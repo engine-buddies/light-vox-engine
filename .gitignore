@@ -1,3 +1,9 @@
+# VS 15/17 cache/options directory
+.vs/
+
+# Light Vox specific configuration
+_Binary/
+
 # Prerequisites
 *.d
 
