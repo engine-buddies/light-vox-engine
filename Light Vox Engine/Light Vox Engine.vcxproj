@@ -71,12 +71,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)_Binary\</OutDir>
-    <IntDir>$(SolutionDir)_Binary\$(ProjectName)\$(Configuration)\</IntDir>
-    <TargetName>$(ProjectName) _Debug Build_</TargetName>
+    <IntDir>$(SolutionDir)_Binary\$(PlatformTarget)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName) x32_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)_Binary\</OutDir>
-    <IntDir>$(SolutionDir)_Binary\$(ProjectName)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)_Binary\$(PlatformTarget)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName) x32</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)_Binary\</OutDir>
+    <IntDir>$(SolutionDir)_Binary\$(PlatformTarget)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName) x64_d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)_Binary\</OutDir>
+    <IntDir>$(SolutionDir)_Binary\$(PlatformTarget)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName) x64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -98,6 +109,11 @@ xcopy "$(SolutionDir)Assets" "$(SolutionDir)_Binary\Assets" /S /Y /E
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <PostBuildEvent>
+      <Command>mkdir "$(SolutionDir)_Binary\Assets"
+xcopy "$(SolutionDir)Assets" "$(SolutionDir)_Binary\Assets" /S /Y /E
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -131,6 +147,11 @@ xcopy "$(SolutionDir)Assets" "$(SolutionDir)_Binary\Assets" /S /Y /E
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(SolutionDir)_Binary\Assets"
+xcopy "$(SolutionDir)Assets" "$(SolutionDir)_Binary\Assets" /S /Y /E
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
