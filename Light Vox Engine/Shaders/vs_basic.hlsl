@@ -17,10 +17,10 @@ PSInput VSMain(
 {
 	PSInput result;
 	float4 pos = float4(position, 1.0f);
-	//pos = mul(pos, model);
+	pos = mul(pos, model);
 	result.worldpos = pos;
 
-	//pos = mul(pos, viewProj);
+	pos = mul(pos, viewProj);
 	result.position = pos;
 	result.uv = uv;
 

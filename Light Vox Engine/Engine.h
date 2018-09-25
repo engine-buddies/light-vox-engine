@@ -1,11 +1,11 @@
 #pragma once
 #include <Windows.h>
-#include <WindowsX.h>
 #include "GraphicsCore.h"
 
-#if defined(_DEBUG)
-#include <sstream>	//for creating a window
-#endif
+
+/*
+It's basically our entire engine (handles life cycle and windows related stuff)
+*/
 
 
 class Engine

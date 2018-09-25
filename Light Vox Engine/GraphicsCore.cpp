@@ -1,4 +1,7 @@
 #include "GraphicsCore.h"
+#include "FrameResource.h"
+
+using namespace Microsoft::WRL;
 
 UINT GraphicsCore::rtvDescriptorSize = 0;
 
@@ -53,7 +56,7 @@ void GraphicsCore::Update()
 	PIXSetMarker(commandQueue.Get(), 0, L"Getting last completed fence");
 
 	const UINT64 lastCompletedFence = fence->GetCompletedValue();
-	currentFrameResourceIndex = (currentFrameResourceIndex + 1) % kFRAME_COUNT;
+	currentFrameResourceIndex = (currentFrameResourceIndex + 1) % LV_FRAME_COUNT;
 	currentFrameResource = frameResources[currentFrameResourceIndex];
 
 	//make sure the frame we're on isn't currently in use by the GPU
@@ -108,8 +111,8 @@ void GraphicsCore::Render()
 	EndFrame();
 
 	commandQueue->ExecuteCommandLists(
-		_countof(currentFrameResource->batchSubmit),
-		currentFrameResource->batchSubmit
+		_countof(currentFrameResource->batchedCommandList),
+		currentFrameResource->batchedCommandList
 	);
 
 	PIXBeginEvent(commandQueue.Get(), 0, L"Presenting to screen");
@@ -128,7 +131,7 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 
 #if defined(_DEBUG)
 	//enable debug layer if needed (must do before device creation)
-	Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+	ComPtr<ID3D12Debug> debugController;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 	{
 		debugController->EnableDebugLayer();
@@ -137,14 +140,14 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 #endif
 
 	//create the factory
-	Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
+	ComPtr<IDXGIFactory4> factory;
 	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
 
 	//try creating device with hardware first then use WARP
 	if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device))))
 	{
 		//use a warp device
-		Microsoft::WRL::ComPtr<IDXGIAdapter> warpAdapter;
+		ComPtr<IDXGIAdapter> warpAdapter;
 		ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
 		ThrowIfFailed(D3D12CreateDevice(
 			warpAdapter.Get(),
@@ -166,7 +169,7 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 
 	//describe the swap chain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { };
-	swapChainDesc.BufferCount = kFRAME_COUNT; //frame count
+	swapChainDesc.BufferCount = LV_FRAME_COUNT; //frame count
 	swapChainDesc.Width = windowWidth; // adjust width
 	swapChainDesc.Height = windowHeight; // adjust Height
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -175,7 +178,7 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 	swapChainDesc.SampleDesc.Count = 1;
 
 	//create and copy over swapchain
-	Microsoft::WRL::ComPtr<IDXGISwapChain1> tempSwapChain;
+	ComPtr<IDXGISwapChain1> tempSwapChain;
 	ThrowIfFailed(factory->CreateSwapChainForHwnd(
 		commandQueue.Get(),
 		hWindow,
@@ -220,8 +223,8 @@ inline HRESULT GraphicsCore::InitRootSignature()
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
 
-	Microsoft::WRL::ComPtr<ID3DBlob> signature;
-	Microsoft::WRL::ComPtr<ID3DBlob> error;
+	ComPtr<ID3DBlob> signature;
+	ComPtr<ID3DBlob> error;
 
 	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
 	ThrowIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
@@ -231,8 +234,8 @@ inline HRESULT GraphicsCore::InitRootSignature()
 
 inline HRESULT GraphicsCore::InitPSO()
 {
-	Microsoft::WRL::ComPtr<ID3DBlob> vs;
-	Microsoft::WRL::ComPtr<ID3DBlob> ps;
+	ComPtr<ID3DBlob> vs;
+	ComPtr<ID3DBlob> ps;
 
 	D3DReadFileToBlob(L"Assets/Shaders/vs_basic.cso", &vs);
 	D3DReadFileToBlob(L"Assets/Shaders/ps_basic.cso", &ps);
@@ -276,7 +279,7 @@ inline HRESULT GraphicsCore::InitRTV()
 {
 	// Create heap of render target descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = kFRAME_COUNT;
+	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
@@ -287,7 +290,7 @@ inline HRESULT GraphicsCore::InitRTV()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// Create a RTV for each frame.
-	for (UINT n = 0; n < kFRAME_COUNT; n++)
+	for (UINT n = 0; n < LV_FRAME_COUNT; n++)
 	{
 		ThrowIfFailed(swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
 		device->CreateRenderTargetView(renderTargets[n].Get(), nullptr, rtvHandle);
@@ -360,11 +363,11 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 
 	//loaded 'model data'
 	FLOAT vertices[] = {
-		-0.5f, -0.5f,  0.f,
+		-0.5f, -0.5f,  1.f,
 		 0.f,   0.f, 
-		 0.f,   0.5f,  0.f,
+		 0.f,   0.5f,  1.f,
 		 0.f,   1.f, 
-		 0.5f, -0.5f,  0.f,
+		 0.5f, -0.5f,  1.f,
 		 1.f,   0.f, 
 	};
 
@@ -472,7 +475,7 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 	// buffer view (CBV) descriptor heap.  Heap layout: null views, 
 	// frame 1's constant buffer, frame 2's constant buffers, etc...
 	const UINT nullSrvCount = 2;		// Null descriptors are needed for out of bounds behavior reads.
-	const UINT cbvCount = kFRAME_COUNT * 2;
+	const UINT cbvCount = LV_FRAME_COUNT * 2;
 	const UINT srvCount = 0; // _countof(SampleAssets::Textures) + (FrameCount * 1);
 	D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
 	cbvSrvHeapDesc.NumDescriptors = nullSrvCount + cbvCount + srvCount;
@@ -491,7 +494,7 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 
 inline HRESULT GraphicsCore::InitFrameResources()
 {
-	for (int i = 0; i < kFRAME_COUNT; i++)
+	for (int i = 0; i < LV_FRAME_COUNT; i++)
 	{
 		frameResources[i] = new FrameResource(device.Get(), pso.Get(), dsvHeap.Get(), cbvSrvHeap.Get(), &viewport, i);
 		frameResources[i]->WriteConstantBuffers(&viewport, &camera);
@@ -527,7 +530,7 @@ inline void GraphicsCore::BeginFrame()
 	currentFrameResource->Init();
 
 	//transition back buffer to be used as render target
-	currentFrameResource->commandLists[kCOMMAND_LIST_PRE]->ResourceBarrier(
+	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ResourceBarrier(
 		1,
 		&CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)
 	);
@@ -535,29 +538,29 @@ inline void GraphicsCore::BeginFrame()
 	//clear back buffer with c o r n f l o w e r   b l u e
 	const float clearColor[] = { 0.392f, 0.584f, 0.929f, 1.0f };
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
-	currentFrameResource->commandLists[kCOMMAND_LIST_PRE]->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 	//clear depth buffer
-	currentFrameResource->commandLists[kCOMMAND_LIST_PRE]->ClearDepthStencilView(dsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ClearDepthStencilView(dsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	//close the 'pre' command list
-	ThrowIfFailed(currentFrameResource->commandLists[kCOMMAND_LIST_PRE]->Close());
+	ThrowIfFailed(currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->Close());
 }
 
 inline void GraphicsCore::MidFrame()
 {
 	currentFrameResource->SwapBarriers();
-	ThrowIfFailed(currentFrameResource->commandLists[kCOMMAND_LIST_MID]->Close());
+	ThrowIfFailed(currentFrameResource->commandLists[LV_COMMAND_LIST_MID]->Close());
 }
 
 inline void GraphicsCore::EndFrame()
 {
 	currentFrameResource->Finish();
-	currentFrameResource->commandLists[kCOMMAND_LIST_POST]->ResourceBarrier(
+	currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->ResourceBarrier(
 		1, 
 		&CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT)
 	);
-	ThrowIfFailed(currentFrameResource->commandLists[kCOMMAND_LIST_POST]->Close());
+	ThrowIfFailed(currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->Close());
 }
 
 inline void GraphicsCore::SetCommonPipelineState(ID3D12GraphicsCommandList * commandList)

@@ -1,7 +1,8 @@
 #pragma once
 #include "stdafx.h"
-#include "Camera.h"
-#include "FrameResource.h"
+#include "Camera.h"	//it wouldn't let me forward declare?
+
+class FrameResource;
 
 //this should probably be a namespace instead of a class
 class GraphicsCore
@@ -53,7 +54,7 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain;
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
-	Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[kFRAME_COUNT];
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[LV_FRAME_COUNT];
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilView;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
@@ -77,11 +78,11 @@ private:
 	//fence & synch related vars
 	UINT frameIndex;
 	HANDLE fenceEvent;
-	ComPtr<ID3D12Fence> fence;
+	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	UINT64 fenceValue;
 
 	//frame resources
-	FrameResource* frameResources[kFRAME_COUNT];
+	FrameResource* frameResources[LV_FRAME_COUNT];
 	FrameResource* currentFrameResource;
 	int currentFrameResourceIndex;
 };

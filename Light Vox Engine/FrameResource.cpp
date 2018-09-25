@@ -1,12 +1,15 @@
 #include "FrameResource.h"
+#include "Camera.h"
 
+using namespace DirectX;
 
 FrameResource::FrameResource(ID3D12Device * device, ID3D12PipelineState * pso, ID3D12DescriptorHeap * dsvHeap, ID3D12DescriptorHeap * cbvSrvHeap, D3D12_VIEWPORT * viewport, UINT frameResourceIndex)
 {
 	fenceValue = 0;
 	this->pso = pso;
 
-	for (UINT i = 0; i < kCOMMAND_LIST_COUNT; i++)
+	//create the main command list
+	for (UINT i = 0; i < LV_COMMAND_LIST_COUNT; i++)
 	{
 		ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocators[i])));
 		ThrowIfFailed(device->CreateCommandList(
@@ -21,7 +24,8 @@ FrameResource::FrameResource(ID3D12Device * device, ID3D12PipelineState * pso, I
 		ThrowIfFailed(commandLists[i]->Close());
 	}
 
-	for (UINT i = 0; i < kNUM_CONTEXTS; i++)
+	//create the scene rendering command list (split through cores)
+	for (UINT i = 0; i < LV_NUM_CONTEXTS; i++)
 	{
 		ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&sceneCommandAllocators[i])));
 		ThrowIfFailed(device->CreateCommandList(
@@ -39,11 +43,13 @@ FrameResource::FrameResource(ID3D12Device * device, ID3D12PipelineState * pso, I
 	const UINT nullSrvCount = 2;			// Null descriptors at the start of the heap.
 	const UINT textureCount = 0;
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	//get handle to the cbv heap
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvCpuHandle(cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle(cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
 	nullSrvHandle = cbvSrvGpuHandle;
-	cbvSrvCpuHandle.Offset(nullSrvCount + textureCount + (frameResourceIndex * kFRAME_COUNT), cbvSrvDescriptorSize);
-	cbvSrvGpuHandle.Offset(nullSrvCount + textureCount + (frameResourceIndex * kFRAME_COUNT), cbvSrvDescriptorSize);
+	cbvSrvCpuHandle.Offset(nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), cbvSrvDescriptorSize);
+	cbvSrvGpuHandle.Offset(nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), cbvSrvDescriptorSize);
 
 	// Create the constant buffers.
 	const UINT constantBufferSize = (sizeof(SceneConstantBuffer) + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1); // must be a multiple 256 bytes
@@ -69,17 +75,17 @@ FrameResource::FrameResource(ID3D12Device * device, ID3D12PipelineState * pso, I
 	device->CreateConstantBufferView(&cbvDesc, cbvSrvCpuHandle);
 	sceneCbvHandle = cbvSrvGpuHandle;
 
-	// Batch up command lists for execution later.
-	const UINT batchSize = _countof(sceneCommandLists) + kCOMMAND_LIST_COUNT; // _countof(m_shadowCommandLists) + 3;
-	batchSubmit[0] = commandLists[kCOMMAND_LIST_PRE].Get();
-	memcpy(batchSubmit + 1, sceneCommandLists, _countof(sceneCommandLists) * sizeof(ID3D12CommandList*));
-	batchSubmit[_countof(sceneCommandLists) + 1] = commandLists[kCOMMAND_LIST_MID].Get();
-	batchSubmit[_countof(sceneCommandLists) + 2] = commandLists[kCOMMAND_LIST_POST].Get();
+	//combine all of our command lists
+	const UINT batchSize = _countof(sceneCommandLists) + LV_COMMAND_LIST_COUNT; // _countof(m_shadowCommandLists) + 3;
+	batchedCommandList[0] = commandLists[LV_COMMAND_LIST_PRE].Get();
+	memcpy(batchedCommandList + 1, sceneCommandLists, _countof(sceneCommandLists) * sizeof(ID3D12CommandList*));
+	batchedCommandList[_countof(sceneCommandLists) + 1] = commandLists[LV_COMMAND_LIST_MID].Get();
+	batchedCommandList[_countof(sceneCommandLists) + 2] = commandLists[LV_COMMAND_LIST_POST].Get();
 }
 
 FrameResource::~FrameResource()
 {
-	for (int i = 0; i < kCOMMAND_LIST_COUNT; i++)
+	for (int i = 0; i < LV_COMMAND_LIST_COUNT; i++)
 	{
 		commandAllocators[i] = nullptr;
 		commandLists[i] = nullptr;
@@ -87,7 +93,7 @@ FrameResource::~FrameResource()
 
 	sceneConstantBuffer = nullptr;
 
-	for (int i = 0; i < kNUM_CONTEXTS; i++)
+	for (int i = 0; i < LV_NUM_CONTEXTS; i++)
 	{
 		sceneCommandLists[i] = nullptr;
 		sceneCommandAllocators[i] = nullptr;
@@ -96,6 +102,7 @@ FrameResource::~FrameResource()
 
 void FrameResource::Bind(ID3D12GraphicsCommandList * commandList, BOOL scenePass, D3D12_CPU_DESCRIPTOR_HANDLE * rtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE * dsvHandle)
 {
+	//set-up before rendering
 	commandList->SetGraphicsRootDescriptorTable(1, sceneCbvHandle);
 	commandList->OMSetRenderTargets(1, rtvHandle, FALSE, dsvHandle);
 }
@@ -103,14 +110,14 @@ void FrameResource::Bind(ID3D12GraphicsCommandList * commandList, BOOL scenePass
 void FrameResource::Init()
 {
 	// Reset the command allocators and lists for the main thread.
-	for (int i = 0; i < kCOMMAND_LIST_COUNT; i++)
+	for (int i = 0; i < LV_COMMAND_LIST_COUNT; i++)
 	{
 		ThrowIfFailed(commandAllocators[i]->Reset());
 		ThrowIfFailed(commandLists[i]->Reset(commandAllocators[i].Get(), pso.Get()));
 	}
 
 	// Reset the worker command allocators and lists.
-	for (int i = 0; i < kNUM_CONTEXTS; i++)
+	for (int i = 0; i < LV_NUM_CONTEXTS; i++)
 	{
 		ThrowIfFailed(sceneCommandAllocators[i]->Reset());
 		ThrowIfFailed(sceneCommandLists[i]->Reset(sceneCommandAllocators[i].Get(), pso.Get()));
@@ -119,20 +126,30 @@ void FrameResource::Init()
 
 void FrameResource::SwapBarriers()
 {
-
+	//nothing yet
 }
 
 void FrameResource::Finish()
 {
-
+	//nothing yet
 }
 
 void FrameResource::WriteConstantBuffers(D3D12_VIEWPORT * viewport, Camera * camera)
 {
 	SceneConstantBuffer sceneConsts = {};
 
-	DirectX::XMStoreFloat4x4(&sceneConsts.model, DirectX::XMMatrixIdentity());
+	//for testing
+	/*
+	static float e = 0;
+	XMStoreFloat4x4(&sceneConsts.model, 
+		XMMatrixTranspose(XMMatrixRotationZ(e))
+	);
+	e += 0.01f;
+	*/
+	XMStoreFloat4x4(&sceneConsts.model, XMMatrixIdentity());
+
 	camera->GetViewProjMatrix(&sceneConsts.viewProj, viewport->Width, viewport->Height);
 
+	//copy over
 	memcpy(sceneConstantBufferWO, &sceneConsts, sizeof(SceneConstantBuffer));
 }

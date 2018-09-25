@@ -100,11 +100,7 @@
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
 xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
-for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"
-
-mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"
@@ -137,11 +133,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Bin
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
 xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
-for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"
-
-mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"
@@ -181,13 +173,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Bin
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
 xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
-for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"
-
-mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.pdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"
@@ -224,13 +210,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Bin
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
 xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
-for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"
-
-mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.pdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"

@@ -1,6 +1,11 @@
 #include "engine.h"
 #include "stdafx.h"
 
+#include <WindowsX.h>
+#if defined(_DEBUG)
+#include <sstream>	//for creating a console
+#endif
+
 Engine* Engine::engineInstance = nullptr;
 
 /* LIFE CYCLE */
