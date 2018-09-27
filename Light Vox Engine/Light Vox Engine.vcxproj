@@ -103,14 +103,12 @@ mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.pdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Moving VS meta data back next to the .exe</Message>
+      <Message>
+      </Message>
     </PreBuildEvent>
     <Link>
       <AdditionalDependencies>d3d12.lib;dxgi.lib;D3DCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -136,14 +134,12 @@ mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.pdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Moving VS meta data back next to the .exe</Message>
+      <Message>
+      </Message>
     </PreBuildEvent>
     <Link>
       <AdditionalDependencies>d3d12.lib;dxgi.lib;D3DCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -176,14 +172,12 @@ mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.pdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Moving VS meta data back next to the .exe</Message>
+      <Message>
+      </Message>
     </PreBuildEvent>
     <FxCompile>
       <ShaderType>Effect</ShaderType>
@@ -213,14 +207,12 @@ mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>mkdir "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ilk) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.pdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.iobj) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"
-for /r "$(SolutionDir)_Binary" %%x in (*.ipdb) do move "%%x" "$(SolutionDir)_Binary\VSMetaData\"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Moving VS meta data back next to the .exe</Message>
+      <Message>
+      </Message>
     </PreBuildEvent>
     <FxCompile>
       <ShaderType>Effect</ShaderType>

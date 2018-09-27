@@ -1,5 +1,3 @@
-!Assets/Models/*
-
 # VS 15/17 cache/options directory
 .vs/
 
@@ -117,3 +115,7 @@ ipch/
 
 # Local History for Visual Studio
 .localhistory/
+
+
+# Un-ignore the obj files for our models
+!Assets/Models/*.obj

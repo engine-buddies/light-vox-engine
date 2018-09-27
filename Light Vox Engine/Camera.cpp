@@ -23,19 +23,39 @@ Camera::~Camera() { }
 
 void Camera::SetTransform(XMVECTOR position, XMVECTOR forward, XMVECTOR up)
 {
-	this->position = position;
-	this->forward = forward;
-	this->up = up;
+    XMStoreFloat3(&this->position, position);
+    XMStoreFloat3(&this->forward, forward);
+    XMStoreFloat3(&this->up, up);
 }
 
-void Camera::GetViewProjMatrix(XMFLOAT4X4 * viewProj, float screenWidth, float screenHeight)
+void Camera::GetViewProjMatrix(
+    DirectX::XMFLOAT4X4 * view, 
+    DirectX::XMFLOAT4X4 * proj, 
+    float screenWidth, 
+    float screenHeight)
 {
-	//calculate vp mat and store in viewProj
-	XMStoreFloat4x4(viewProj, 
-		XMMatrixMultiplyTranspose(		//multiply and transpose two matrices
-			XMMatrixLookAtLH(position, forward, up),									//view
-			XMMatrixPerspectiveFovLH(fov, screenWidth / screenHeight, nearZ, farZ)		//projection
+    //calculate view mat
+    XMStoreFloat4x4(view,
+        XMMatrixTranspose(
+            XMMatrixLookAtLH(
+                XMLoadFloat3(&position),
+                XMLoadFloat3(&forward),
+                XMLoadFloat3(&up)
+            )
 		)
 	);
+
+    //calculate the projection matrix
+    XMStoreFloat4x4(proj,
+        XMMatrixTranspose(
+            XMMatrixPerspectiveFovLH(
+                fov, 
+                screenWidth / screenHeight, 
+                nearZ, 
+                farZ
+            )		
+        )
+    );
+
 }
 
