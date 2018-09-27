@@ -7,7 +7,8 @@ class Camera;
 struct SceneConstantBuffer
 {
 	DirectX::XMFLOAT4X4 model;
-	DirectX::XMFLOAT4X4 viewProj;
+	DirectX::XMFLOAT4X4 view;
+	DirectX::XMFLOAT4X4 projection;
 };
 
 /*

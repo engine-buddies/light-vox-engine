@@ -32,6 +32,9 @@
     <ClCompile Include="FrameResource.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="ObjLoader.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GraphicsCore.h">
@@ -56,6 +59,9 @@
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="FrameResource.h">
+      <Filter>Source Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjLoader.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>

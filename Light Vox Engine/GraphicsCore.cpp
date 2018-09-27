@@ -1,9 +1,13 @@
 #include "GraphicsCore.h"
 #include "FrameResource.h"
 
+//needed for 'right now'
+#include "ObjLoader.h"
+
 using namespace Microsoft::WRL;
 
 UINT GraphicsCore::rtvDescriptorSize = 0;
+UINT count = 0;
 
 
 GraphicsCore::GraphicsCore(HWND hWindow, UINT windowW, UINT windowH)
@@ -38,15 +42,6 @@ HRESULT GraphicsCore::Init()
 	ThrowIfFailed(InitInputShaderRsources());
 	ThrowIfFailed(InitFrameResources());
 	ThrowIfFailed(InitSyncObjects());
-
-	//other rendering components to init
-		//vertex buffer
-		//index buffer
-		//shader resources + cbv-srv heap?
-		//samplers + sampler heap
-		//frame reources
-		//synchronization objects
-
 
 	return S_OK;
 }
@@ -102,7 +97,7 @@ void GraphicsCore::Render()
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	const UINT nullSrvCount = 2;
 
-	pSceneCommandList->DrawIndexedInstanced(3, 1, 0, 0, 0);
+	pSceneCommandList->DrawIndexedInstanced(count, 1, 0, 0, 0);
 
 	PIXEndEvent(pSceneCommandList);
 	ThrowIfFailed(pSceneCommandList->Close());
@@ -204,7 +199,7 @@ inline HRESULT GraphicsCore::InitRootSignature()
 
 	//this should be ordered from most to least frequent
 	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[2];
-	CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+	CD3DX12_ROOT_PARAMETER1		rootParameters[2];
 
 	//diffuse + normal SRV
 	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
@@ -241,8 +236,9 @@ inline HRESULT GraphicsCore::InitPSO()
 	D3DReadFileToBlob(L"Assets/Shaders/ps_basic.cso", &ps);
 
 	D3D12_INPUT_ELEMENT_DESC vertexInputDescription[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 12,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
@@ -356,32 +352,48 @@ inline HRESULT GraphicsCore::InitViewportScissorRectangle()
 	return S_OK;
 }
 
+
 inline HRESULT GraphicsCore::InitInputShaderRsources()
 {
 	ComPtr<ID3D12GraphicsCommandList> commandList;
 	ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), pso.Get(), IID_PPV_ARGS(&commandList)));
 
-	//loaded 'model data'
-	FLOAT vertices[] = {
-		-0.5f, -0.5f,  1.f,
-		 0.f,   0.f, 
-		 0.f,   0.5f,  1.f,
-		 0.f,   1.f, 
-		 0.5f, -0.5f,  1.f,
-		 1.f,   0.f, 
-	};
+	std::vector<Vertex>* vertices = new std::vector<Vertex>();
+	std::vector<uint16_t>* indices = new std::vector<uint16_t>();
+	//ObjLoader::LoadObj(vertices, indices, "Assets/Models/sphere.obj");
+	ObjLoader::LoadObj(vertices, indices, "Assets/Models/bus.obj");
+	/*Vertex v1 = { };
+	v1.position = DirectX::XMFLOAT3(-0.5f, 0.f, 0.f);
+	v1.uv = DirectX::XMFLOAT2(-0.5f, 1.f);
+	v1.normal = DirectX::XMFLOAT3(-0.5f, 1.f, 0.f);
 
-	uint16_t indices[] = {
-		 0, 1, 2
-	};
+	Vertex v2 = { };
+	v2.position = DirectX::XMFLOAT3(0.f, 0.5f, 0.f);
+	v2.uv = DirectX::XMFLOAT2(-0.5f, 1.f);
+	v2.normal = DirectX::XMFLOAT3(-0.5f, 1.f, 0.f);
+
+	Vertex v3 = { };
+	v3.position = DirectX::XMFLOAT3(0.5f, 0.f, 0.f);
+	v3.uv = DirectX::XMFLOAT2(-0.5f, 1.f);
+	v3.normal = DirectX::XMFLOAT3(-0.5f, 1.f, 0.f);
+	
+	vertices->push_back(v1);
+	vertices->push_back(v2);
+	vertices->push_back(v3);
+
+	indices->push_back(0);
+	indices->push_back(1);
+	indices->push_back(2);*/
 
 	//make vertex buffer for 'n' floats
-	UINT vertexDataSize = 3 * 5 * sizeof(FLOAT);
+	UINT vertexDataSize = vertices->size() * sizeof(Vertex);
 	UINT vertexDataOffset = 0;
-	UINT vertexStride = 5 * sizeof(FLOAT);
-	UINT indexDataSize = 3 * sizeof(uint16_t); 
+	UINT vertexStride = sizeof(Vertex);
+	UINT indexDataSize = indices->size() * sizeof(uint16_t); 
 	UINT indexDataOffset = 0;
 
+	count = indices->size();
+	
 	//vertex buffer
 	{
 		//create vertex buffer
@@ -406,7 +418,7 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 		));
 
 		D3D12_SUBRESOURCE_DATA vertexData = { };
-		vertexData.pData = vertices + vertexDataOffset;
+		vertexData.pData = &((*vertices)[0]) + vertexDataOffset;
 		vertexData.RowPitch = vertexDataSize;
 		vertexData.SlicePitch = vertexData.RowPitch;
 
@@ -451,7 +463,7 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 		));
 
 		D3D12_SUBRESOURCE_DATA indexData = { };
-		indexData.pData = indices + indexDataOffset;
+		indexData.pData = &((*indices)[0]) + indexDataOffset;
 		indexData.RowPitch = indexDataSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
@@ -469,7 +481,9 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 		indexBufferView.SizeInBytes = indexDataSize;
 		indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 	}
-	
+
+	delete vertices;
+	delete indices;
 
 	// Describe and create a shader resource view (SRV) and constant 
 	// buffer view (CBV) descriptor heap.  Heap layout: null views, 
@@ -483,6 +497,28 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 	cbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	ThrowIfFailed(device->CreateDescriptorHeap(&cbvSrvHeapDesc, IID_PPV_ARGS(&cbvSrvHeap)));
 	NAME_D3D12_OBJECT(cbvSrvHeap);
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle(cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
+	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+
+	{
+		// Describe and create 2 null SRVs. Null descriptors are needed in order 
+		// to achieve the effect of an "unbound" resource.
+		D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		nullSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		nullSrvDesc.Texture2D.MipLevels = 1;
+		nullSrvDesc.Texture2D.MostDetailedMip = 0;
+		nullSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+		device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
+		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+
+		device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
+		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+	}
 
 	//close the command list and transfer static data
 	ThrowIfFailed(commandList->Close());
@@ -576,4 +612,9 @@ inline void GraphicsCore::SetCommonPipelineState(ID3D12GraphicsCommandList * com
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 	commandList->IASetIndexBuffer(&indexBufferView);
 	commandList->OMSetStencilRef(0);
+
+	//D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = cbvSrvHeap->GetGPUDescriptorHandleForHeapStart();
+	//const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvHandle(cbvSrvHeapStart, 2, cbvSrvDescriptorSize);
+	//commandList->SetGraphicsRootDescriptorTable(0, cbvSrvHandle);
 }

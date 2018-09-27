@@ -50,6 +50,8 @@ FrameResource::FrameResource(ID3D12Device * device, ID3D12PipelineState * pso, I
 	nullSrvHandle = cbvSrvGpuHandle;
 	cbvSrvCpuHandle.Offset(nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), cbvSrvDescriptorSize);
 	cbvSrvGpuHandle.Offset(nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), cbvSrvDescriptorSize);
+	cbvSrvCpuHandle.Offset(cbvSrvDescriptorSize);
+	cbvSrvGpuHandle.Offset(cbvSrvDescriptorSize);
 
 	// Create the constant buffers.
 	const UINT constantBufferSize = (sizeof(SceneConstantBuffer) + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1); // must be a multiple 256 bytes
@@ -139,16 +141,16 @@ void FrameResource::WriteConstantBuffers(D3D12_VIEWPORT * viewport, Camera * cam
 	SceneConstantBuffer sceneConsts = {};
 
 	//for testing
-	/*
-	static float e = 0;
-	XMStoreFloat4x4(&sceneConsts.model, 
-		XMMatrixTranspose(XMMatrixRotationZ(e))
-	);
-	e += 0.01f;
-	*/
-	XMStoreFloat4x4(&sceneConsts.model, XMMatrixIdentity());
 
-	camera->GetViewProjMatrix(&sceneConsts.viewProj, viewport->Width, viewport->Height);
+    static float e = 0;
+	XMStoreFloat4x4(&sceneConsts.model, 
+        XMMatrixRotationY(e)
+	);
+    e += 0.01f;
+	
+	//XMStoreFloat4x4(&sceneConsts.model, XMMatrixIdentity());
+
+	camera->GetViewProjMatrix(&sceneConsts.view, &sceneConsts.projection, viewport->Width, viewport->Height);
 
 	//copy over
 	memcpy(sceneConstantBufferWO, &sceneConsts, sizeof(SceneConstantBuffer));
