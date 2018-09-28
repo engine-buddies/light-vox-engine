@@ -3,11 +3,29 @@
 class Time
 {
 public:
+	/// <summary>
+	/// Gets singleton object of time
+	/// </summary>
 	static Time* GetInstance();
+	/// <summary>
+	/// Releases singleton object of time
+	/// </summary>
 	void ReleaseInstance();
+	/// <summary>
+	/// Intializes preformance counter, current time, previous time
+	/// </summary>
 	void Init();
+	/// <summary>
+	/// Updates the time 
+	/// </summary>
 	void UpdateTimer();
+	/// <summary>
+	/// Get total time since starting 
+	/// </summary>
 	float getTotalTimeFloat();
+	/// <summary>
+	/// Get delta time 
+	/// </summary>
 	float getDeltaTimeFloat();
 
 private:
