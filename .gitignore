@@ -115,3 +115,7 @@ ipch/
 
 # Local History for Visual Studio
 .localhistory/
+
+
+# Un-ignore the obj files for our models
+!Assets/Models/*.obj

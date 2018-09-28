@@ -1,16 +1,23 @@
-#include <iostream>
-#include "Time.h"
+#include "stdafx.h"
+#include "engine.h"
 
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	std::cout << "Welcome to the Light Vox Engine!" << std::endl;
-	auto time = Time::GetInstance();
-	time->Init();
-	while (true)
 	{
-		time->UpdateTimer();
-		std::cout << time->getTotalTimeFloat() << std::endl;
+		//memory leak detections
+#if defined(_DEBUG)
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+		Engine engine(hInstance);
+
+		LV_PRINT_DEBUG("Initializing Systems");
+		ThrowIfFailed(engine.InitSystems());	//init all 
+		ThrowIfFailed(engine.Run());			//run that baby
 	}
-	time->ReleaseInstance();
+
+	//dump that info
+#if defined(_DEBUG)
+	_CrtDumpMemoryLeaks();
+#endif
 	return 0;
 }
