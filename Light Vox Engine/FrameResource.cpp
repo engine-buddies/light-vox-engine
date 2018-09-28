@@ -109,7 +109,7 @@ FrameResource::FrameResource(
 
 FrameResource::~FrameResource()
 {
-	for (int i = 0; i < LV_COMMAND_LIST_COUNT; i++)
+	for (int i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		commandAllocators[i] = nullptr;
 		commandLists[i] = nullptr;
@@ -117,7 +117,7 @@ FrameResource::~FrameResource()
 
 	sceneConstantBuffer = nullptr;
 
-	for (int i = 0; i < LV_NUM_CONTEXTS; i++)
+	for (int i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		sceneCommandLists[i] = nullptr;
 		sceneCommandAllocators[i] = nullptr;
@@ -139,7 +139,7 @@ void FrameResource::Bind(
 void FrameResource::Init()
 {
 	// Reset the command allocators and lists for the main thread.
-	for (int i = 0; i < LV_COMMAND_LIST_COUNT; i++)
+	for (int i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		ThrowIfFailed(commandAllocators[i]->Reset());
 		ThrowIfFailed(commandLists[i]->Reset(
@@ -149,7 +149,7 @@ void FrameResource::Init()
 	}
 
 	// Reset the worker command allocators and lists.
-	for (int i = 0; i < LV_NUM_CONTEXTS; i++)
+	for (int i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		ThrowIfFailed(sceneCommandAllocators[i]->Reset());
 		ThrowIfFailed(sceneCommandLists[i]->Reset(

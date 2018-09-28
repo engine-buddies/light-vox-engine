@@ -58,6 +58,9 @@
     <ClInclude Include="FrameResource.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Configs.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
