@@ -22,6 +22,7 @@ Engine::Engine(HINSTANCE hInstance)
 
 Engine::~Engine()
 {
+    time->ReleaseInstance();
 	delete graphics;
 }
 
@@ -88,8 +89,11 @@ HRESULT Engine::InitSystems()
 {
 	InitWindow();
 	graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
+    time = Time::GetInstance();
 
 	ThrowIfFailed(graphics->Init());
+    time->Init();
+
 	return S_OK;
 }
 
@@ -107,6 +111,7 @@ HRESULT Engine::Run()
 		{
 			graphics->Update();
 			graphics->Render();
+            time->UpdateTimer();
 		}
 	}
 

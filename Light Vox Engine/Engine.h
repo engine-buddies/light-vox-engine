@@ -1,7 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include "GraphicsCore.h"
-
+#include "Time.h"
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -37,6 +37,7 @@ private:
 	float windowHeight;
 
 	GraphicsCore* graphics;
+    Time* time;
 
 	HRESULT InitWindow();
 

@@ -222,12 +222,15 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+<<<<<<< HEAD
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Time.cpp" />
+=======
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GraphicsCore.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Time.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -239,7 +242,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="GraphicsCore.h" />
     <ClInclude Include="LVutils.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Time.h" />
+>>>>>>> 59154ef2b77365057381e5e77919f30342187edb
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
@@ -256,7 +259,11 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
+    <ClInclude Include="Time.h" />
+=======
     <None Include="packages.config" />
+>>>>>>> 59154ef2b77365057381e5e77919f30342187edb
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -52,7 +52,5 @@ float Time::getTotalTimeFloat()
 
 float Time::getDeltaTimeFloat()
 {
-	return deltaTime;
+    return deltaTime;
 }
-
-

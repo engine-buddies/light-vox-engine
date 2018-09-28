@@ -23,6 +23,11 @@
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+<<<<<<< HEAD
+    <ClCompile Include="Time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+=======
     <ClCompile Include="GraphicsCore.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -31,9 +36,6 @@
     </ClCompile>
     <ClCompile Include="FrameResource.cpp">
       <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Time.cpp">
-      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -64,9 +66,7 @@
     <ClInclude Include="Configs.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Time.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
+>>>>>>> 59154ef2b77365057381e5e77919f30342187edb
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
@@ -77,6 +77,12 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
+    <ClInclude Include="Time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+=======
     <None Include="packages.config" />
+>>>>>>> 59154ef2b77365057381e5e77919f30342187edb
   </ItemGroup>
 </Project>
