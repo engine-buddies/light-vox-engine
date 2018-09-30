@@ -2,7 +2,6 @@
 #include <Windows.h>
 #include "GraphicsCore.h"
 
-
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
 */
@@ -37,6 +36,7 @@ private:
 	float windowHeight;
 
 	GraphicsCore* graphics;
+    Camera* camera;
 
 	HRESULT InitWindow();
 

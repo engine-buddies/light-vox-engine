@@ -15,12 +15,10 @@ GraphicsCore::GraphicsCore(HWND hWindow, UINT windowW, UINT windowH)
 	fenceValue = 0;
 	frameIndex = 0;
 	currentFrameResource = nullptr;
-    camera = new Camera();
 }
 
 GraphicsCore::~GraphicsCore()
 {
-    delete camera;
 }
 
 void GraphicsCore::OnResize(UINT width, UINT height)
@@ -43,7 +41,7 @@ HRESULT GraphicsCore::Init()
 	return S_OK;
 }
 
-void GraphicsCore::Update()
+void GraphicsCore::Update(DirectX::XMFLOAT4X4 transforms[], Camera* camera)
 {
 	PIXSetMarker(commandQueue.Get(), 0, L"Getting last completed fence");
 
@@ -66,16 +64,7 @@ void GraphicsCore::Update()
 		CloseHandle(eventHandle);
 	}
 
-	DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -2.f);
-	DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
-	DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
-	camera->SetTransform(
-		DirectX::XMLoadFloat3(&pos),
-		DirectX::XMLoadFloat3(&forward),
-		DirectX::XMLoadFloat3(&up)
-	);
-
-	currentFrameResource->WriteConstantBuffers(&viewport, camera);
+	currentFrameResource->WriteConstantBuffers(transforms, &viewport, camera);
 
 }
 
@@ -651,7 +640,6 @@ inline HRESULT GraphicsCore::InitFrameResources()
             &viewport, 
             i
         );
-		frameResources[i]->WriteConstantBuffers(&viewport, camera);
 	}
 
 	currentFrameResourceIndex = 0;
