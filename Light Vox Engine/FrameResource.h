@@ -1,9 +1,11 @@
 #pragma once
-#include "stdafx.h"		//this is needed here because our 'configs' are in here
+#include "stdafx.h"		
 
 class Camera;
 
-//Whatever matches our constant buffer in the shader
+/// <summary>
+/// Whatever goes into the constant buffer for our main 'scene' render
+/// </summary>
 struct SceneConstantBuffer
 {
 	DirectX::XMFLOAT4X4 model;
@@ -11,14 +13,23 @@ struct SceneConstantBuffer
 	DirectX::XMFLOAT4X4 projection;
 };
 
-/*
-Wraps around data that persists through one scene
-
-TODO: write proper getters/setters, pack data correctly
-*/
+/// <summary>
+/// Wrapper for data that persists through one scene
+/// TODO: proper getters/setters, pack data correctly
+/// </summary>
 class FrameResource
 {
 public:
+
+    /// <summary>
+    /// Designated constructor
+    /// </summary>
+    /// <param name="device">Rendering devicec</param>
+    /// <param name="pso">Main pipeline state object</param>
+    /// <param name="dsvHeap">Depth Stencil View heap</param>
+    /// <param name="cbvSrvHeap">CBVSRV heap</param>
+    /// <param name="viewport">Viewport</param>
+    /// <param name="frameResourceIndex">The index of this frame</param>
 	FrameResource(
 		ID3D12Device* device,
 		ID3D12PipelineState* pso,
@@ -27,9 +38,20 @@ public:
 		D3D12_VIEWPORT* viewport,
 		UINT frameResourceIndex
 	);
+
+    /// <summary>
+    /// Destructs the object
+    /// </summary>
 	~FrameResource();
 
-	//binds the frame resource for rendering
+    /// <summary>
+    /// Binds the resources to prepare for rendering
+    /// </summary>
+    /// <param name="commandList">Commandlist in which to bind to</param>
+    /// <param name="scenePass">Wether this is a scene 
+    /// pass or shadow pass (not used right now)</param>
+    /// <param name="rtvHandle">Handle to the RTV heap</param>
+    /// <param name="dsvHandle">handle to the DSV heap</param>
 	void Bind(
 		ID3D12GraphicsCommandList *commandList,
 		BOOL scenePass,
@@ -37,16 +59,26 @@ public:
 		D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle
 	);
 
-	//refreshes the frame resourcce
+    /// <summary>
+    /// Refreshes the resource for re-use
+    /// </summary>
 	void Init();
 
-	//for swapping shadow texture from write to read (not used rn)
+    /// <summary>
+    /// For swapping between render passes (not used right now)
+    /// </summary>
 	void SwapBarriers();
 
-	//cleans up any resource state for next use
+    /// <summary>
+    /// Cleans up the resource states for next use
+    /// </summary>
 	void Finish();
 
-	//updates the cbuffer data
+    /// <summary>
+    /// Updates the constant buffer
+    /// </summary>
+    /// <param name="viewport">The viewport</param>
+    /// <param name="camera">The camera of the scene</param>
 	void WriteConstantBuffers(D3D12_VIEWPORT* viewport, Camera* camera);
 
 	//culmination of all of the command lists
@@ -65,9 +97,14 @@ public:
 private:
 	//pointer to things we need to properly render
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
+
+    //the gpu side of the scene constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> sceneConstantBuffer;
 
-	SceneConstantBuffer* sceneConstantBufferWO;		//write-only buffer for scene-level cbuffer stuff
-	D3D12_GPU_DESCRIPTOR_HANDLE nullSrvHandle;	// Null SRV for out of bounds behavior (for shadow?)
+    //write-only buffer for scene-level cbuffer stuff
+	SceneConstantBuffer* sceneConstantBufferWO;		
+
+    // Null SRV for out of bounds behavior (for shadow?)
+	D3D12_GPU_DESCRIPTOR_HANDLE nullSrvHandle;	
 	D3D12_GPU_DESCRIPTOR_HANDLE sceneCbvHandle;
 };

@@ -63,6 +63,9 @@
     </ClInclude>
     <ClInclude Include="ObjLoader.h">
       <Filter>Source Files\Graphics</Filter>
+	</ClInclude>
+    <ClInclude Include="Configs.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

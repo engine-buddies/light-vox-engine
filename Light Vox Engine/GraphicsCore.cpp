@@ -1,16 +1,13 @@
 #include "GraphicsCore.h"
 #include "FrameResource.h"
+#include "Camera.h"
 
 //needed for 'right now'
 #include "ObjLoader.h"
 
 using namespace Microsoft::WRL;
 
-UINT GraphicsCore::rtvDescriptorSize = 0;
-UINT count = 0;
-
-
-GraphicsCore::GraphicsCore(HWND hWindow, UINT windowW, UINT windowH)
+GraphicsCore::GraphicsCore(HWND hWindow, UINT windowW, UINT windowH)            
 {
 	this->hWindow = hWindow;
 	windowWidth = windowW;
@@ -18,30 +15,30 @@ GraphicsCore::GraphicsCore(HWND hWindow, UINT windowW, UINT windowH)
 	fenceValue = 0;
 	frameIndex = 0;
 	currentFrameResource = nullptr;
-	camera = Camera();
+    camera = new Camera();
 }
 
 GraphicsCore::~GraphicsCore()
 {
+    delete camera;
 }
 
 void GraphicsCore::OnResize(UINT width, UINT height)
 {
-
+    //TODO - recreate scssisor rectangle, viewport, and back buffers
 }
 
 HRESULT GraphicsCore::Init()
 {
-	//initializes everything
 	ThrowIfFailed(InitDeviceCommandQueueSwapChain());
 	ThrowIfFailed(InitRootSignature());
 	ThrowIfFailed(InitPSO());
 	ThrowIfFailed(InitRTV());
 	ThrowIfFailed(InitDepthStencil());
 	ThrowIfFailed(InitViewportScissorRectangle());
-	ThrowIfFailed(InitInputShaderRsources());
+	ThrowIfFailed(InitInputShaderResources());
 	ThrowIfFailed(InitFrameResources());
-	ThrowIfFailed(InitSyncObjects());
+	ThrowIfFailed(InitSynchronizationObjects());
 
 	return S_OK;
 }
@@ -61,21 +58,24 @@ void GraphicsCore::Update()
 		if (eventHandle == nullptr)
 			ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 
-		ThrowIfFailed(fence->SetEventOnCompletion(currentFrameResource->fenceValue, eventHandle));
+		ThrowIfFailed(fence->SetEventOnCompletion(
+            currentFrameResource->fenceValue, 
+            eventHandle)
+        );
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
 
-	DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, 0.f);
+	DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -2.f);
 	DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
 	DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
-	camera.SetTransform(
+	camera->SetTransform(
 		DirectX::XMLoadFloat3(&pos),
 		DirectX::XMLoadFloat3(&forward),
 		DirectX::XMLoadFloat3(&up)
 	);
 
-	currentFrameResource->WriteConstantBuffers(&viewport, &camera);
+	currentFrameResource->WriteConstantBuffers(&viewport, camera);
 
 }
 
@@ -87,8 +87,14 @@ void GraphicsCore::Render()
 	ID3D12GraphicsCommandList* pSceneCommandList = currentFrameResource->sceneCommandLists[0].Get();
 
 	SetCommonPipelineState(pSceneCommandList);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+        rtvHeap->GetCPUDescriptorHandleForHeapStart(), 
+        frameIndex, 
+        rtvDescriptorSize
+    );
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
+        dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
 	currentFrameResource->Bind(pSceneCommandList, TRUE, &rtvHandle, &dsvHandle);
 
 	PIXBeginEvent(pSceneCommandList, 0, L"Worker drawing scene pass...");
@@ -97,7 +103,7 @@ void GraphicsCore::Render()
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	const UINT nullSrvCount = 2;
 
-	pSceneCommandList->DrawIndexedInstanced(count, 1, 0, 0, 0);
+	pSceneCommandList->DrawIndexedInstanced(verticesCount, 1, 0, 0, 0);
 
 	PIXEndEvent(pSceneCommandList);
 	ThrowIfFailed(pSceneCommandList->Close());
@@ -150,6 +156,8 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 			IID_PPV_ARGS(&device)
 		));
 	}
+    NAME_D3D12_OBJECT(device);
+
 
 	//describe the main queue
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -158,9 +166,7 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 
 	//create it
 	ThrowIfFailed(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)));
-
-	//create command allocator
-	ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
+    NAME_D3D12_OBJECT(commandQueue);
 
 	//describe the swap chain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { };
@@ -192,7 +198,10 @@ inline HRESULT GraphicsCore::InitRootSignature()
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = { };
 	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
 
-	if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+	if (FAILED(device->CheckFeatureSupport(
+        D3D12_FEATURE_ROOT_SIGNATURE, 
+        &featureData, 
+        sizeof(featureData))))
 	{
 		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 	}
@@ -202,12 +211,30 @@ inline HRESULT GraphicsCore::InitRootSignature()
 	CD3DX12_ROOT_PARAMETER1		rootParameters[2];
 
 	//diffuse + normal SRV
-	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-	rootParameters[0].InitAsDescriptorTable(1, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	descriptorRanges[0].Init(
+        D3D12_DESCRIPTOR_RANGE_TYPE_SRV,            //type of descriptor
+        2,                                          //number of descriptors
+        1,                                          //base shader register
+        0,                                          //space in register
+        D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC     //data flag
+    );
+	rootParameters[0].InitAsDescriptorTable(
+        1,                              //number of descriptor ranges
+        &descriptorRanges[0],           //address
+        D3D12_SHADER_VISIBILITY_PIXEL   //what it's visible to
+    );
 
 	//constant buffer
-	descriptorRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-	rootParameters[1].InitAsDescriptorTable(1, &descriptorRanges[1], D3D12_SHADER_VISIBILITY_ALL);
+	descriptorRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 
+        1, 
+        0, 
+        0, 
+        D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC
+    );
+	rootParameters[1].InitAsDescriptorTable(1, 
+        &descriptorRanges[1], 
+        D3D12_SHADER_VISIBILITY_ALL
+    );
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init_1_1(
@@ -221,8 +248,20 @@ inline HRESULT GraphicsCore::InitRootSignature()
 	ComPtr<ID3DBlob> signature;
 	ComPtr<ID3DBlob> error;
 
-	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
-	ThrowIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
+	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(
+        &rootSignatureDesc, 
+        featureData.HighestVersion, 
+        &signature, 
+        &error
+    ));
+	ThrowIfFailed(device->CreateRootSignature(
+        0, 
+        signature->GetBufferPointer(), 
+        signature->GetBufferSize(), 
+        IID_PPV_ARGS(&rootSignature)
+    ));
+    NAME_D3D12_OBJECT(rootSignature);
+
 
 	return S_OK;
 }
@@ -235,22 +274,50 @@ inline HRESULT GraphicsCore::InitPSO()
 	D3DReadFileToBlob(L"Assets/Shaders/vs_basic.cso", &vs);
 	D3DReadFileToBlob(L"Assets/Shaders/ps_basic.cso", &ps);
 
+    //input from our vertices
 	D3D12_INPUT_ELEMENT_DESC vertexInputDescription[] = {
-		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 12,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ 
+            "POSITION",                                     //semantic name                         
+            0,                                              //semantic index
+            DXGI_FORMAT_R32G32B32_FLOAT,                    //format of data
+            0,                                              //input slot
+            0,                                              //the offset
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,     //input classification
+            0                                               //istance rate
+        },
+		{ 
+            "TEXCOORD", 
+            0, 
+            DXGI_FORMAT_R32G32_FLOAT,    
+            0, 
+            12, 
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 
+            0 
+        },
+        { 
+            "NORMAL",    
+            0, 
+            DXGI_FORMAT_R32G32B32_FLOAT, 
+            0, 
+            20, 
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 
+            0 
+        },
 	};
 
+    //build the input layout
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
 	inputLayoutDescription.pInputElementDescs = vertexInputDescription;
 	inputLayoutDescription.NumElements = _countof(vertexInputDescription);
 
+    //build out our depth stencil description
 	CD3DX12_DEPTH_STENCIL_DESC1 depthStencilDesc(D3D12_DEFAULT);
 	depthStencilDesc.DepthEnable = true;
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	depthStencilDesc.StencilEnable = FALSE;
 
+    //describe our PSO
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { };
 	psoDesc.InputLayout = inputLayoutDescription;
 	psoDesc.pRootSignature = rootSignature.Get();
@@ -266,7 +333,12 @@ inline HRESULT GraphicsCore::InitPSO()
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.SampleDesc.Count = 1;
 
-	ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)));
+    //create our PSO
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+        &psoDesc, 
+        IID_PPV_ARGS(&pso)
+    ));
+    NAME_D3D12_OBJECT(pso);
 
 	return S_OK;
 }
@@ -278,19 +350,24 @@ inline HRESULT GraphicsCore::InitRTV()
 	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
+	ThrowIfFailed(device->CreateDescriptorHeap(
+        &rtvHeapDesc, 
+        IID_PPV_ARGS(&rtvHeap)
+    ));
+    NAME_D3D12_OBJECT(rtvHeap);
 
 	rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	// Create frame resources.
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
-	// Create a RTV for each frame.
+	// Create an RTV for each frame.
 	for (UINT n = 0; n < LV_FRAME_COUNT; n++)
 	{
 		ThrowIfFailed(swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
 		device->CreateRenderTargetView(renderTargets[n].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, rtvDescriptorSize);
+        NAME_D3D12_OBJECT_INDEXED(renderTargets, n);
 	}
 	return S_OK;
 }
@@ -302,7 +379,11 @@ inline HRESULT GraphicsCore::InitDepthStencil()
 	dsvHeapDescriptor.NumDescriptors = 1;
 	dsvHeapDescriptor.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDescriptor.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	ThrowIfFailed(device->CreateDescriptorHeap(&dsvHeapDescriptor, IID_PPV_ARGS(&dsvHeap)));
+	ThrowIfFailed(device->CreateDescriptorHeap(
+        &dsvHeapDescriptor, 
+        IID_PPV_ARGS(&dsvHeap)
+    ));
+    NAME_D3D12_OBJECT(dsvHeap);
 
 	//describe the depth stencil view
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = { };
@@ -320,12 +401,26 @@ inline HRESULT GraphicsCore::InitDepthStencil()
 	ThrowIfFailed(device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, windowWidth, windowHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+		&CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_D32_FLOAT, 
+            windowWidth, 
+            windowHeight, 
+            1, 
+            0, 
+            1, 
+            0, 
+            D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+        ),
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&depthOptimizedClearValue,
 		IID_PPV_ARGS(&depthStencilView)
 	));
-	device->CreateDepthStencilView(depthStencilView.Get(), &depthStencilDesc, dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
+	device->CreateDepthStencilView(
+        depthStencilView.Get(),
+        &depthStencilDesc, 
+        dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
 	NAME_D3D12_OBJECT(depthStencilView);
 
 	return S_OK;
@@ -352,38 +447,30 @@ inline HRESULT GraphicsCore::InitViewportScissorRectangle()
 	return S_OK;
 }
 
-
-inline HRESULT GraphicsCore::InitInputShaderRsources()
+inline HRESULT GraphicsCore::InitInputShaderResources()
 {
+    //create command allocator
+    ComPtr<ID3D12CommandAllocator> commandAllocator;
+    ThrowIfFailed(device->CreateCommandAllocator(
+        D3D12_COMMAND_LIST_TYPE_DIRECT, 
+        IID_PPV_ARGS(&commandAllocator)
+    ));
+    NAME_D3D12_OBJECT(commandAllocator);
+
+    //create a command list
 	ComPtr<ID3D12GraphicsCommandList> commandList;
-	ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), pso.Get(), IID_PPV_ARGS(&commandList)));
+	ThrowIfFailed(device->CreateCommandList(
+        0, 
+        D3D12_COMMAND_LIST_TYPE_DIRECT, 
+        commandAllocator.Get(), 
+        pso.Get(), 
+        IID_PPV_ARGS(&commandList)
+    ));
+    NAME_D3D12_OBJECT(commandList);
 
 	std::vector<Vertex>* vertices = new std::vector<Vertex>();
 	std::vector<uint16_t>* indices = new std::vector<uint16_t>();
-	//ObjLoader::LoadObj(vertices, indices, "Assets/Models/sphere.obj");
-	ObjLoader::LoadObj(vertices, indices, "Assets/Models/bus.obj");
-	/*Vertex v1 = { };
-	v1.position = DirectX::XMFLOAT3(-0.5f, 0.f, 0.f);
-	v1.uv = DirectX::XMFLOAT2(-0.5f, 1.f);
-	v1.normal = DirectX::XMFLOAT3(-0.5f, 1.f, 0.f);
-
-	Vertex v2 = { };
-	v2.position = DirectX::XMFLOAT3(0.f, 0.5f, 0.f);
-	v2.uv = DirectX::XMFLOAT2(-0.5f, 1.f);
-	v2.normal = DirectX::XMFLOAT3(-0.5f, 1.f, 0.f);
-
-	Vertex v3 = { };
-	v3.position = DirectX::XMFLOAT3(0.5f, 0.f, 0.f);
-	v3.uv = DirectX::XMFLOAT2(-0.5f, 1.f);
-	v3.normal = DirectX::XMFLOAT3(-0.5f, 1.f, 0.f);
-	
-	vertices->push_back(v1);
-	vertices->push_back(v2);
-	vertices->push_back(v3);
-
-	indices->push_back(0);
-	indices->push_back(1);
-	indices->push_back(2);*/
+	ObjLoader::LoadObj(vertices, indices, "Assets/Models/voxel.obj");
 
 	//make vertex buffer for 'n' floats
 	UINT vertexDataSize = vertices->size() * sizeof(Vertex);
@@ -392,7 +479,7 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 	UINT indexDataSize = indices->size() * sizeof(uint16_t); 
 	UINT indexDataOffset = 0;
 
-	count = indices->size();
+    verticesCount = indices->size();
 	
 	//vertex buffer
 	{
@@ -425,10 +512,22 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 
 		//this looks like it's pre-emptively loading all the static geometry 
 		PIXBeginEvent(commandList.Get(), 0, L"Copy vertex buffer to default resource");
-		UpdateSubresources<1>(commandList.Get(), vertexBuffer.Get(), vertexBufferUpload.Get(), 0, 0, 1, &vertexData);
+		UpdateSubresources<1>(
+            commandList.Get(), 
+            vertexBuffer.Get(), 
+            vertexBufferUpload.Get(), 
+            0, 
+            0, 
+            1, 
+            &vertexData
+        );
 		commandList->ResourceBarrier(
 			1,
-			&CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+			&CD3DX12_RESOURCE_BARRIER::Transition(
+                vertexBuffer.Get(), 
+                D3D12_RESOURCE_STATE_COPY_DEST, 
+                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            )
 		);
 		PIXEndEvent(commandList.Get());
 
@@ -469,10 +568,22 @@ inline HRESULT GraphicsCore::InitInputShaderRsources()
 
 		//this looks like it's pre-emptively loading all the static geometry 
 		PIXBeginEvent(commandList.Get(), 0, L"Copy index buffer to default resource");
-		UpdateSubresources<1>(commandList.Get(), indexBuffer.Get(), indexBufferUpload.Get(), 0, 0, 1, &indexData);
+		UpdateSubresources<1>(
+            commandList.Get(), 
+            indexBuffer.Get(), 
+            indexBufferUpload.Get(), 
+            0, 
+            0, 
+            1, 
+            &indexData
+        );
 		commandList->ResourceBarrier(
 			1,
-			&CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+			&CD3DX12_RESOURCE_BARRIER::Transition(
+                indexBuffer.Get(), 
+                D3D12_RESOURCE_STATE_COPY_DEST, 
+                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            )
 		);
 		PIXEndEvent(commandList.Get());
 
@@ -532,8 +643,15 @@ inline HRESULT GraphicsCore::InitFrameResources()
 {
 	for (int i = 0; i < LV_FRAME_COUNT; i++)
 	{
-		frameResources[i] = new FrameResource(device.Get(), pso.Get(), dsvHeap.Get(), cbvSrvHeap.Get(), &viewport, i);
-		frameResources[i]->WriteConstantBuffers(&viewport, &camera);
+		frameResources[i] = new FrameResource(
+            device.Get(), 
+            pso.Get(), 
+            dsvHeap.Get(), 
+            cbvSrvHeap.Get(), 
+            &viewport, 
+            i
+        );
+		frameResources[i]->WriteConstantBuffers(&viewport, camera);
 	}
 
 	currentFrameResourceIndex = 0;
@@ -542,9 +660,13 @@ inline HRESULT GraphicsCore::InitFrameResources()
 	return S_OK;
 }
 
-inline HRESULT GraphicsCore::InitSyncObjects()
+inline HRESULT GraphicsCore::InitSynchronizationObjects()
 {
-	ThrowIfFailed(device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+	ThrowIfFailed(device->CreateFence(
+        fenceValue, 
+        D3D12_FENCE_FLAG_NONE, 
+        IID_PPV_ARGS(&fence)
+    ));
 	fenceValue++;
 
 	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -568,16 +690,36 @@ inline void GraphicsCore::BeginFrame()
 	//transition back buffer to be used as render target
 	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ResourceBarrier(
 		1,
-		&CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)
+		&CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargets[frameIndex].Get(), 
+            D3D12_RESOURCE_STATE_PRESENT, 
+            D3D12_RESOURCE_STATE_RENDER_TARGET
+        )
 	);
 
 	//clear back buffer with c o r n f l o w e r   b l u e
 	const float clearColor[] = { 0.392f, 0.584f, 0.929f, 1.0f };
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
-	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+        rtvHeap->GetCPUDescriptorHandleForHeapStart(),
+        frameIndex, 
+        rtvDescriptorSize
+    );
+	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ClearRenderTargetView(
+        rtvHandle, 
+        clearColor, 
+        0, 
+        nullptr
+    );
 
 	//clear depth buffer
-	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ClearDepthStencilView(dsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->ClearDepthStencilView(
+        dsvHeap->GetCPUDescriptorHandleForHeapStart(), 
+        D3D12_CLEAR_FLAG_DEPTH, 
+        1.0f, 
+        0, 
+        0, 
+        nullptr
+    );
 
 	//close the 'pre' command list
 	ThrowIfFailed(currentFrameResource->commandLists[LV_COMMAND_LIST_PRE]->Close());
@@ -594,7 +736,11 @@ inline void GraphicsCore::EndFrame()
 	currentFrameResource->Finish();
 	currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->ResourceBarrier(
 		1, 
-		&CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT)
+		&CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargets[frameIndex].Get(),
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT
+        )
 	);
 	ThrowIfFailed(currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->Close());
 }

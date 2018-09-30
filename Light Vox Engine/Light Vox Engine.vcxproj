@@ -235,6 +235,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Configs.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DXSampleHelper.h" />
     <ClInclude Include="Engine.h" />
