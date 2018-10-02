@@ -89,7 +89,7 @@ HRESULT Engine::InitSystems()
 {
 	InitWindow();
 	graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
-    time = Time::GetInstance();
+    time = GameTime::GetInstance();
 
 	ThrowIfFailed(graphics->Init());
     time->Init();

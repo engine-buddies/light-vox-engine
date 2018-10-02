@@ -1,12 +1,12 @@
 #pragma once
 #include <Windows.h>
-class Time
+class GameTime
 {
 public:
 	/// <summary>
 	/// Gets singleton object of time
 	/// </summary>
-	static Time* GetInstance();
+	static GameTime* GetInstance();
 	/// <summary>
 	/// Releases singleton object of time
 	/// </summary>
@@ -20,23 +20,23 @@ public:
 	/// </summary>
 	void UpdateTimer();
 	/// <summary>
-	/// Get total time since starting 
+	/// return total time (time since starting program) as double 
 	/// </summary>
-	float getTotalTimeFloat();
+    double getTotalTime();
 	/// <summary>
-	/// Get delta time 
+	/// Return delta time as double
 	/// </summary>
-	float getDeltaTimeFloat();
+	double getDeltaTime();
 
 private:
-	static Time* instance;
+	static GameTime* instance;
 
 	__int64 startTime;
 	__int64 currentTime;
 	__int64 previousTime;
 
-	float totalTime;
-	float deltaTime;
+	double totalTime;
+	double deltaTime;
 	double perfCounterSeconds;
 
 };

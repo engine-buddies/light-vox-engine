@@ -1,37 +1,37 @@
-#include "Time.h"
+#include "GameTime.h"
 
-Time* Time::instance = nullptr;
+GameTime* GameTime::instance = nullptr;
 
-Time * Time::GetInstance()
+GameTime* GameTime::GetInstance()
 {
 	if (instance == nullptr)
-		instance = new Time();
+		instance = new GameTime();
 
 	return instance;
 }
 
-void Time::ReleaseInstance()
+void GameTime::ReleaseInstance()
 {
-	if(instance != nullptr)
+	if (instance != nullptr)
 		delete instance;
 }
 
-void Time::UpdateTimer()
+void GameTime::UpdateTimer()
 {
 	__int64 now;
 	QueryPerformanceCounter((LARGE_INTEGER*)&now);
-	currentTime = now;
+	currentTime = (double)now;
 
 	//Calc delta time and clamp to zero
 	//Could go negitive if CPU goes into power saver mode
-	//of the process itself gets moves to another core
-	deltaTime = max((float)((currentTime - previousTime) * perfCounterSeconds), 0.0f);
-	totalTime = (float)((currentTime - startTime) * perfCounterSeconds);
+	//or the process itself gets moves to another core
+	deltaTime = max(((currentTime - previousTime) * perfCounterSeconds), 0.0f);
+	totalTime = ((currentTime - startTime) * perfCounterSeconds);
 
 	previousTime = currentTime;
 }
 
-void Time::Init()
+void GameTime::Init()
 {
 	//Query preformance counter for accurate timing information
 	__int64 perfFreq;
@@ -45,12 +45,12 @@ void Time::Init()
 	previousTime = now;
 }
 
-float Time::getTotalTimeFloat()
+double GameTime::getTotalTime()
 {
 	return totalTime;
 }
 
-float Time::getDeltaTimeFloat()
+double GameTime::getDeltaTime()
 {
     return deltaTime;
 }
