@@ -24,6 +24,9 @@ Engine::~Engine()
 {
     time->ReleaseInstance();
 	delete graphics;
+
+    // Releases the instance of the entity manager
+    EntityManager::ReleaseInstance();
 }
 
 HRESULT Engine::InitWindow()
@@ -90,6 +93,11 @@ HRESULT Engine::InitSystems()
 	InitWindow();
 	graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
     time = GameTime::GetInstance();
+
+    // Calling get instance will create the entity manager
+    EntityManager* enMan = EntityManager::GetInstance();
+    enMan->Init();
+    enMan = nullptr;
 
 	ThrowIfFailed(graphics->Init());
     time->Init();
