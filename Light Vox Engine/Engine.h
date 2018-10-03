@@ -1,7 +1,9 @@
 #pragma once
 #include <Windows.h>
 #include "GraphicsCore.h"
+#include "GameTime.h"
 #include "EntityManager.h"
+
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -38,6 +40,7 @@ private:
 
 	GraphicsCore* graphics;
     Camera* camera;
+    GameTime* time;
 
 	HRESULT InitWindow();
 

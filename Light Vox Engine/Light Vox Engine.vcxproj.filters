@@ -38,6 +38,9 @@
     <ClCompile Include="EntityManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameTime.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GraphicsCore.h">
@@ -72,6 +75,9 @@
     </ClInclude>
     <ClInclude Include="EntityManager.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameTime.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

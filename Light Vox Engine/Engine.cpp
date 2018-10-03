@@ -25,6 +25,7 @@ Engine::Engine(HINSTANCE hInstance)
 
 Engine::~Engine()
 {
+    time->ReleaseInstance();
 	delete graphics;
     delete camera;
 
@@ -95,6 +96,7 @@ HRESULT Engine::InitSystems()
 {
 	InitWindow();
 	graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
+    time = GameTime::GetInstance();
 
     // Calling get instance will create the entity manager
     EntityManager* enMan = EntityManager::GetInstance();
@@ -102,6 +104,8 @@ HRESULT Engine::InitSystems()
     enMan = nullptr;
 
 	ThrowIfFailed(graphics->Init());
+    time->Init();
+
 	return S_OK;
 }
 
@@ -140,6 +144,7 @@ HRESULT Engine::Run()
 
 			graphics->Update(transforms, camera);
 			graphics->Render();
+            time->UpdateTimer();
 		}
 	}
 
