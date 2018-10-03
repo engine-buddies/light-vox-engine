@@ -45,12 +45,12 @@ void GameTime::Init()
 	previousTime = now;
 }
 
-double GameTime::getTotalTime()
+double GameTime::GetTotalTime()
 {
 	return totalTime;
 }
 
-double GameTime::getDeltaTime()
+double GameTime::GetDeltaTime()
 {
     return deltaTime;
 }

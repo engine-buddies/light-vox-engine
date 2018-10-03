@@ -22,11 +22,11 @@ public:
 	/// <summary>
 	/// return total time (time since starting program) as double 
 	/// </summary>
-    double getTotalTime();
+    double GetTotalTime();
 	/// <summary>
 	/// Return delta time as double
 	/// </summary>
-	double getDeltaTime();
+	double GetDeltaTime();
 
 private:
 	static GameTime* instance;
