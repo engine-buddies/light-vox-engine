@@ -1,0 +1,43 @@
+#pragma once
+#include <Windows.h>
+class GameTime
+{
+public:
+	/// <summary>
+	/// Gets singleton object of time
+	/// </summary>
+	static GameTime* GetInstance();
+	/// <summary>
+	/// Releases singleton object of time
+	/// </summary>
+	void ReleaseInstance();
+	/// <summary>
+	/// Intializes preformance counter, current time, previous time
+	/// </summary>
+	void Init();
+	/// <summary>
+	/// Updates the time 
+	/// </summary>
+	void UpdateTimer();
+	/// <summary>
+	/// return total time (time since starting program) as double 
+	/// </summary>
+    double GetTotalTime();
+	/// <summary>
+	/// Return delta time as double
+	/// </summary>
+	double GetDeltaTime();
+
+private:
+	static GameTime* instance;
+
+	double startTime;
+	double currentTime;
+	double previousTime;
+
+	double totalTime;
+	double deltaTime;
+	double perfCounterSeconds;
+
+};
+
