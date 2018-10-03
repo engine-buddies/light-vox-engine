@@ -31,9 +31,9 @@ public:
 private:
 	static GameTime* instance;
 
-	__int64 startTime;
-	__int64 currentTime;
-	__int64 previousTime;
+	double startTime;
+	double currentTime;
+	double previousTime;
 
 	double totalTime;
 	double deltaTime;

@@ -32,10 +32,11 @@
     <ClCompile Include="FrameResource.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="GameTime.cpp">
-      <Filter>Source Files\Utils</Filter>
     <ClCompile Include="EntityManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameTime.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -66,10 +67,11 @@
     <ClInclude Include="Configs.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="GameTime.h">
-      <Filter>Source Files\Utils</Filter>
     <ClInclude Include="EntityManager.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameTime.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
