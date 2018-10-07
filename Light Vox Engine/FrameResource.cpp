@@ -3,6 +3,8 @@
 
 using namespace DirectX;
 
+#define MAX_INSTANCE_COUNT 100;
+
 FrameResource::FrameResource(
     ID3D12Device * device, 
     ID3D12PipelineState * pso, 
@@ -11,6 +13,7 @@ FrameResource::FrameResource(
     D3D12_VIEWPORT * viewport, 
     UINT frameResourceIndex)
 {
+    instanceBufferWO = new InstanceBuffer[100];
 	fenceValue = 0;
 	this->pso = pso;
 
@@ -50,21 +53,39 @@ FrameResource::FrameResource(
 		ThrowIfFailed(sceneCommandLists[i]->Close());
 	}
 
+    CD3DX12_RANGE zeroReadRange(0, 0);
+
+    //create the upload buffer for instance data
+    ThrowIfFailed(device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(sizeof(InstanceBuffer) * 100),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&instanceUploadBuffer)
+    ));;
+
+    // map it to a WO struct buffer thing
+    ThrowIfFailed(instanceUploadBuffer->Map(0,
+        nullptr,
+        reinterpret_cast<void**>(&instanceBufferWO)
+    ));
+
     // Null descriptors at the start of the heap (used for shadows)
-	const UINT nullSrvCount = 2;			
-	const UINT textureCount = 0;
+	const UINT nullSrvCount = 0;			
+    const UINT textureCount = 0;
+    const UINT cbvCount     = 1;
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//get handle to the cbv heap
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvCpuHandle(cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle(cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
-	nullSrvHandle = cbvSrvGpuHandle;
 	cbvSrvCpuHandle.Offset(
-        nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), 
+        (frameResourceIndex * (textureCount)) + nullSrvCount,
         cbvSrvDescriptorSize
     );
 	cbvSrvGpuHandle.Offset(
-        nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), 
+        (frameResourceIndex * (textureCount)) + nullSrvCount,
         cbvSrvDescriptorSize
     );
 
@@ -82,9 +103,8 @@ FrameResource::FrameResource(
     );
 
 	// Map the constant buffers and cache their heap pointers.
-	CD3DX12_RANGE readRange(0, 0);		// We do not intend to read from this resource on the CPU.
 	ThrowIfFailed(sceneConstantBuffer->Map(0, 
-        &readRange, 
+        &zeroReadRange,
         reinterpret_cast<void**>(&sceneConstantBufferWO)
         )
     );
@@ -132,7 +152,9 @@ void FrameResource::Bind(
 )
 {
 	//set-up before rendering
-	commandList->SetGraphicsRootDescriptorTable(1, sceneCbvHandle);
+    commandList->SetGraphicsRootShaderResourceView(0, instanceUploadBuffer->GetGPUVirtualAddress());
+    commandList->SetGraphicsRootDescriptorTable(2, sceneCbvHandle);
+    //commandList->SetGraphicsRootDescriptorTable(1, sceneCbvHandle);
 	commandList->OMSetRenderTargets(1, rtvHandle, FALSE, dsvHandle);
 }
 
@@ -175,15 +197,17 @@ void FrameResource::WriteConstantBuffers(
     Camera * camera)
 {
 	SceneConstantBuffer sceneConsts = {};
-
-    sceneConsts.model = transforms[0];
-
 	camera->GetViewProjMatrix(
         &sceneConsts.view, 
         &sceneConsts.projection, 
         viewport->Width,
         viewport->Height
     );
+
+    for (int i = 0; i < 100; i++)
+    {
+        instanceBufferWO[i].model = transforms[i];
+    }
 
 	//copy over
 	memcpy(sceneConstantBufferWO, &sceneConsts, sizeof(SceneConstantBuffer));

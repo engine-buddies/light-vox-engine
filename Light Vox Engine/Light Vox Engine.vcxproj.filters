@@ -69,7 +69,7 @@
     </ClInclude>
     <ClInclude Include="ObjLoader.h">
       <Filter>Source Files\Graphics</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="Configs.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
@@ -78,6 +78,9 @@
     </ClInclude>
     <ClInclude Include="GameTime.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="PipelineDefinitions.h">
+      <Filter>Source Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

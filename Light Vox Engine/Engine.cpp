@@ -122,18 +122,33 @@ HRESULT Engine::Run()
 		else
 		{
             //DEBUG CODE for basic transform update;
-            DirectX::XMFLOAT4X4 transforms[1];
-            static float r = 0;
-            DirectX::XMFLOAT3 vecUp = DirectX::XMFLOAT3(0, 1, 0);
-            DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixRotationAxis(
-                DirectX::XMLoadFloat3(&vecUp),
-                r
-            );
-            r += 0.01f;
-            DirectX::XMStoreFloat4x4(transforms + 0, transformMatrix);
+            static DirectX::XMFLOAT4X4 transforms[100];
+            static bool init = false;
+            if (!init)
+            {
+                float x = -10;
+                float y = -10;
+                float z = 0;
+                for (int i = 0; i < 10; i++)
+                {
+                    for (int j = 0; j < 10; j++)
+                    {
+                        DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation(x, y , z);
+                        DirectX::XMStoreFloat4x4(transforms + i * 10 + j, DirectX::XMMatrixTranspose(transformMatrix));
+
+                        x += 2;
+                    }
+                    
+                    y += 2;
+                    x = -10;
+                }
+
+                init = true;
+            }
+
 
             //DEBUG CODE for basic camera update
-            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -2.f);
+            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -10.f);
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
             DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
             camera->SetTransform(

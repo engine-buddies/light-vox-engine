@@ -246,6 +246,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="GraphicsCore.h" />
     <ClInclude Include="LVutils.h" />
     <ClInclude Include="ObjLoader.h" />
+    <ClInclude Include="PipelineDefinitions.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="GameTime.h" />
   </ItemGroup>
@@ -261,6 +262,8 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">VSMain</EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.1</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

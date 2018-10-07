@@ -92,7 +92,7 @@ void GraphicsCore::Render()
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	const UINT nullSrvCount = 2;
 
-	pSceneCommandList->DrawIndexedInstanced(verticesCount, 1, 0, 0, 0);
+	pSceneCommandList->DrawIndexedInstanced(verticesCount, 100, 0, 0, 0);
 
 	PIXEndEvent(pSceneCommandList);
 	ThrowIfFailed(pSceneCommandList->Close());
@@ -197,30 +197,35 @@ inline HRESULT GraphicsCore::InitRootSignature()
 
 	//this should be ordered from most to least frequent
 	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[2];
-	CD3DX12_ROOT_PARAMETER1		rootParameters[2];
+	CD3DX12_ROOT_PARAMETER1		rootParameters[3];
 
-	//diffuse + normal SRV
-	descriptorRanges[0].Init(
+    rootParameters[0].InitAsShaderResourceView(
+        0,                              //register
+        1
+    );
+
+    //diffuse + normal SRV
+    descriptorRanges[0].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SRV,            //type of descriptor
         2,                                          //number of descriptors
         1,                                          //base shader register
         0,                                          //space in register
         D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC     //data flag
     );
-	rootParameters[0].InitAsDescriptorTable(
+	rootParameters[1].InitAsDescriptorTable(
         1,                              //number of descriptor ranges
         &descriptorRanges[0],           //address
         D3D12_SHADER_VISIBILITY_PIXEL   //what it's visible to
     );
 
 	//constant buffer
-	descriptorRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 
-        1, 
-        0, 
-        0, 
+    descriptorRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
+        1,
+        0,
+        0,
         D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC
     );
-	rootParameters[1].InitAsDescriptorTable(1, 
+	rootParameters[2].InitAsDescriptorTable(1, 
         &descriptorRanges[1], 
         D3D12_SHADER_VISIBILITY_ALL
     );
@@ -274,24 +279,24 @@ inline HRESULT GraphicsCore::InitPSO()
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,     //input classification
             0                                               //istance rate
         },
-		{ 
-            "TEXCOORD", 
-            0, 
-            DXGI_FORMAT_R32G32_FLOAT,    
-            0, 
-            12, 
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 
-            0 
-        },
         { 
             "NORMAL",    
             0, 
             DXGI_FORMAT_R32G32B32_FLOAT, 
             0, 
-            20, 
+            12, 
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 
             0 
         },
+        {
+            "TEXCOORD",
+            0,
+            DXGI_FORMAT_R32G32_FLOAT,
+            0,
+            24,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        }
 	};
 
     //build the input layout
@@ -587,10 +592,11 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 
 	// Describe and create a shader resource view (SRV) and constant 
 	// buffer view (CBV) descriptor heap.  Heap layout: null views, 
-	// frame 1's constant buffer, frame 2's constant buffers, etc...
-	const UINT nullSrvCount = 2;		// Null descriptors are needed for out of bounds behavior reads.
-	const UINT cbvCount = LV_FRAME_COUNT * 2;
-	const UINT srvCount = 0; // _countof(SampleAssets::Textures) + (FrameCount * 1);
+	// frame 1's constant buffer, frame 1's SRVs,
+    // frame 2's constant buffers, frame 2's SRVs, etc...
+	const UINT nullSrvCount = 0;		// Null descriptors are needed for out of bounds behavior reads.
+	const UINT cbvCount = 1 * LV_FRAME_COUNT;
+	const UINT srvCount = 0 * LV_FRAME_COUNT; // _countof(SampleAssets::Textures) + (FrameCount * 1);
 	D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
 	cbvSrvHeapDesc.NumDescriptors = nullSrvCount + cbvCount + srvCount;
 	cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -600,7 +606,6 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle(cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
 
 	{
 		// Describe and create 2 null SRVs. Null descriptors are needed in order 
@@ -613,11 +618,11 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 		nullSrvDesc.Texture2D.MostDetailedMip = 0;
 		nullSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-		device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
-		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
-
-		device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
-		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+        for (unsigned int i = 0; i < nullSrvCount; ++i)
+        {
+		    device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
+		    cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+        }
 	}
 
 	//close the command list and transfer static data
@@ -746,9 +751,4 @@ inline void GraphicsCore::SetCommonPipelineState(ID3D12GraphicsCommandList * com
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 	commandList->IASetIndexBuffer(&indexBufferView);
 	commandList->OMSetStencilRef(0);
-
-	//D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = cbvSrvHeap->GetGPUDescriptorHandleForHeapStart();
-	//const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvHandle(cbvSrvHeapStart, 2, cbvSrvDescriptorSize);
-	//commandList->SetGraphicsRootDescriptorTable(0, cbvSrvHandle);
 }
