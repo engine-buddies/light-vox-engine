@@ -9,7 +9,8 @@ class Camera;
 struct SceneConstantBuffer
 {
 	DirectX::XMFLOAT4X4 model;
-	DirectX::XMFLOAT4X4 viewProj;
+	DirectX::XMFLOAT4X4 view;
+	DirectX::XMFLOAT4X4 projection;
 };
 
 /// <summary>
@@ -78,7 +79,11 @@ public:
     /// </summary>
     /// <param name="viewport">The viewport</param>
     /// <param name="camera">The camera of the scene</param>
-	void WriteConstantBuffers(D3D12_VIEWPORT* viewport, Camera* camera);
+	void WriteConstantBuffers(
+        DirectX::XMFLOAT4X4 transforms[],
+        D3D12_VIEWPORT* viewport, 
+        Camera* camera
+    );
 
 	//culmination of all of the command lists
 	ID3D12CommandList* batchedCommandList[1 + LV_COMMAND_LIST_COUNT];

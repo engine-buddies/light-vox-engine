@@ -170,25 +170,18 @@ void FrameResource::Finish()
 }
 
 void FrameResource::WriteConstantBuffers(
+    DirectX::XMFLOAT4X4 transforms[],
     D3D12_VIEWPORT * viewport, 
     Camera * camera)
 {
 	SceneConstantBuffer sceneConsts = {};
 
-	//for testing
-	/*
-	static float e = 0;
-	XMStoreFloat4x4(&sceneConsts.model, 
-		XMMatrixTranspose(XMMatrixRotationZ(e))
-	);
-	e += 0.01f;
-	*/
-	XMStoreFloat4x4(&sceneConsts.model, XMMatrixIdentity());
-	
-    camera->GetViewProjMatrix(
-        &sceneConsts.viewProj,
-        &sceneConsts.viewProj,
-        viewport->Width, 
+    sceneConsts.model = transforms[0];
+
+	camera->GetViewProjMatrix(
+        &sceneConsts.view, 
+        &sceneConsts.projection, 
+        viewport->Width,
         viewport->Height
     );
 

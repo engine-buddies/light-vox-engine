@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "stdafx.h"
+#include "Camera.h"
 
 #include <WindowsX.h>
 #if defined(_DEBUG)
@@ -14,16 +15,19 @@ Engine::Engine(HINSTANCE hInstance)
 {
 	this->hInstance = hInstance;
 	Engine::engineInstance = this;
-	windowWidth = 800;
-	windowHeight = 500;
+	windowWidth = 1280;
+	windowHeight = 720;
 	windowTitle = "STRUGGLE BUS";
 	hWindow = 0;
+    
+    camera = new Camera();
 }
 
 Engine::~Engine()
 {
     time->ReleaseInstance();
 	delete graphics;
+    delete camera;
 
     // Releases the instance of the entity manager
     EntityManager::ReleaseInstance();
@@ -117,7 +121,28 @@ HRESULT Engine::Run()
 		}
 		else
 		{
-			graphics->Update();
+            //DEBUG CODE for basic transform update;
+            DirectX::XMFLOAT4X4 transforms[1];
+            static float r = 0;
+            DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixRotationY(
+                r
+            );
+            r += 0.01f;
+
+            //store in the first transform index
+            DirectX::XMStoreFloat4x4(transforms + 0, transformMatrix);
+
+            //DEBUG CODE for basic camera update
+            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -2.f);
+            DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
+            DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
+            camera->SetTransform(
+                DirectX::XMLoadFloat3(&pos),
+                DirectX::XMLoadFloat3(&forward),
+                DirectX::XMLoadFloat3(&up)
+            );
+
+			graphics->Update(transforms, camera);
 			graphics->Render();
             time->UpdateTimer();
 		}

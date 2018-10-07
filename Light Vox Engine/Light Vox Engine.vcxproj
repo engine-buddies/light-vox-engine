@@ -98,7 +98,8 @@
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
-xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
+mkdir "$(SolutionDir)_Binary\Assets\Models\"
+copy "$(SolutionDir)Assets\Models" "$(SolutionDir)_Binary\Assets\Models\"
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
@@ -129,7 +130,8 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
-xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
+mkdir "$(SolutionDir)_Binary\Assets\Models\"
+copy "$(SolutionDir)Assets\Models" "$(SolutionDir)_Binary\Assets\Models\"
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
@@ -167,7 +169,8 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
-xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
+mkdir "$(SolutionDir)_Binary\Assets\Models\"
+copy "$(SolutionDir)Assets\Models" "$(SolutionDir)_Binary\Assets\Models\"
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
@@ -202,7 +205,8 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
-xcopy "$(SolutionDir)Assets\" "$(SolutionDir)_Binary\Assets\" /S /Y /E
+mkdir "$(SolutionDir)_Binary\Assets\Models\"
+copy "$(SolutionDir)Assets\Models" "$(SolutionDir)_Binary\Assets\Models\"
 mkdir "$(SolutionDir)_Binary\Assets\Shaders"
 for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Binary\Assets\Shaders\"</Command>
     </PostBuildEvent>
@@ -228,6 +232,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GraphicsCore.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="GameTime.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +246,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GraphicsCore.h" />
     <ClInclude Include="LVutils.h" />
+    <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="GameTime.h" />
   </ItemGroup>

@@ -39,6 +39,7 @@ private:
 	float windowHeight;
 
 	GraphicsCore* graphics;
+    Camera* camera;
     GameTime* time;
 
 	HRESULT InitWindow();
@@ -49,4 +50,3 @@ private:
 #endif
 
 };
-
