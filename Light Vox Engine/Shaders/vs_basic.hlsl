@@ -1,24 +1,12 @@
+//these #defines are used to selectively compile from PipelineDefinitions.h
 #define _SHADER
 #define _VSHADER
-#include "../PipelineDefinitions.h"
 
-struct PSInput
-{
-    float4 position : SV_POSITION;
-    float4 worldpos : POSITION;
-    float3 normal : NORMAL;
-    float2 uv : TEXCOORD0;
-};
+//contains all defitnitions for shader-to-shader and shader-to-CPU stuff
+#include "../ShaderDefinitions.h"
 
-struct VSInput
-{
-    float3 position : POSITION;
-    float3 normal : NORMAL;
-    float2 uv : TEXCOORD0;
-};
-
+//basically a SRV of instanced data
 StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);
-
 
 PSInput VSMain(
     VSInput vInput,
@@ -29,9 +17,9 @@ PSInput VSMain(
 
     //define position and world position
     float4 pos = float4(vInput.position, 1.0f);
-
-    pos = mul(pos, gInstanceData[instanceID].model);
-
+    float4x4 model = gInstanceData[instanceID].model;
+    
+    pos = mul(pos, model);
     result.worldpos = pos;
 
     //move to screen space
@@ -41,7 +29,6 @@ PSInput VSMain(
 
     //supply uv and normal
     result.uv = vInput.uv;
-    result.normal = mul(vInput.normal, (float3x3)gInstanceData[instanceID].model);
-
+    result.normal = mul(vInput.normal, (float3x3)model);
     return result;
 }

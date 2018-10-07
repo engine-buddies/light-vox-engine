@@ -1,6 +1,7 @@
 #include "GraphicsCore.h"
 #include "FrameResource.h"
 #include "Camera.h"
+#include "ShaderDefinitions.h"    //Utils for initialization
 
 //needed for 'right now'
 #include "ObjLoader.h"
@@ -92,7 +93,7 @@ void GraphicsCore::Render()
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	const UINT nullSrvCount = 2;
 
-	pSceneCommandList->DrawIndexedInstanced(verticesCount, 100, 0, 0, 0);
+	pSceneCommandList->DrawIndexedInstanced(verticesCount, LV_MAX_INSTANCE_COUNT, 0, 0, 0);
 
 	PIXEndEvent(pSceneCommandList);
 	ThrowIfFailed(pSceneCommandList->Close());
@@ -269,35 +270,8 @@ inline HRESULT GraphicsCore::InitPSO()
 	D3DReadFileToBlob(L"Assets/Shaders/ps_basic.cso", &ps);
 
     //input from our vertices
-	D3D12_INPUT_ELEMENT_DESC vertexInputDescription[] = {
-		{ 
-            "POSITION",                                     //semantic name                         
-            0,                                              //semantic index
-            DXGI_FORMAT_R32G32B32_FLOAT,                    //format of data
-            0,                                              //input slot
-            0,                                              //the offset
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,     //input classification
-            0                                               //istance rate
-        },
-        { 
-            "NORMAL",    
-            0, 
-            DXGI_FORMAT_R32G32B32_FLOAT, 
-            0, 
-            12, 
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 
-            0 
-        },
-        {
-            "TEXCOORD",
-            0,
-            DXGI_FORMAT_R32G32_FLOAT,
-            0,
-            24,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        }
-	};
+    D3D12_INPUT_ELEMENT_DESC vertexInputDescription[3];
+    ShaderDefinitions::SetInputLayout(vertexInputDescription);
 
     //build the input layout
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;

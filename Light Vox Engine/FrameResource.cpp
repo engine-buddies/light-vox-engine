@@ -3,8 +3,6 @@
 
 using namespace DirectX;
 
-#define MAX_INSTANCE_COUNT 100;
-
 FrameResource::FrameResource(
     ID3D12Device * device, 
     ID3D12PipelineState * pso, 
@@ -13,7 +11,7 @@ FrameResource::FrameResource(
     D3D12_VIEWPORT * viewport, 
     UINT frameResourceIndex)
 {
-    instanceBufferWO = new InstanceBuffer[100];
+    instanceBufferWO = new InstanceBuffer[LV_MAX_INSTANCE_COUNT];
 	fenceValue = 0;
 	this->pso = pso;
 
@@ -59,7 +57,7 @@ FrameResource::FrameResource(
     ThrowIfFailed(device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(sizeof(InstanceBuffer) * 100),
+        &CD3DX12_RESOURCE_DESC::Buffer(sizeof(InstanceBuffer) * LV_MAX_INSTANCE_COUNT),
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&instanceUploadBuffer)
@@ -67,7 +65,7 @@ FrameResource::FrameResource(
 
     // map it to a WO struct buffer thing
     ThrowIfFailed(instanceUploadBuffer->Map(0,
-        nullptr,
+        &zeroReadRange,
         reinterpret_cast<void**>(&instanceBufferWO)
     ));
 
@@ -204,7 +202,7 @@ void FrameResource::WriteConstantBuffers(
         viewport->Height
     );
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; i++)
     {
         instanceBufferWO[i].model = transforms[i];
     }

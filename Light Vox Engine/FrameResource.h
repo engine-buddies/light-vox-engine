@@ -1,12 +1,8 @@
 #pragma once
 #include "stdafx.h"		
-#include "PipelineDefinitions.h"
+#include "ShaderDefinitions.h"
 
 class Camera;
-
-
-
-
 
 /// <summary>
 /// Wrapper for data that persists through one scene
