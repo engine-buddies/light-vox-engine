@@ -124,12 +124,12 @@ HRESULT Engine::Run()
             //DEBUG CODE for basic transform update;
             DirectX::XMFLOAT4X4 transforms[1];
             static float r = 0;
-            DirectX::XMFLOAT3 vecUp = DirectX::XMFLOAT3(0, 1, 0);
-            DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixRotationAxis(
-                DirectX::XMLoadFloat3(&vecUp),
+            DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixRotationY(
                 r
             );
             r += 0.01f;
+
+            //store in the first transform index
             DirectX::XMStoreFloat4x4(transforms + 0, transformMatrix);
 
             //DEBUG CODE for basic camera update
