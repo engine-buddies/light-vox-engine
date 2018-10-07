@@ -82,6 +82,9 @@
     <ClInclude Include="ShaderDefinitions.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="EntityComponents.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
