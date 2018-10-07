@@ -40,9 +40,10 @@ void GameTime::Init()
 
 	__int64 now;
 	QueryPerformanceCounter((LARGE_INTEGER*)&now);
-	startTime = now;
-	currentTime = now;
-	previousTime = now;
+    double doubleNow = static_cast<double>(now);
+	startTime = doubleNow;
+	currentTime = doubleNow;
+	previousTime = doubleNow;
 }
 
 double GameTime::GetTotalTime()

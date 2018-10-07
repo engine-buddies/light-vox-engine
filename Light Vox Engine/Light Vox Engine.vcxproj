@@ -229,6 +229,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="GraphicsCore.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="GameTime.cpp" />
+    <ClCompile Include="Physics.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -240,6 +241,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GraphicsCore.h" />
     <ClInclude Include="LVutils.h" />
+    <ClInclude Include="Physics.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="GameTime.h" />
   </ItemGroup>
