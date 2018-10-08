@@ -1,6 +1,9 @@
 #pragma once
 
-#include <thread>   // std::thread
+#include <thread>           // std::thread
+#include "JobSequence.h"    // A job 
+#include "CpuJob.h"         // typedefs for jobs
+
 
 /// <summary>
 /// Manage and execute jobs with an aim to increase
@@ -10,6 +13,7 @@
 class JobManager
 {
 public:
+
     
     /// <summary>
     /// Get the current job manager

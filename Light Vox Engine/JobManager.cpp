@@ -7,7 +7,7 @@ JobManager* JobManager::Instance = nullptr;
 JobManager::JobManager()
 {
     unsigned int supportedThreads = std::thread::hardware_concurrency();
-    printf( "The number of threads supported on this system is: %d", supportedThreads );
+    printf( "The number of threads supported on this system is: %d\n", supportedThreads );
 
     // Create the worker threads 
 
@@ -19,6 +19,7 @@ JobManager::JobManager()
 JobManager::~JobManager()
 {
     // TODO: Any cleanup of worker threads here
+    printf( "\tJob Manager dtor!\n" );
 }
 
 
@@ -33,5 +34,9 @@ JobManager* JobManager::GetInstance()
 
 void JobManager::ReleaseInstance()
 {
-    if ( Instance != nullptr ) delete Instance;
+    if ( Instance != nullptr )
+    {
+        delete Instance;
+        Instance = nullptr;
+    }
 }

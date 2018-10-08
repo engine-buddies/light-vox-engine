@@ -15,6 +15,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Source Files\JobSystem">
+      <UniqueIdentifier>{3fb5184a-369a-4a24-b088-92d5f92b670c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -40,6 +43,12 @@
     </ClCompile>
     <ClCompile Include="GameTime.cpp">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="JobManager.cpp">
+      <Filter>Source Files\JobSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="JobSequence.cpp">
+      <Filter>Source Files\JobSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -69,7 +78,7 @@
     </ClInclude>
     <ClInclude Include="ObjLoader.h">
       <Filter>Source Files\Graphics</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="Configs.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
@@ -81,6 +90,15 @@
     </ClInclude>
     <ClInclude Include="EntityComponents.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="JobManager.h">
+      <Filter>Source Files\JobSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSequence.h">
+      <Filter>Source Files\JobSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CpuJob.h">
+      <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

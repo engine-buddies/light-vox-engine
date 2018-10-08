@@ -31,6 +31,7 @@ Engine::~Engine()
 
     // Releases the instance of the entity manager
     EntityManager::ReleaseInstance();
+    JobManager::ReleaseInstance();
 }
 
 HRESULT Engine::InitWindow()
@@ -102,6 +103,9 @@ HRESULT Engine::InitSystems()
     EntityManager* enMan = EntityManager::GetInstance();
     enMan->Init();
     enMan = nullptr;
+
+    JobManager::GetInstance();
+    
 
 	ThrowIfFailed(graphics->Init());
     time->Init();

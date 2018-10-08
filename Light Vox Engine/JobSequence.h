@@ -37,5 +37,8 @@ public:
     /// </summary>
     void Wait();
 
+private:
+
+    
 };
 
