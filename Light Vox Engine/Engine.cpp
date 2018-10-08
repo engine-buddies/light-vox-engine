@@ -126,7 +126,6 @@ HRESULT Engine::Run()
             static bool init = false;
             static int count = sqrtf(LV_MAX_INSTANCE_COUNT);
             static float rotation = 0.001f;
-  //          if (!init)
             {
 
                 float x = -count / 2.0f;
@@ -146,8 +145,6 @@ HRESULT Engine::Run()
                     y += 1;
                     x = -count / 2.0f;
                 }
-
-//                init = true;
             }
             rotation += 0.01f;
 
