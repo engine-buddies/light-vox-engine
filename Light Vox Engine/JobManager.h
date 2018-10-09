@@ -1,8 +1,11 @@
 #pragma once
 
 #include <thread>           // std::thread
-#include <queue>            // std::queue
+#include <deque>            // std::dequeue for the job queue
+                            // because it does not allocate memory 
+                            // on every push and pop and is constant-time
 #include <vector>           // std::vector
+#include <mutex>
 #include "JobSequence.h"    // A job 
 #include "CpuJob.h"         // typedefs for jobs
 
@@ -11,7 +14,7 @@
 /// Manage and execute jobs with an aim to increase
 /// efficiency in using a multicore CPU
 /// </summary>
-/// <author>Ben Hoffman</author>?
+/// <author>Ben Hoffman</author>
 class JobManager
 {
 public:
@@ -23,27 +26,22 @@ public:
     ////////////////////////////////////////
     // Accessors
 
-    inline const bool GetIsDone() const;
-
     inline const size_t GetThreadCount() const;
     
 private:
 
     /// <summary>
     /// A way for the worker threads to ask for work from the 
-    /// job queue
+    /// job queue. Blocking function
     /// </summary>
     void AskForWork();
 
-    /** Determines if the application is still running or not */
-    bool IsDone;
+    // Define some mutex things for easier reference later
+    typedef std::mutex                mutex_t;
+    typedef std::unique_lock<mutex_t> lock_t;
 
-    // Job sequences for managing jobs 
-    CpuJob testJobBoi;
-    
     // Ready queue for the jobs 
-    std::queue<CpuJob> JobQueue;
-
+    std::deque<CpuJob> ReadyQueue;
 
     // Worker threads for executing jobs
     // A worker thread extracts a job from the job queue and executes it
