@@ -4,12 +4,9 @@
 #include "GameTime.h"
 #include "EntityManager.h"
 
-
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
 */
-
-
 class Engine
 {
 public:
@@ -39,6 +36,7 @@ private:
 	float windowHeight;
 
 	GraphicsCore* graphics;
+    Camera* camera;
     GameTime* time;
 
 	HRESULT InitWindow();
@@ -49,4 +47,3 @@ private:
 #endif
 
 };
-

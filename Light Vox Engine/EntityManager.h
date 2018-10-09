@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EntityComponents.h"
 
 /// <summary>
 /// Singleton for controlling the creation of game entities.
@@ -44,122 +45,24 @@ private:
 
     static EntityManager* Instance;
 
-
-public:
-
     ///////////////////////////////////////////////////
     // Entity components
 
-    struct Transform
-    {
-        float position[ 3 ];
-        int body;
-        float rotation[ 4 ];
-    };
+    // TODO: Make these arrays the proper size
+    EntityComponents::Transform Transforms[ 1024 ];
 
-    struct BodyProperties
-    {
-        float inertia_inverse[ 3 ];
-        float mass_inverse;
-    };
+    EntityComponents::BodyProperties BodyProperties[ 1024 ];
 
-    struct BodyMomentum
-    {
-        float velocity[ 3 ];
-        float unused0;
-        float angular_velocity[ 3 ];
-        float unused1;
-    };
+    /*
+    struct ContactImpulseData;
+    struct ContactConstraintData;
+    void Collide( ActiveBodies* active_bodies, ContactData* contacts, BodyData bodies, ColliderData colliders, BodyConnections body_connections );
+    ContactImpulseData* Read_cached_impulses( ContactCache contact_cache, ContactData contacts );
+    void Write_cached_impulses( ContactCache* contact_cache, ContactData contacts, ContactImpulseData* contact_impulses );
+    ContactConstraintData* Setup_contact_constraints( ActiveBodies active_bodies, ContactData contacts, BodyData bodies, ContactImpulseData* contact_impulses );
+    void Apply_Impulses( ContactConstraintData* data, BodyData bodies );
+    void Update_Cached_impulses( ContactConstraintData* data, ContactImpulseData* contact_impulses );
+    void UpdatePhysics( ActiveBodies active_bodies, BodyData bodies, float time_step );
+    */
 
-    struct SphereCollider
-    {
-        float radius;
-    };
-
-    struct BoxCollider
-    {
-        float size[ 3 ];
-        float unused;
-    };
-
-    struct Contact
-    {
-        float position[ 3 ];
-        float penetration;
-        float normal[ 3 ];
-        float friction;
-    };
-
-    struct BodyPair
-    {
-        int a;
-        int b;
-    };
-
-    struct ContactData
-    {
-        Contact* data;
-        BodyPair* bodies;
-        int* tags;
-        int capacity;
-        int count;
-
-        int* sleeping_pairs;
-        int sleeping_count;
-    };
-
-    struct ColliderData
-    {
-        struct
-        {
-            int* tags;
-            BoxCollider* data;
-            Transform* transforms;
-            int count;
-        } boxes;
-
-        struct
-        {
-            int* tags;
-            SphereCollider* data;
-            Transform* transforms;
-            int count;
-        } spheres;
-    };
-
-    struct BodyData
-    {
-        Transform* transforms;
-        BodyProperties* properties;
-        BodyMomentum* momentum;
-        int idle_counters;
-        int count;
-    };
-
-    struct BodyConnections
-    {
-        BodyPair* data;
-        int count;
-    };
-
-    struct CachedContactImpulse
-    {
-        float impulse[ 3 ];
-        float unused;
-    };
-
-    struct ContactCache
-    {
-        int* tags;
-        CachedContactImpulse* data;
-        int capacity;
-        int count;
-    };
-
-    struct ActiveBodies
-    {
-        int* indices;
-        int capacity;
-        int count;
-    };
 };

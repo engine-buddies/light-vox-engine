@@ -5,18 +5,13 @@ using namespace DirectX;
 Camera::Camera()
 {
 	//default values
-	fov = 0.25f * XM_PI;
+	fov = 90.0f;
 	nearZ = 0.01f;
 	farZ = 100.f;
 
-	XMFLOAT3 pos = XMFLOAT3(0.f, 0.f, -1.f);
-	XMFLOAT3 forward = XMFLOAT3(0.f, 0.f, 1.f);
-	XMFLOAT3 up = XMFLOAT3(0.f, 1.f, 0.f);
-	SetTransform(
-		XMLoadFloat3(&pos),
-		XMLoadFloat3(&forward),
-		XMLoadFloat3(&up)
-	);
+	position = XMFLOAT3(0.f, 0.f, -2.f);
+	forward = XMFLOAT3(0.0f, 0.f, 1.f);
+	up = XMFLOAT3(0.f, 1.f, 0.f);
 }
 
 Camera::~Camera() { }
@@ -28,34 +23,28 @@ void Camera::SetTransform(XMVECTOR position, XMVECTOR forward, XMVECTOR up)
     XMStoreFloat3(&this->up, up);
 }
 
-void Camera::GetViewProjMatrix(
-    DirectX::XMFLOAT4X4 * view, 
+void Camera::GetViewProjMatrix(DirectX::XMFLOAT4X4 * view, 
     DirectX::XMFLOAT4X4 * proj, 
-    float screenWidth, 
-    float screenHeight)
+    float screenWidth, float 
+    screenHeight)
 {
-    //calculate view mat
-    XMStoreFloat4x4(view,
-        XMMatrixTranspose(
-            XMMatrixLookAtLH(
-                XMLoadFloat3(&position),
-                XMLoadFloat3(&forward),
-                XMLoadFloat3(&up)
-            )
-		)
-	);
-
-    //calculate the projection matrix
-    XMStoreFloat4x4(proj,
-        XMMatrixTranspose(
-            XMMatrixPerspectiveFovLH(
-                fov, 
-                screenWidth / screenHeight, 
-                nearZ, 
-                farZ
-            )		
-        )
+	//calculate view
+    XMStoreFloat4x4(
+        view,
+        XMMatrixTranspose(XMMatrixLookToLH(
+            XMLoadFloat3(&position), 
+            XMLoadFloat3(&forward),
+            XMLoadFloat3(&up)))
     );
 
-}
+	float aspectRatio = screenWidth / screenHeight;
+	float fovAngleY = 90.f * XM_PI / 180.0f;
 
+	//calculate proj
+	XMStoreFloat4x4(
+        proj,
+        XMMatrixTranspose(
+            XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ)
+        )
+    );
+}

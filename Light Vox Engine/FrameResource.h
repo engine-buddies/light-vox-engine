@@ -1,16 +1,8 @@
 #pragma once
 #include "stdafx.h"		
+#include "ShaderDefinitions.h"
 
 class Camera;
-
-/// <summary>
-/// Whatever goes into the constant buffer for our main 'scene' render
-/// </summary>
-struct SceneConstantBuffer
-{
-	DirectX::XMFLOAT4X4 model;
-	DirectX::XMFLOAT4X4 viewProj;
-};
 
 /// <summary>
 /// Wrapper for data that persists through one scene
@@ -78,7 +70,11 @@ public:
     /// </summary>
     /// <param name="viewport">The viewport</param>
     /// <param name="camera">The camera of the scene</param>
-	void WriteConstantBuffers(D3D12_VIEWPORT* viewport, Camera* camera);
+	void WriteConstantBuffers(
+        DirectX::XMFLOAT4X4 transforms[],
+        D3D12_VIEWPORT* viewport, 
+        Camera* camera
+    );
 
 	//culmination of all of the command lists
 	ID3D12CommandList* batchedCommandList[1 + LV_COMMAND_LIST_COUNT];
@@ -100,10 +96,14 @@ private:
     //the gpu side of the scene constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> sceneConstantBuffer;
 
+    //instance upload buffer
+    Microsoft::WRL::ComPtr<ID3D12Resource> instanceUploadBuffer;
+
     //write-only buffer for scene-level cbuffer stuff
 	SceneConstantBuffer* sceneConstantBufferWO;		
+    InstanceBuffer* instanceBufferWO;
 
     // Null SRV for out of bounds behavior (for shadow?)
 	D3D12_GPU_DESCRIPTOR_HANDLE nullSrvHandle;	
-	D3D12_GPU_DESCRIPTOR_HANDLE sceneCbvHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE sceneCbvHandle;
 };

@@ -33,7 +33,7 @@ public:
     /// Handles our event fences and makes sure we're not writing to a frame
     /// that the GPU is still processing
     /// </summary>
-	void Update();
+	void Update(DirectX::XMFLOAT4X4 transforms[], Camera* camera);
 
     /// <summary>
     /// Where all the render logic lives
@@ -131,8 +131,6 @@ private:
 	CD3DX12_VIEWPORT viewport;  //viewport 
 	CD3DX12_RECT scissorRect;   //scissor rectangle
 
-	Camera* camera; //our cameraino
-
 	//Main pipeline stuff that shouldn't change up much
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain;
@@ -165,6 +163,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferUpload;
 	//Microsoft::WRL::ComPtr<ID3D12Resource> textures[1];           
 	//Microsoft::WRL::ComPtr<ID3D12Resource> texturesUploads[1];
+    UINT verticesCount;
 
 	//fence & synch related vars
 	UINT frameIndex;
