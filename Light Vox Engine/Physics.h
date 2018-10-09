@@ -1,24 +1,40 @@
 #pragma once
-class Physics
+#include "Entity.h"
+
+class Physics : public Component<Physics>
 {
 public:
-    Physics();
-    ~Physics();
-    struct ContactImpulseData;
-    struct ContactConstraintData;
 
-    /*void Collide(ActiveBodies* active_bodies, ContactData* contacts, BodyData bodies, ColliderData colliders, BodyConnections body_connections);
+    struct Transform : public Component<Transform> {
+        DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixIdentity();
+        DirectX::XMFLOAT3 pos = { 0, 0, 0 };
+        DirectX::XMFLOAT3 rot = { 0, 0, 0 };
+        DirectX::XMFLOAT3 scale = { 0, 0, 0 };
 
-    ContactImpulseData* Read_cached_impulses(ContactCache contact_cache, ContactData contacts);
+    };
 
-    void Write_cached_impulses(ContactCache* contact_cache, ContactData contacts, ContactImpulseData* contact_impulses);
+    struct BodyProperties : public Component<BodyProperties> {
+        DirectX::XMFLOAT3 velocity = { 0, 0, 0 };
+        float mass = 1.0f;
 
-    ContactConstraintData* Setup_contact_constraints(ActiveBodies active_bodies, ContactData contacts, BodyData bodies, ContactImpulseData* contact_impulses);
+    };
 
-    void Apply_Impulses(ContactConstraintData* data, BodyData bodies);
+    struct BoxCollider : public Component<BoxCollider>
+    {
+        DirectX::XMFLOAT3 size = {1.0, 1.0f, 1.0f};
+    };
 
-    void Update_Cached_impulses(ContactConstraintData* data, ContactImpulseData* contact_impulses);
+    struct SphereCollider: public Component<SphereCollider>
+    {
+        float radius = 1.0f;
+    };
+    
 
-    void UpdatePhysics(ActiveBodies active_bodies, BodyData bodies, float time_step);*/
+    void Init();
+    void Update(double dt);
+    bool Collide(std::vector<Entity> es);
+
+private:
+    Component<Transform> transform;
+    Component<BodyProperties> bodyProperties;
 };
-

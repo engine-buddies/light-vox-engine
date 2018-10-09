@@ -23,3 +23,4 @@
 #include "lvUtils.h"
 #include "DXSampleHelper.h"
 #include "Configs.h"
+#include <cstdint>

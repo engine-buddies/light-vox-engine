@@ -3,6 +3,8 @@
 #include "GraphicsCore.h"
 #include "GameTime.h"
 #include "EntityManager.h"
+//#include "Entity.h"
+#include <vector>
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -38,6 +40,7 @@ private:
 	GraphicsCore* graphics;
     Camera* camera;
     GameTime* time;
+    //std::vector<Entity> es;
 
 	HRESULT InitWindow();
 

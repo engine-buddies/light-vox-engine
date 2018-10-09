@@ -98,6 +98,14 @@ HRESULT Engine::InitSystems()
     graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
     time = GameTime::GetInstance();
 
+    //DEBUG:::
+    //es.reserve(200);
+    //for (int i = 0; i < 200; ++i) 
+    //{
+    //    //es.push_back(Entity());
+    //    //es.back().add_component<Physics>();
+    //}
+
     // Calling get instance will create the entity manager
     EntityManager* enMan = EntityManager::GetInstance();
     enMan->Init();
@@ -108,10 +116,11 @@ HRESULT Engine::InitSystems()
 
     return S_OK;
 }
-
 HRESULT Engine::Run()
 {
     MSG msg = { };
+
+
     while (msg.message != WM_QUIT)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
