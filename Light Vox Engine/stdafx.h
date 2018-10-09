@@ -6,6 +6,9 @@
 #include <stdlib.h>  
 #include <crtdbg.h> 
 #include <iostream>
+#else
+#include <stdexcpt.h>
+#include <stdexcept>
 #endif
 
 //For windows and graphics
