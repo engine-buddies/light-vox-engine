@@ -8,7 +8,7 @@
 /// <author>Ben Hoffman</author>
 struct CpuJob
 {
-    uint8_t priority;
+    int priority;
     void( *func_ptr )( void* arg, int index );
 };
 

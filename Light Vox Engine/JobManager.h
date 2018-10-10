@@ -17,14 +17,24 @@ class JobManager
 {
 public:
 
-    JobManager();
+    /// <summary>
+    /// Get's the static instance of the job manager
+    /// </summary>
+    /// <returns></returns>
+    static JobManager * GetInstance();
 
-    ~JobManager();
+    /// <summary>
+    /// Delete the static instance
+    /// </summary>
+    static void ReleaseInstance();
+
 
     /// <summary>
     /// Adds a job to the ready queue
     /// </summary>
     void AddJob( CpuJob aJob );
+
+    // TODO: Sequence factory interface
 
     ////////////////////////////////////////
     // Accessors
@@ -33,6 +43,12 @@ public:
     
 private:
 
+    JobManager();
+
+    ~JobManager();
+
+    static JobManager* Instance;
+
     /// <summary>
     /// Worker thread will wait for any jobs
     /// to be available in the Ready Queue and execute
@@ -40,6 +56,7 @@ private:
     /// </summary>
     void WorkerThread();
     
+
     /// <summary>
     /// A mutex determining if the queue is ready
     /// </summary>

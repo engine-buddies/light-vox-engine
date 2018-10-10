@@ -42,8 +42,6 @@ private:
     Camera* camera;
     GameTime* time;
 
-    JobManager* JobMan = nullptr;
-
 	HRESULT InitWindow();
 
 #if defined(_DEBUG)

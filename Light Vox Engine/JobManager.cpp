@@ -10,6 +10,7 @@ void TestJobB( void* myTestArgs, int myTestIndex )
     printf( "Test job TWOOOOO here bub: %s \n", (char*) myTestArgs );
 }
 
+JobManager* JobManager::Instance = nullptr;
 
 JobManager::JobManager()
 {
@@ -71,6 +72,24 @@ JobManager::~JobManager()
     }
 }
 
+JobManager*  JobManager::GetInstance()
+{
+    if ( Instance == nullptr )
+    {
+        Instance = new JobManager();
+    }
+    return Instance;
+}
+
+void JobManager::ReleaseInstance()
+{
+    if ( Instance != nullptr )
+    {
+        delete Instance;
+        Instance = nullptr;
+    }
+}
+
 // Temporary add job function
 void JobManager::AddJob( CpuJob aJob )
 {
@@ -99,7 +118,7 @@ void JobManager::WorkerThread()
             printf( "** THere is a job in there dude!\n" );
             
             // Current bug here about not being a way to access something
-            // Unsure what is goin on at this moment in time
+            // Unsure what is going on at this moment in time
 
             //CpuJob CurJob = ReadyQueue.wait_pop_front();
             

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CpuJob.h"
+
 /// <summary>
 /// Represents a subsystem for managing dependencies 
 /// </summary>
@@ -40,5 +42,7 @@ public:
 private:
 
     
+
+
 };
 
