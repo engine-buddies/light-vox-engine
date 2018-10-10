@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 #include <deque>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -94,12 +96,37 @@ public:
     /// -- Uses lock on mutex --
     /// </summary>
     /// <returns>first element of the mutable sequence</returns>
-    T front()
+    T& front()
     {
         boost::mutex::scoped_lock( My_Mutex );        
 
         return TheDequeue.front();
     }
+
+    
+    /// <summary>
+    /// Pops the front element off of the dequeue
+    /// -- Uses lock on mutex --
+    /// </summary>
+    template<typename T>
+    void pop_front()
+    {
+        boost::mutex::scoped_lock( My_Mutex );
+
+        TheDequeue.pop_front();
+    }
+
+    /// <summary>
+    /// Pops the back element off of the dequeue
+    /// -- Uses lock on mutex --
+    /// </summary>
+    template<typename T>
+    void pop_back()
+    {
+        boost::mutex::scoped_lock( My_Mutex );
+
+        TheDequeue.pop_back();
+    } 
 
     /// <summary>
     /// test if sequence is empty
@@ -111,6 +138,5 @@ public:
         boost::mutex::scoped_lock( My_Mutex );
         return TheDequeue.empty();
     }
-
 
 };
