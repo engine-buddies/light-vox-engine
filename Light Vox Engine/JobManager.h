@@ -66,6 +66,6 @@ private:
     /// </summary>
     std::atomic<bool> IsDone;
 
-
+    
 };
 

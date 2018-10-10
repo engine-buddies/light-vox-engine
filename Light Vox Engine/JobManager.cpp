@@ -25,16 +25,16 @@ JobManager::JobManager()
 
     printf( "Created %d worker threads!\n", (int) WorkerThreads.size() );
 
-    CpuJob testFuncA {};
+    CpuJob testFuncA;
     testFuncA.priority = 1;
     testFuncA.func_ptr = &TestJob;
 
     CpuJob testFuncB {};
-    testFuncA.priority = 1;
+    testFuncA.priority = 2;
     testFuncA.func_ptr = &TestJobB;
 
     CpuJob testFuncC {};
-    testFuncA.priority = 1;
+    testFuncA.priority = 3;
     testFuncA.func_ptr = &TestJob;
 
     AddJob( testFuncA );
@@ -90,6 +90,12 @@ void JobManager::WorkerThread()
             
             // Current bug here about not being a way to access something
             // Unsure what is going on at this moment in time
+
+            CpuJob CurJob;
+            ReadyQueue.pop_front( CurJob );
+            // Why does this just return 0 every time ?
+            printf( "The job's priority is %d\n", CurJob.priority );
+            
 
             //CpuJob CurJob = ReadyQueue.wait_pop_front();
             

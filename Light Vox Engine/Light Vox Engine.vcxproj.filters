@@ -101,7 +101,7 @@
       <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
     <ClInclude Include="ConcurrentQueue.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -14,25 +14,6 @@ template<typename T>
 class ConcurrentQueue
 {
     
-private:
-
-    /// <summary>
-    /// Dequeue will be used here because it does not allocate memory 
-    /// on every push and pop and is constant-time
-    /// </summary>
-    std::deque<T> TheDequeue;
-
-    /// <summary>
-    /// The mutex to be used by this concurrent queue
-    /// </summary>
-    boost::mutex My_Mutex;
-
-    /// <summary>
-    /// Conditional variable stating that there is data in the deuque
-    /// that can be used
-    /// </summary>
-    boost::condition_variable DataAvailableCondition;
-
 public:
     
     /// <summary>
@@ -87,14 +68,29 @@ public:
 
         return elem;
     }
-    
+
     template<typename T>
+    void pop_front(T& aItem)
+    {
+        boost::mutex::scoped_lock waitLock( My_Mutex );
+
+        while ( TheDequeue.empty() )
+        {
+            DataAvailableCondition.wait( waitLock );
+        }
+        aItem = TheDequeue.front();
+        printf( "Hello front boi: %p \n", &aItem );
+        TheDequeue.pop_front();
+    }
+    
+    
     /// <summary>
     /// returns the first element of the mutable sequence
     /// -- Uses lock on mutex --
     /// </summary>
     /// <returns>first element of the mutable sequence</returns>
-    T front()
+    template<typename T>
+    T& front()
     {
         boost::mutex::scoped_lock( My_Mutex );        
 
@@ -111,6 +107,31 @@ public:
         boost::mutex::scoped_lock( My_Mutex );
         return TheDequeue.empty();
     }
+
+    size_t size() const
+    {
+        boost::mutex::scoped_lock( My_Mutex );
+        return TheDequeue.size();
+    }
+
+private:
+
+    /// <summary>
+    /// Dequeue will be used here because it does not allocate memory 
+    /// on every push and pop and is constant-time
+    /// </summary>
+    std::deque<T> TheDequeue;
+
+    /// <summary>
+    /// The mutex to be used by this concurrent queue
+    /// </summary>
+    boost::mutex My_Mutex;
+
+    /// <summary>
+    /// Conditional variable stating that there is data in the deuque
+    /// that can be used
+    /// </summary>
+    boost::condition_variable DataAvailableCondition;
 
 
 };
