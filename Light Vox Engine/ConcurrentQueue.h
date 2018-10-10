@@ -75,17 +75,30 @@ public:
     template<typename T>
     T wait_pop_front()
     {
-        boost::mutex::scoped_lock( My_Mutex );
+        boost::mutex::scoped_lock waitLock ( My_Mutex );
         // Wait to be notified of new data
         while ( TheDequeue.empty() )
         {
-            DataAvailableCondition.wait( lock );
+            DataAvailableCondition.wait( waitLock );
         }
 
-        auto elem = std::move( TheDequeue.front() );  // Move the front element
-        TheDequeue.pop_front();                       // Remove it from the deque
+        T elem = std::move( TheDequeue.front() );  // Move the front element
+        TheDequeue.pop_front();                    // Remove it from the deque
 
         return elem;
+    }
+    
+    template<typename T>
+    /// <summary>
+    /// returns the first element of the mutable sequence
+    /// -- Uses lock on mutex --
+    /// </summary>
+    /// <returns>first element of the mutable sequence</returns>
+    T front()
+    {
+        boost::mutex::scoped_lock( My_Mutex );        
+
+        return TheDequeue.front();
     }
 
     /// <summary>

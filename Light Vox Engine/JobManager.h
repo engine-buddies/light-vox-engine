@@ -40,15 +40,23 @@ private:
     /// </summary>
     void WorkerThread();
     
+    /// <summary>
+    /// A mutex determining if the queue is ready
+    /// </summary>
     boost::mutex ReadyQueueMutex;
 
     // Ready queue for the jobs
     ConcurrentQueue<CpuJob> ReadyQueue;
 
+    /// <summary>
+    /// Conditional variable for if a job is available
+    /// </summary>
+    boost::condition_variable JobAvailable;
+
     // Worker threads for executing jobs
     // A worker thread extracts a job from the job queue and executes it
     std::vector<boost::thread> WorkerThreads;
-
+    
     /// <summary>
     /// Atomic bool determining if we are done
     /// </summary>
