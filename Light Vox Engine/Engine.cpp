@@ -31,8 +31,12 @@ Engine::~Engine()
 
     // Releases the instance of the entity manager
     EntityManager::ReleaseInstance();
-
-    JobManager::ReleaseInstance();
+    // Cleanup job manager
+    if ( JobMan != nullptr )
+    {
+        delete JobMan;
+        JobMan = nullptr;
+    }
 }
 
 HRESULT Engine::InitWindow()
@@ -105,8 +109,7 @@ HRESULT Engine::InitSystems()
     enMan->Init();
     enMan = nullptr;
 
-    //JobMan = new JobManager();
-    JobManager::GetInstance();
+    JobMan = new JobManager();
 
 	ThrowIfFailed(graphics->Init());
     time->Init();

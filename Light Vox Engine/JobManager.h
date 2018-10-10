@@ -17,16 +17,9 @@ class JobManager
 {
 public:
 
-    /// <summary>
-    /// Get's the static instance of the job manager
-    /// </summary>
-    /// <returns></returns>
-    static JobManager * GetInstance();
+    JobManager();
 
-    /// <summary>
-    /// Delete the static instance
-    /// </summary>
-    static void ReleaseInstance();
+    ~JobManager();
 
 
     /// <summary>
@@ -42,12 +35,6 @@ public:
     inline const size_t GetThreadCount() const;
     
 private:
-
-    JobManager();
-
-    ~JobManager();
-
-    static JobManager* Instance;
 
     /// <summary>
     /// Worker thread will wait for any jobs

@@ -10,16 +10,11 @@ void TestJobB( void* myTestArgs, int myTestIndex )
     printf( "Test job TWOOOOO here bub: %s \n", (char*) myTestArgs );
 }
 
-JobManager* JobManager::Instance = nullptr;
-
 JobManager::JobManager()
 {
     const unsigned int supportedThreads = boost::thread::hardware_concurrency();
-
-#if defined(_DEBUG) || defined(DEBUG)
     printf( "The number of threads supported on this system is: %d\n", supportedThreads );
-#endif
-    
+
     IsDone = false;
 
     // Create worker threads that check to see if there is any work to do
@@ -28,30 +23,23 @@ JobManager::JobManager()
         WorkerThreads.push_back( boost::thread( &JobManager::WorkerThread, this ) );
     }
 
-#if defined(_DEBUG) || defined(DEBUG)
     printf( "Created %d worker threads!\n", (int) WorkerThreads.size() );
-#endif
 
-    CpuJob testFuncA { };
+    CpuJob testFuncA {};
     testFuncA.priority = 1;
     testFuncA.func_ptr = &TestJob;
 
-
-    CpuJob testFuncB { };
+    CpuJob testFuncB {};
     testFuncA.priority = 1;
     testFuncA.func_ptr = &TestJobB;
 
-    CpuJob testFuncC { };
+    CpuJob testFuncC {};
     testFuncA.priority = 1;
     testFuncA.func_ptr = &TestJob;
 
-
-    // Add a test job to the ready queue
     AddJob( testFuncA );
-
     // Add a test job to the ready queue
     AddJob( testFuncB );
-
     // Add a test job to the ready queue
     AddJob( testFuncC );
 
@@ -61,7 +49,6 @@ JobManager::~JobManager()
 {
     IsDone = true;
 
-    // Notify all threads that they should end
     JobAvailable.notify_all();
 
     // Ensure that all jobs are done (by joining the thread, 
@@ -70,31 +57,15 @@ JobManager::~JobManager()
     {
         item.join();
     }
-}
 
-JobManager*  JobManager::GetInstance()
-{
-    if ( Instance == nullptr )
-    {
-        Instance = new JobManager();
-    }
-    return Instance;
-}
-
-void JobManager::ReleaseInstance()
-{
-    if ( Instance != nullptr )
-    {
-        delete Instance;
-        Instance = nullptr;
-    }
+    printf( "\tJob Manager dtor!\n" );
 }
 
 // Temporary add job function
 void JobManager::AddJob( CpuJob aJob )
 {
     ReadyQueue.emplace_back( aJob );
-    
+
     // Let one of the worker threads know that there is a job available
     JobAvailable.notify_one();
 }
@@ -102,7 +73,7 @@ void JobManager::AddJob( CpuJob aJob )
 void JobManager::WorkerThread()
 {
     boost::mutex::scoped_lock workerLock ( ReadyQueueMutex );
-    printf( "\tEnter Worker Thread! \n" );
+    printf( "\tEnter Job Thread! \n" );
 
     while ( true )
     {
@@ -126,8 +97,10 @@ void JobManager::WorkerThread()
         }
     }
 
+    
 
-    printf( "\t\tEXIT Worker Thread! \n" );
+
+    printf( "\t\tEXIT Job Thread! \n" );
 }
 
 ////////////////////////////////////////
