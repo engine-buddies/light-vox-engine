@@ -5,20 +5,20 @@ void TestJob( void* myTestArgs, int myTestIndex )
     printf( "Test job here bub: %s \n", (char*) myTestArgs );
 }
 
+
+
 JobManager::JobManager()
 {
-    unsigned int supportedThreads = std::thread::hardware_concurrency();
+    const unsigned int supportedThreads = boost::thread::hardware_concurrency();
     printf( "The number of threads supported on this system is: %d\n", supportedThreads );
 
-    // Create the Job Queue here if we need to
-
-    // test a function here and see if my work threads are up
-    ReadyQueue.emplace_back( &TestJob );
+    // Add a test job to the ready queue
+    AddJob( &TestJob );
 
     // Create worker threads that check to see if there is any work to do
     for ( unsigned int i = 0; i < supportedThreads; ++i )
     {
-        WorkerThreads.push_back( std::thread( &JobManager::AskForWork, this ) );
+        WorkerThreads.push_back( boost::thread( &JobManager::WorkerThread, this ) );
     }
 
     printf( "Created %d worker threads!\n", (int) WorkerThreads.size() );
@@ -28,14 +28,6 @@ JobManager::JobManager()
 // Private destructor
 JobManager::~JobManager()
 {
-    lock_t lock( ReadyQueueMutex );
-
-    // TODO: Any cleanup of worker threads here
-    
-    SignalDone();
-
-    lock.unlock();
-
     // Ensure that all jobs are done (by joining the thread, 
     // thus waiting for all its work to be done)
     for ( auto &item : WorkerThreads )
@@ -48,56 +40,20 @@ JobManager::~JobManager()
 }
 
 // Temporary add job function
-void JobManager::AddJob( int aIndex )
+void JobManager::AddJob( CpuJob aJob )
 {
-    lock_t lock { ReadyQueueMutex };
-
-    ReadyQueue.emplace_back( &TestJob );
-
-    Condition_m.notify_one();
+    ReadyQueue.emplace_back( aJob );
 }
 
-void JobManager::SignalDone()
-{
-    if ( IsDone.exchange( true ) )
-    {
-        return;
-    }
 
-    Condition_m.notify_all();
-}
-
-void JobManager::AskForWork()
+void JobManager::WorkerThread()
 {
     printf( "\tEnter Job Thread! \n" );
 
-   /* for ( int i = 0; ; ++i )
-    {        
-        lock_t lock { ReadyQueueMutex };
-
-        Condition_m.wait( lock, [ = ]()
-            { 
-                return IsDone || !empty(); 
-            } 
-        );
-
-        // Return if the manager has been marked as done
-        if ( IsDone ) return;
-        
-        // Try Pop Unsafe here
-
-        if ( !ReadyQueue.empty() )
-        {
-            CpuJob myjob = ReadyQueue.back();            
-            ReadyQueue.pop_front();
-
-            myjob( "Hello this is a job BOI\n", 1 );
-        }
-    }
-    */
+    // I want to sleep the thread if no jobs exist
+    
     printf( "\t\tEXIT Job Thread! \n" );
 }
-
 
 ////////////////////////////////////////
 // Accessors

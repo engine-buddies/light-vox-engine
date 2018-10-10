@@ -1,15 +1,12 @@
 #pragma once
 
-#include <thread>           // std::thread
-#include <deque>            // std::dequeue for the job queue
-                            // because it does not allocate memory 
-                            // on every push and pop and is constant-time
+#include <boost/thread.hpp>
 #include <vector>           // std::vector
-#include <mutex>            // std::mutex
+
 #include <atomic>           // std::atomic
 #include "JobSequence.h"    // A job 
 #include "CpuJob.h"         // typedefs for jobs
-
+#include "ConcurrentQueue.h"
 
 /// <summary>
 /// Manage and execute jobs with an aim to increase
@@ -27,7 +24,7 @@ public:
     /// <summary>
     /// Adds a job to the ready queue
     /// </summary>
-    void AddJob( int aIndex );
+    void AddJob( CpuJob aJob );
 
     ////////////////////////////////////////
     // Accessors
@@ -37,41 +34,26 @@ public:
 private:
 
     /// <summary>
-    /// A way for the worker threads to ask for work from the 
-    /// job queue. Blocking function
+    /// Worker thread will wait for any jobs
+    /// to be available in the Ready Queue and execute
+    /// them accordingly
     /// </summary>
-    void AskForWork();
-
-    /// <summary>
-    /// Notifies all threads that our work has been done
-    /// </summary>
-    void SignalDone();
-
-    // Define some mutex things for easier reference later
-    typedef std::mutex                mutex_t;
-    typedef std::unique_lock<mutex_t> lock_t;
-
+    void WorkerThread();
     
-    mutex_t ReadyQueueMutex;
+    boost::mutex ReadyQueueMutex;
 
-    // Ready queue for the jobs 
-    std::deque<CpuJob> ReadyQueue;
+    // Ready queue for the jobs
+    ConcurrentQueue<CpuJob> ReadyQueue;
 
     // Worker threads for executing jobs
     // A worker thread extracts a job from the job queue and executes it
-    std::vector<std::thread> WorkerThreads;
+    std::vector<boost::thread> WorkerThreads;
 
     /// <summary>
     /// Atomic bool determining if we are done
     /// </summary>
     std::atomic<bool> IsDone;
 
-    /// <summary>
-    /// Condition to notify other threads that a job has been added.
-    /// Puts an unused thread ot sleep until it is woken up by another
-    /// thread
-    /// </summary>
-    std::condition_variable Condition_m;
 
 };
 

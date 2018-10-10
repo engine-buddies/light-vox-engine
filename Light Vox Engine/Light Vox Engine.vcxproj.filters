@@ -100,6 +100,9 @@
     <ClInclude Include="CpuJob.h">
       <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
+    <ClInclude Include="ConcurrentQueue.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
