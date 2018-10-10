@@ -5,7 +5,8 @@
                             // because it does not allocate memory 
                             // on every push and pop and is constant-time
 #include <vector>           // std::vector
-#include <mutex>
+#include <mutex>            // std::mutex
+#include <atomic>           // std::atomic
 #include "JobSequence.h"    // A job 
 #include "CpuJob.h"         // typedefs for jobs
 
@@ -23,6 +24,11 @@ public:
 
     ~JobManager();
 
+    /// <summary>
+    /// Adds a job to the ready queue
+    /// </summary>
+    void AddJob( int aIndex );
+
     ////////////////////////////////////////
     // Accessors
 
@@ -36,9 +42,17 @@ private:
     /// </summary>
     void AskForWork();
 
+    /// <summary>
+    /// Notifies all threads that our work has been done
+    /// </summary>
+    void SignalDone();
+
     // Define some mutex things for easier reference later
     typedef std::mutex                mutex_t;
     typedef std::unique_lock<mutex_t> lock_t;
+
+    
+    mutex_t ReadyQueueMutex;
 
     // Ready queue for the jobs 
     std::deque<CpuJob> ReadyQueue;
@@ -47,7 +61,17 @@ private:
     // A worker thread extracts a job from the job queue and executes it
     std::vector<std::thread> WorkerThreads;
 
-    
+    /// <summary>
+    /// Atomic bool determining if we are done
+    /// </summary>
+    std::atomic<bool> IsDone;
+
+    /// <summary>
+    /// Condition to notify other threads that a job has been added.
+    /// Puts an unused thread ot sleep until it is woken up by another
+    /// thread
+    /// </summary>
+    std::condition_variable Condition_m;
 
 };
 
