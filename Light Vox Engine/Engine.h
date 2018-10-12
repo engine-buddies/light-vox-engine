@@ -40,8 +40,8 @@ private:
 	GraphicsCore* graphics;
     Camera* camera;
     GameTime* time;
-    //std::vector<Entity> es;
-
+    EntityManager* entityManager;
+   
 	HRESULT InitWindow();
 
 #if defined(_DEBUG)

@@ -50,9 +50,6 @@
     <ClCompile Include="Physics.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="Entity.cpp">
-      <Filter>Source Files\ECS</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LVutils.h">
@@ -98,9 +95,6 @@
       <Filter>Source Files\ECS</Filter>
     </ClInclude>
     <ClInclude Include="EntityManager.h">
-      <Filter>Source Files\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="Detail.h">
       <Filter>Source Files\ECS</Filter>
     </ClInclude>
     <ClInclude Include="Physics.h">

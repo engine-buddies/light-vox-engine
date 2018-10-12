@@ -30,7 +30,7 @@ Engine::~Engine()
     delete camera;
 
     // Releases the instance of the entity manager
-    EntityManager::ReleaseInstance();
+    entityManager->ReleaseInstance();
 }
 
 HRESULT Engine::InitWindow()
@@ -98,24 +98,21 @@ HRESULT Engine::InitSystems()
     graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
     time = GameTime::GetInstance();
 
-    //DEBUG:::
-    //es.reserve(200);
-    //for (int i = 0; i < 200; ++i) 
-    //{
-    //    //es.push_back(Entity());
-    //    //es.back().add_component<Physics>();
-    //}
-
     // Calling get instance will create the entity manager
-    EntityManager* enMan = EntityManager::GetInstance();
-    enMan->Init();
-    enMan = nullptr;
+    entityManager = EntityManager::GetInstance();
 
     ThrowIfFailed(graphics->Init());
     time->Init();
+    entityManager->Init();
 
+    //DEBUG::ECS
+    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; i++)
+    {
+        entityManager->Create_Entity();
+    }
     return S_OK;
 }
+
 HRESULT Engine::Run()
 {
     MSG msg = { };

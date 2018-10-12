@@ -1,17 +1,21 @@
 #pragma once
-#include <vector>
+#include <DirectXMath.h>
 /// <summary>
 /// Structures of the different components that an entity can have
 /// </summary>
 /// <author>Arturo</author>
 /// <author>Ben Hoffman</author>
-namespace ECS
+namespace EntityComponents
 {
-    template <class T>
-    class EntityComponents
+    struct Transform
     {
-    public:
+        DirectX::XMFLOAT3 pos;
+        DirectX::XMFLOAT3 rot;
+        DirectX::XMMATRIX transformMatrix;
+    };
 
-    private:
+    struct BoxCollider
+    {
+        DirectX::XMFLOAT3 size;
     };
 };
