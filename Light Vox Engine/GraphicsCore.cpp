@@ -2,9 +2,11 @@
 #include "FrameResource.h"
 #include "Camera.h"
 #include "ShaderDefinitions.h"    //Utils for initialization
+#include <vector>
+
+#include "ObjLoader.h"
 
 //needed for 'right now'
-#include "ObjLoader.h"
 
 using namespace Microsoft::WRL;
 
@@ -20,6 +22,8 @@ GraphicsCore::GraphicsCore(HWND hWindow, UINT windowW, UINT windowH)
 
 GraphicsCore::~GraphicsCore()
 {
+    for (size_t i = 0; i < LV_FRAME_COUNT; ++i)
+        delete frameResources[i];
 }
 
 void GraphicsCore::OnResize(UINT width, UINT height)
@@ -609,7 +613,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 
 inline HRESULT GraphicsCore::InitFrameResources()
 {
-	for (int i = 0; i < LV_FRAME_COUNT; i++)
+	for (size_t i = 0; i < LV_FRAME_COUNT; i++)
 	{
 		frameResources[i] = new FrameResource(
             device.Get(), 

@@ -135,21 +135,22 @@ HRESULT Engine::Run()
                 {
                     for (int j = 0; j < count; j++)
                     {
-                        DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation(x, y, z);
-                        transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixRotationY(rotation), transformMatrix);
+                        DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation(x + rotation, y, z);
+                        //transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixRotationY(rotation), transformMatrix);
+                        transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixIdentity(), transformMatrix);
                         DirectX::XMStoreFloat4x4(transforms + i * count + j, transformMatrix);
 
-                        x += 1;
+                        x += 2;
                     }
 
-                    y += 1;
+                    y += 2;
                     x = -count / 2.0f;
                 }
             }
             rotation += 0.01f;
 
             //DEBUG CODE for basic camera update
-            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -95.f);
+            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -40.f);
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
             DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
             camera->SetTransform(
