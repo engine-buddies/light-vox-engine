@@ -10,7 +10,6 @@ struct Vertex
     DirectX::XMFLOAT2 uv;
 };
 
-
 class ObjLoader
 {
 public:

@@ -95,7 +95,7 @@ HRESULT Engine::InitWindow()
 HRESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
+    graphics = new GraphicsCore(hWindow, static_cast<UINT>(windowWidth), static_cast<UINT>(windowHeight));
     time = GameTime::GetInstance();
 
     // Calling get instance will create the entity manager
