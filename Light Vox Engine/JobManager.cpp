@@ -12,7 +12,7 @@ void TestJobB( void* myTestArgs, int myTestIndex )
 
 JobManager::JobManager()
 {
-    const unsigned int supportedThreads = boost::thread::hardware_concurrency();
+    const unsigned int supportedThreads = std::thread::hardware_concurrency();
     printf( "The number of threads supported on this system is: %d\n", supportedThreads );
 
     IsDone = false;
@@ -22,7 +22,7 @@ JobManager::JobManager()
     // Create worker threads that check to see if there is any work to do
     for ( unsigned int i = 0; i < supportedThreads; ++i )
     {
-        WorkerThreads.push_back( boost::thread( &JobManager::WorkerThread, this ) );
+        WorkerThreads.push_back( std::thread( &JobManager::WorkerThread, this ) );
     }
 
     printf( "Created %d worker threads!\n", (int) WorkerThreads.size() );
@@ -74,7 +74,7 @@ void JobManager::AddJob( CpuJob aJob )
 
 void JobManager::WorkerThread()
 {
-    boost::mutex::scoped_lock workerLock ( ReadyQueueMutex );
+    std::unique_lock<std::mutex> workerLock ( ReadyQueueMutex );
     printf( "\tEnter Job Thread! \n" );
 
     while ( true )
@@ -91,7 +91,7 @@ void JobManager::WorkerThread()
             CpuJob CurJob;
             ReadyQueue.pop_front( CurJob );
             
-            CurJob.func_ptr( "Test boi hey there", CurJob.priority );
+            CurJob.func_ptr( "Test boy hey there", CurJob.priority );
         }
     }
 

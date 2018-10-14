@@ -1,8 +1,8 @@
 #pragma once
 
 #include <deque>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
+#include <mutex>
+#include <condition_variable>
 
 template<typename T>
 /// <summary>
@@ -23,7 +23,7 @@ public:
     /// <param name="aData">Data to emplace</param>
     void emplace_front( T const & aData )
     {
-        boost::mutex::scoped_lock( My_Mutex );
+        std::unique_lock<std::mutex>( My_Mutex );
         // Add the data safely
         TheDequeue.emplace_front( aData );
         // Notify any threads that may be waiting on a condition for new data
@@ -37,7 +37,7 @@ public:
     /// <param name="aData">Data to emplace</param>
     void emplace_back( T const& aData )
     {
-        boost::mutex::scoped_lock( My_Mutex );
+        std::unique_lock<std::mutex>( My_Mutex );
         // Add the data safely
         TheDequeue.emplace_back( aData );
         // Notify any threads that may be waiting on a condition for new data
@@ -52,14 +52,14 @@ public:
     /// <param name="aItem">Out variable</param>
     void pop_front(T& aItem)
     {
-        boost::mutex::scoped_lock waitLock( My_Mutex );
+        std::unique_lock<std::mutex> waitLock( My_Mutex );
 
         while ( TheDequeue.empty() )
         {
             DataAvailableCondition.wait( waitLock );
         }
         aItem = std::move( TheDequeue.front() );
-        printf( "Hello front boi: %p \n", &aItem );
+        printf( "Hello front boY: %p \n", &aItem );
         TheDequeue.pop_front();
     }
     
@@ -71,7 +71,7 @@ public:
     /// <returns>first element of the mutable sequence</returns>
     T& front()
     {
-        boost::mutex::scoped_lock( My_Mutex );        
+        std::unique_lock<std::mutex>( My_Mutex );
 
         return TheDequeue.front();
     }
@@ -83,13 +83,13 @@ public:
     /// <returns>True if empty</returns>
     bool empty() const
     {
-        boost::mutex::scoped_lock( My_Mutex );
+        std::unique_lock<std::mutex>( My_Mutex );
         return TheDequeue.empty();
     }
 
     size_t size() const
     {
-        boost::mutex::scoped_lock( My_Mutex );
+        std::unique_lock<std::mutex>( My_Mutex );
         return TheDequeue.size();
     }
 
@@ -104,13 +104,13 @@ private:
     /// <summary>
     /// The mutex to be used by this concurrent queue
     /// </summary>
-    boost::mutex My_Mutex;
+    std::mutex My_Mutex;
 
     /// <summary>
     /// Conditional variable stating that there is data in the deuque
     /// that can be used
     /// </summary>
-    boost::condition_variable DataAvailableCondition;
+    std::condition_variable DataAvailableCondition;
 
 
 };

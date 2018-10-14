@@ -1,9 +1,10 @@
 #pragma once
 
-#include <boost/thread.hpp>
+#include <thread>
+#include <condition_variable>
 #include <vector>           // std::vector
-
 #include <atomic>           // std::atomic
+
 #include "JobSequence.h"    // A job 
 #include "CpuJob.h"         // typedefs for jobs
 #include "ConcurrentQueue.h"
@@ -20,7 +21,6 @@ public:
     JobManager();
 
     ~JobManager();
-
 
     /// <summary>
     /// Adds a job to the ready queue
@@ -47,7 +47,7 @@ private:
     /// <summary>
     /// A mutex determining if the queue is ready
     /// </summary>
-    boost::mutex ReadyQueueMutex;
+    std::mutex ReadyQueueMutex;
 
     // Ready queue for the jobs
     ConcurrentQueue<CpuJob> ReadyQueue;
@@ -55,11 +55,11 @@ private:
     /// <summary>
     /// Conditional variable for if a job is available
     /// </summary>
-    boost::condition_variable JobAvailable;
+    std::condition_variable JobAvailable;
 
     // Worker threads for executing jobs
     // A worker thread extracts a job from the job queue and executes it
-    std::vector<boost::thread> WorkerThreads;
+    std::vector<std::thread> WorkerThreads;
     
     /// <summary>
     /// Atomic bool determining if we are done
