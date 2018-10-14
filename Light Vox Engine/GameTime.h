@@ -22,11 +22,19 @@ public:
 	/// <summary>
 	/// return total time (time since starting program) as double 
 	/// </summary>
-    double GetTotalTime();
+    double GetTotalDoubleTime();
 	/// <summary>
 	/// Return delta time as double
 	/// </summary>
-	double GetDeltaTime();
+	double GetDeltaDoubleTime();
+    /// <summary>
+    /// return total time (time since starting program) as float 
+    /// </summary>
+    double GetTotalFloatTime();
+    /// <summary>
+    /// Return delta time as float
+    /// </summary>
+    double GetDeltaFloatTime();
 
 private:
 	static GameTime* instance;
@@ -35,9 +43,11 @@ private:
 	double currentTime;
 	double previousTime;
 
-	double totalTime;
-	double deltaTime;
+	double totalDoubleTime;
+	double deltaDoubleTime;
 	double perfCounterSeconds;
 
+    float totalFloatTime;
+    float deltaFloatTime;
 };
 

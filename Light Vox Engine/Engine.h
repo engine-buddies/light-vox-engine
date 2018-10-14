@@ -1,10 +1,11 @@
 #pragma once
 #include <Windows.h>
+#include <vector>
 #include "GraphicsCore.h"
 #include "GameTime.h"
 #include "EntityManager.h"
 //#include "Entity.h"
-#include <vector>
+#include "Physics.h"
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -37,10 +38,14 @@ private:
 	float windowWidth;
 	float windowHeight;
 
+    //ECS
+    EntityManager* entityManager;
+
+    //Systems
 	GraphicsCore* graphics;
     Camera* camera;
     GameTime* time;
-    EntityManager* entityManager;
+    Physics* physics;
    
 	HRESULT InitWindow();
 

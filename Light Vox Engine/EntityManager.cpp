@@ -7,9 +7,7 @@ EntityManager* EntityManager::Instance = nullptr;
 EntityManager* EntityManager::GetInstance()
 {
     if (Instance == nullptr)
-    {
         Instance = new EntityManager();
-    }
 
     return Instance;
 }

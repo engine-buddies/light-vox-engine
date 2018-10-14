@@ -80,11 +80,6 @@ private:
     ///////////////////////////////////////////////////
     // Entity components
     //TODO:: Align and Pack 
-    struct AllGameObjects
-    {
-        EntityComponents::Transform Transforms[MAX_GAME_OBJECTS];
-        EntityComponents::BoxCollider boxCollider[MAX_GAME_OBJECTS];
-    };
-    AllGameObjects allGameObjects;
+    
 
 };
