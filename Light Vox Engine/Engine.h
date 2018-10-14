@@ -5,11 +5,10 @@
 #include "EntityManager.h"
 #include "JobManager.h"
 
+
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
 */
-
-
 class Engine
 {
 public:

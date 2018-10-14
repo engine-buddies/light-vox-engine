@@ -52,9 +52,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GraphicsCore.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="LVutils.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
@@ -86,6 +83,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="GameTime.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsCore.h">
+      <Filter>Source Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderDefinitions.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="EntityComponents.h">
