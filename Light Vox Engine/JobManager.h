@@ -34,6 +34,12 @@ public:
     /// </summary>
     void AddJob( CpuJob aJob );
 
+    /// <summary>
+    /// Add a job without making a cpu job
+    /// </summary>
+    /// <param name="func_ptr">A function pointer that is considered a job</param>
+    void AddJob( void( *func_ptr )( void* args, int index ) );
+
     // TODO: Sequence factory interface
 
     // We don't want anything making copies of this class so delete these operators
@@ -51,7 +57,7 @@ private:
 
     ~JobManager();
     
-    static JobManager* Instance;
+    static JobManager* instance;
 
     /// <summary>
     /// Worker thread will wait for any jobs
@@ -64,24 +70,24 @@ private:
     /// <summary>
     /// A mutex determining if the queue is ready
     /// </summary>
-    std::mutex ReadyQueueMutex;
+    std::mutex readyQueueMutex;
 
     // Ready queue for the jobs
-    ConcurrentQueue<CpuJob> ReadyQueue;
+    ConcurrentQueue<CpuJob> readyQueue;
 
     /// <summary>
     /// Conditional variable for if a job is available
     /// </summary>
-    std::condition_variable JobAvailable;
+    std::condition_variable jobAvailableCondition;
 
     // Worker threads for executing jobs
     // A worker thread extracts a job from the job queue and executes it
-    std::vector<std::thread> WorkerThreads;
+    std::vector<std::thread> workerThreads;
     
     /// <summary>
-    /// Atomic bool determining if we are done
+    /// Atomic bool determining if we are done used for closing all threads
     /// </summary>
-    std::atomic<bool> IsDone;
+    std::atomic<bool> isDone;
 
     
 };
