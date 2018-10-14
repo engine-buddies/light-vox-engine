@@ -1,16 +1,23 @@
 #include "JobManager.h"
 
+using namespace Jobs;
+
+
 // Singleton requirement
 JobManager* JobManager::instance = nullptr;
 
 void TestJob( void* myTestArgs, int myTestIndex )
 {
+#ifdef _DEBUG
     printf( "Test job here bub: %s \n", (char*) myTestArgs );
+#endif
 }
 
 void TestJobB( void* myTestArgs, int myTestIndex )
 {
+#ifdef _DEBUG
     printf( "Test job TWOOOOO here bub: %s \n", (char*) myTestArgs );
+#endif
 }
 
 JobManager* JobManager::GetInstance()
@@ -34,33 +41,33 @@ void JobManager::ReleaseInstance()
 JobManager::JobManager()
 {
     const unsigned int supportedThreads = std::thread::hardware_concurrency();
+
+#ifdef _DEBUG
     printf( "The number of threads supported on this system is: %d\n", supportedThreads );
+#endif // DEBUG
 
     isDone = false;
 
     // Create worker threads that check to see if there is any work to do
-    for ( unsigned int i = 0; i < supportedThreads; ++i )
+    for ( size_t i = 0; i < supportedThreads; ++i )
     {
         workerThreads.push_back( std::thread( &JobManager::WorkerThread, this ) );
     }
-
+#ifdef _DEBUG
     printf( "Created %d worker threads!\n", (int) workerThreads.size() );
 
-    CpuJob testFuncA {};
-    testFuncA.func_ptr = &TestJob;
 
-    CpuJob testFuncB {};
-    testFuncB.func_ptr = &TestJobB;
+    AddJob( &TestJob, "Test RAgs for Job A 1" );
+    AddJob( &TestJobB, "test args for B 2 " );
+    AddJob( &TestJobB, "test args for B 3 " );
+    AddJob( &TestJob, "test args for A 4 " );
+    AddJob( &TestJob, "test args for A 5 " );
+    AddJob( &TestJob, "test args for A 6 " );
+    AddJob( &TestJob, "test args for A 7 " );
+    
 
-    CpuJob testFuncC {};
-    testFuncC.func_ptr = &TestJob;
 
-    AddJob( testFuncA );
-    // Add a test job to the ready queue
-    AddJob( testFuncB );
-    // Add a test job to the ready queue
-    AddJob( testFuncC );
-
+#endif // DEBUG
 }
 
 JobManager::~JobManager()
@@ -79,21 +86,12 @@ JobManager::~JobManager()
     printf( "\tJob Manager dtor!\n" );
 }
 
-// Temporary add job function
-void JobManager::AddJob( CpuJob aJob )
-{
-    readyQueue.emplace_back( aJob );
-
-    // Let one of the worker threads know that there is a job available
-    jobAvailableCondition.notify_one();
-}
-
-void JobManager::AddJob( void( *func_ptr )( void *aArgs, int index ) )
+void JobManager::AddJob( void( *func_ptr )( void *aArgs, int index ), void* jobArgs )
 {
     CpuJob tempJob { };
     
     tempJob.func_ptr = func_ptr;
-    //tempJob.args = aArgs;
+    tempJob.args = jobArgs;
 
     readyQueue.emplace_back( tempJob );
 
@@ -105,7 +103,6 @@ void JobManager::AddJob( void( *func_ptr )( void *aArgs, int index ) )
 void JobManager::WorkerThread()
 {
     std::unique_lock<std::mutex> workerLock ( readyQueueMutex );
-    printf( "\tEnter Job Thread! \n" );
 
     while ( true )
     {
@@ -122,11 +119,17 @@ void JobManager::WorkerThread()
             readyQueue.pop_front( CurJob );
             
             CurJob.func_ptr( CurJob.args, CurJob.index );
+
+            // Notify other threads that a job has been taken and we should probably
+            // check to make sure that there isn;t more
+            jobAvailableCondition.notify_one();
         }
     }
-
+#ifdef _DEBUG
     printf( "\t\tEXIT Job Thread! \n" );
+#endif
 }
+
 
 ////////////////////////////////////////
 // Accessors

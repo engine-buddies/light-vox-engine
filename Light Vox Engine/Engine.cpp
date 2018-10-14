@@ -9,6 +9,13 @@
 
 Engine* Engine::engineInstance = nullptr;
 
+void TestMePlz( void* argBoi, int index )
+{
+#if defined(_DEBUG)
+    printf( "Hey YOOOO this is a test for you:: %s\n", static_cast<char*> ( argBoi ) );
+#endif
+}
+
 /* LIFE CYCLE */
 
 Engine::Engine(HINSTANCE hInstance)
@@ -31,7 +38,7 @@ Engine::~Engine()
 
     // Releases the instance of the entity manager
     EntityManager::ReleaseInstance();
-    JobManager::ReleaseInstance();
+    Jobs::JobManager::ReleaseInstance();
     
 }
 
@@ -105,7 +112,11 @@ HRESULT Engine::InitSystems()
     enMan->Init();
     enMan = nullptr;
 
-    JobManager::GetInstance();
+    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
+
+    man->AddJobA( &TestMePlz, "Well this is awk" );
+
+    man = nullptr;
 
 	ThrowIfFailed(graphics->Init());
     time->Init();
@@ -116,6 +127,9 @@ HRESULT Engine::InitSystems()
 HRESULT Engine::Run()
 {
     MSG msg = { };
+    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
+    
+
     while (msg.message != WM_QUIT)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -168,7 +182,7 @@ HRESULT Engine::Run()
             time->UpdateTimer();
         }
     }
-
+    man = nullptr;
     return (HRESULT)msg.wParam;
 }
 
