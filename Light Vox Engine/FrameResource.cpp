@@ -11,11 +11,13 @@ FrameResource::FrameResource(
     D3D12_VIEWPORT * viewport, 
     UINT frameResourceIndex)
 {
+    //instanceBufferWO = new InstanceBuffer[LV_MAX_INSTANCE_COUNT];
+    //sceneConstantBufferWO = new SceneConstantBuffer;
 	fenceValue = 0;
 	this->pso = pso;
 
 	//create the main command list
-	for (UINT i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
+	for (size_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		ThrowIfFailed(device->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -33,7 +35,7 @@ FrameResource::FrameResource(
 	}
 
 	//create the scene rendering command list (split through cores)
-	for (UINT i = 0; i < LV_NUM_CONTEXTS; ++i)
+	for (size_t i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		ThrowIfFailed(device->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT, 
@@ -50,21 +52,39 @@ FrameResource::FrameResource(
 		ThrowIfFailed(sceneCommandLists[i]->Close());
 	}
 
+    CD3DX12_RANGE zeroReadRange(0, 0);
+
+    //create the upload buffer for instance data
+    ThrowIfFailed(device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(sizeof(InstanceBuffer) * LV_MAX_INSTANCE_COUNT),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&instanceUploadBuffer)
+    ));;
+
+    // map it to a WO struct buffer thing
+    ThrowIfFailed(instanceUploadBuffer->Map(0,
+        &zeroReadRange,
+        reinterpret_cast<void**>(&instanceBufferWO)
+    ));
+
     // Null descriptors at the start of the heap (used for shadows)
-	const UINT nullSrvCount = 2;			
-	const UINT textureCount = 0;
+	const UINT nullSrvCount = 0;			
+    const UINT textureCount = 0;
+    const UINT cbvCount     = 1;
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//get handle to the cbv heap
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvCpuHandle(cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle(cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
-	nullSrvHandle = cbvSrvGpuHandle;
 	cbvSrvCpuHandle.Offset(
-        nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), 
+        (frameResourceIndex * (textureCount)) + nullSrvCount,
         cbvSrvDescriptorSize
     );
 	cbvSrvGpuHandle.Offset(
-        nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), 
+        (frameResourceIndex * (textureCount)) + nullSrvCount,
         cbvSrvDescriptorSize
     );
 
@@ -82,9 +102,8 @@ FrameResource::FrameResource(
     );
 
 	// Map the constant buffers and cache their heap pointers.
-	CD3DX12_RANGE readRange(0, 0);		// We do not intend to read from this resource on the CPU.
 	ThrowIfFailed(sceneConstantBuffer->Map(0, 
-        &readRange, 
+        &zeroReadRange,
         reinterpret_cast<void**>(&sceneConstantBufferWO)
         )
     );
@@ -109,15 +128,22 @@ FrameResource::FrameResource(
 
 FrameResource::~FrameResource()
 {
-	for (int i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
+
+    if (sceneConstantBuffer != nullptr)
+        sceneConstantBuffer->Unmap(0, nullptr);
+    sceneConstantBuffer = nullptr;
+
+    if (instanceUploadBuffer != nullptr)
+        instanceUploadBuffer->Unmap(0, nullptr);
+    instanceUploadBuffer = nullptr;
+
+	for (size_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		commandAllocators[i] = nullptr;
 		commandLists[i] = nullptr;
 	}
 
-	sceneConstantBuffer = nullptr;
-
-	for (int i = 0; i < LV_NUM_CONTEXTS; ++i)
+	for (size_t i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		sceneCommandLists[i] = nullptr;
 		sceneCommandAllocators[i] = nullptr;
@@ -132,14 +158,16 @@ void FrameResource::Bind(
 )
 {
 	//set-up before rendering
-	commandList->SetGraphicsRootDescriptorTable(1, sceneCbvHandle);
+    commandList->SetGraphicsRootShaderResourceView(0, instanceUploadBuffer->GetGPUVirtualAddress());
+    commandList->SetGraphicsRootDescriptorTable(2, sceneCbvHandle);
+    //commandList->SetGraphicsRootDescriptorTable(1, sceneCbvHandle);
 	commandList->OMSetRenderTargets(1, rtvHandle, FALSE, dsvHandle);
 }
 
 void FrameResource::Init()
 {
 	// Reset the command allocators and lists for the main thread.
-	for (int i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
+	for (size_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		ThrowIfFailed(commandAllocators[i]->Reset());
 		ThrowIfFailed(commandLists[i]->Reset(
@@ -149,7 +177,7 @@ void FrameResource::Init()
 	}
 
 	// Reset the worker command allocators and lists.
-	for (int i = 0; i < LV_NUM_CONTEXTS; ++i)
+	for (size_t i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		ThrowIfFailed(sceneCommandAllocators[i]->Reset());
 		ThrowIfFailed(sceneCommandLists[i]->Reset(
@@ -175,9 +203,6 @@ void FrameResource::WriteConstantBuffers(
     Camera * camera)
 {
 	SceneConstantBuffer sceneConsts = {};
-
-    sceneConsts.model = transforms[0];
-
 	camera->GetViewProjMatrix(
         &sceneConsts.view, 
         &sceneConsts.projection, 
@@ -185,6 +210,6 @@ void FrameResource::WriteConstantBuffers(
         viewport->Height
     );
 
-	//copy over
 	memcpy(sceneConstantBufferWO, &sceneConsts, sizeof(SceneConstantBuffer));
+    memcpy(instanceBufferWO, transforms, sizeof(InstanceBuffer) * LV_MAX_INSTANCE_COUNT);
 }
