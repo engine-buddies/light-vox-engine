@@ -17,6 +17,7 @@ void JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
 {
     // TODO: Add a job to this sequence and add it the job queue
     // Of the job manager
+
 }
 
 void JobSequence::Barrier()

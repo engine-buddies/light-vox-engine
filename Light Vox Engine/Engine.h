@@ -40,7 +40,6 @@ private:
 	GraphicsCore* graphics;
     Camera* camera;
     GameTime* time;
-    JobManager* JobMan = nullptr;
 
 	HRESULT InitWindow();
 

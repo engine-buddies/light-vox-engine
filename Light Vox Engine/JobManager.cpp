@@ -1,5 +1,8 @@
 #include "JobManager.h"
 
+// Singleton requirement
+JobManager* JobManager::Instance = nullptr;
+
 void TestJob( void* myTestArgs, int myTestIndex )
 {
     printf( "Test job here bub: %s \n", (char*) myTestArgs );
@@ -8,6 +11,24 @@ void TestJob( void* myTestArgs, int myTestIndex )
 void TestJobB( void* myTestArgs, int myTestIndex )
 {
     printf( "Test job TWOOOOO here bub: %s \n", (char*) myTestArgs );
+}
+
+JobManager* JobManager::GetInstance()
+{
+    if ( Instance == nullptr ) 
+    {
+        Instance = new JobManager();
+    }
+    return Instance;
+}
+
+void JobManager::ReleaseInstance()
+{
+    if ( Instance != nullptr )
+    {
+        delete Instance;
+        Instance = nullptr;
+    }
 }
 
 JobManager::JobManager()

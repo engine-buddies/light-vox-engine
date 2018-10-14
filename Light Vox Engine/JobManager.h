@@ -18,9 +18,16 @@ class JobManager
 {
 public:
 
-    JobManager();
+    /// <summary>
+    /// Get the Job manager instance
+    /// </summary>
+    /// <returns>Current instance of the job manager</returns>
+    static JobManager* GetInstance();
 
-    ~JobManager();
+    /// <summary>
+    /// Release the current Job Manager instance
+    /// </summary>
+    static void ReleaseInstance();
 
     /// <summary>
     /// Adds a job to the ready queue
@@ -29,12 +36,22 @@ public:
 
     // TODO: Sequence factory interface
 
+    // We don't want anything making copies of this class so delete these operators
+    JobManager( JobManager const& )     = delete;
+    void operator=( JobManager const& ) = delete;
+
     ////////////////////////////////////////
     // Accessors
 
     inline const size_t GetThreadCount() const;
     
 private:
+
+    JobManager();
+
+    ~JobManager();
+    
+    static JobManager* Instance;
 
     /// <summary>
     /// Worker thread will wait for any jobs
