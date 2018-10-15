@@ -9,12 +9,6 @@
 
 Engine* Engine::engineInstance = nullptr;
 
-void TestMePlz( void* argBoi, int index )
-{
-#if defined(_DEBUG)
-    printf( "Hey YOOOO this is a test for you:: %s\n", static_cast<char*> ( argBoi ) );
-#endif
-}
 
 /* LIFE CYCLE */
 
@@ -113,9 +107,8 @@ HRESULT Engine::InitSystems()
     enMan = nullptr;
 
     Jobs::JobManager* man = Jobs::JobManager::GetInstance();
-
-    man->AddJobA( &TestMePlz, "Well this is awk" );
-
+    // Add any jobs you need here, like this: 
+    //man->AddJobA( &FunctionName, void* args );
     man = nullptr;
 
 	ThrowIfFailed(graphics->Init());
@@ -126,9 +119,7 @@ HRESULT Engine::InitSystems()
 
 HRESULT Engine::Run()
 {
-    MSG msg = { };
-    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
-    
+    MSG msg = { };    
 
     while (msg.message != WM_QUIT)
     {
@@ -182,7 +173,6 @@ HRESULT Engine::Run()
             time->UpdateTimer();
         }
     }
-    man = nullptr;
     return (HRESULT)msg.wParam;
 }
 

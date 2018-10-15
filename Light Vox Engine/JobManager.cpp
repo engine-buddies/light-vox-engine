@@ -2,23 +2,8 @@
 
 using namespace Jobs;
 
-
 // Singleton requirement
 JobManager* JobManager::instance = nullptr;
-
-void TestJob( void* myTestArgs, int myTestIndex )
-{
-#ifdef _DEBUG
-    printf( "Test job here bub: %s \n", (char*) myTestArgs );
-#endif
-}
-
-void TestJobB( void* myTestArgs, int myTestIndex )
-{
-#ifdef _DEBUG
-    printf( "Test job TWOOOOO here bub: %s \n", (char*) myTestArgs );
-#endif
-}
 
 JobManager* JobManager::GetInstance()
 {
@@ -53,21 +38,7 @@ JobManager::JobManager()
     {
         workerThreads.push_back( std::thread( &JobManager::WorkerThread, this ) );
     }
-#ifdef _DEBUG
-    printf( "Created %d worker threads!\n", (int) workerThreads.size() );
 
-
-    AddJob( &TestJob, "Test RAgs for Job A 1" );
-    AddJob( &TestJobB, "test args for B 2 " );
-    AddJob( &TestJobB, "test args for B 3 " );
-    AddJob( &TestJob, "test args for A 4 " );
-    AddJob( &TestJob, "test args for A 5 " );
-    AddJob( &TestJob, "test args for A 6 " );
-    AddJob( &TestJob, "test args for A 7 " );
-    
-
-
-#endif // DEBUG
 }
 
 JobManager::~JobManager()
@@ -125,9 +96,6 @@ void JobManager::WorkerThread()
             jobAvailableCondition.notify_one();
         }
     }
-#ifdef _DEBUG
-    printf( "\t\tEXIT Job Thread! \n" );
-#endif
 }
 
 
