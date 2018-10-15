@@ -3,6 +3,7 @@
 
 class Camera;
 class FrameResource;
+struct ObjectData;
 
 /// <summary>
 /// This is the core of all our graphics lives
@@ -65,7 +66,12 @@ private:
     /// <summary>
     /// Loads in our shaders and builds out a PSO
     /// </summary>
-	inline HRESULT InitPSO();		
+	inline HRESULT InitPSO();	
+
+    /// <summary>
+    /// Loads in our shaders and builds out a PSO for the Second Pass
+    /// </summary>
+    inline HRESULT InitLightPassPSO();
 
     /// <summary>
     /// Create the Render Target View Heap and initialize our render
@@ -100,6 +106,11 @@ private:
     /// </summary>
 	inline HRESULT InitSynchronizationObjects();	
 
+    /// <summary>
+    /// Initializes the geometry needed for the Lighting Pass
+    /// </summary>
+    inline HRESULT InitLightPassGeometry();
+
     /*RENDER HELPERS*/
 
     /// <summary>
@@ -119,10 +130,16 @@ private:
 	inline void EndFrame();
 
     /// <summary>
-    /// Sets the pipeline with common stuff for rendering *most* everything
+    /// Sets the pipeline with common stuff for rendering to the first pass
     /// </summary>
     /// <param name="commandList">The main rendering command list</param>
-	inline void SetCommonPipelineState(ID3D12GraphicsCommandList* commandList);
+	inline void SetGBufferPSO(ID3D12GraphicsCommandList* commandList);
+
+    /// <summary>
+    /// Sets the pipeline with second pass stuff
+    /// </summary>
+    /// <param name="commandList">The main rendering command list</param>
+    inline void SetLightPassPSO(ID3D12GraphicsCommandList* commandList);
 
 	HWND hWindow;		//handle to window
 	UINT windowWidth;	//width of window
@@ -135,7 +152,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
-	Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[LV_FRAME_COUNT];
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[LV_FRAME_COUNT * LV_NUM_RTV];
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilView;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
@@ -145,6 +162,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> samplerHeap;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> lightPso;
 
     //frame resources
     FrameResource* frameResources[LV_FRAME_COUNT];
@@ -170,4 +188,9 @@ private:
 	HANDLE fenceEvent;
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	UINT64 fenceValue;
+
+    //Deferred Rendering members
+    ObjectData screenQuad;
+    Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[LV_NUM_RTV];
+    float clearColor[4] = { 0.0,0.0f,0.0f,1.0f };
 };

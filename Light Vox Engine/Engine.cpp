@@ -15,8 +15,8 @@ Engine::Engine(HINSTANCE hInstance)
 {
 	this->hInstance = hInstance;
 	Engine::engineInstance = this;
-	windowWidth = 1280;
-	windowHeight = 720;
+	windowWidth = LV_VIEWPORT_WIDTH;
+	windowHeight = LV_VIEWPORT_HEIGHT;
 	windowTitle = "STRUGGLE BUS";
 	hWindow = 0;
     

@@ -75,7 +75,7 @@ void GraphicsCore::Render()
 	//init worker threads?
 	ID3D12GraphicsCommandList* pSceneCommandList = currentFrameResource->sceneCommandLists[0].Get();
 
-	SetCommonPipelineState(pSceneCommandList);
+    SetGBufferPSO(pSceneCommandList);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
         rtvHeap->GetCPUDescriptorHandleForHeapStart(), 
         frameIndex, 
@@ -159,7 +159,7 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 
 	//describe the swap chain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { };
-	swapChainDesc.BufferCount = LV_FRAME_COUNT; //frame count
+	swapChainDesc.BufferCount = LV_FRAME_COUNT * LV_NUM_RTV;
 	swapChainDesc.Width = windowWidth; // adjust width
 	swapChainDesc.Height = windowHeight; // adjust Height
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -318,10 +318,10 @@ inline HRESULT GraphicsCore::InitPSO()
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 3;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_SNORM;
-	psoDesc.RTVFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	psoDesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	psoDesc.RTVFormats[2] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.SampleDesc.Count = 1;
 
     //create our PSO
@@ -334,11 +334,52 @@ inline HRESULT GraphicsCore::InitPSO()
 	return S_OK;
 }
 
+inline HRESULT GraphicsCore::InitLightPassPSO()
+{
+    ComPtr<ID3DBlob> vs;
+    ComPtr<ID3DBlob> ps;
+
+    D3DReadFileToBlob(L"Assets/Shaders/vs_basic.cso", &vs);
+    D3DReadFileToBlob(L"Assets/Shaders/ps_lighting.cso", &ps);
+
+    static D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+    };
+
+    //describe the PSO
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC lightPsoDesc{};
+    lightPsoDesc.VS = CD3DX12_SHADER_BYTECODE(vs.Get());
+    lightPsoDesc.PS = CD3DX12_SHADER_BYTECODE(ps.Get());
+    lightPsoDesc.InputLayout.pInputElementDescs = screenQuadVertexDesc;
+    lightPsoDesc.InputLayout.NumElements = _countof(screenQuadVertexDesc);
+    lightPsoDesc.pRootSignature = rootSignature.Get();
+    lightPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    lightPsoDesc.DepthStencilState.DepthEnable = false;
+    lightPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    lightPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    lightPsoDesc.RasterizerState.DepthClipEnable = false;
+    lightPsoDesc.SampleMask = UINT_MAX;
+    lightPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    lightPsoDesc.NumRenderTargets = 1;
+    //descPipelineState.RTVFormats[0] = mRtvFormat[0];
+    lightPsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    lightPsoDesc.SampleDesc.Count = 1;
+
+    //create our PSO
+    ThrowIfFailed(device->CreateGraphicsPipelineState(
+        &lightPsoDesc,
+        IID_PPV_ARGS(&pso)
+    ));
+    NAME_D3D12_OBJECT(pso);
+    return S_OK;
+}
+
 inline HRESULT GraphicsCore::InitRTV()
 {
 	// Create heap of render target descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT;
+	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_RTV;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	ThrowIfFailed(device->CreateDescriptorHeap(
@@ -346,17 +387,65 @@ inline HRESULT GraphicsCore::InitRTV()
         IID_PPV_ARGS(&rtvHeap)
     ));
     NAME_D3D12_OBJECT(rtvHeap);
+    CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_DEFAULT);
 
 	rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	// Create frame resources.
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
-	// Create an RTV for each frame.
-	for (UINT n = 0; n < LV_FRAME_COUNT; n++)
+    //Texture Description for G Buffer
+    D3D12_RESOURCE_DESC textureDesc{};
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    textureDesc.Alignment = 0;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.MipLevels = 1;
+    textureDesc.DepthOrArraySize = 1;
+    textureDesc.Width = (UINT)LV_VIEWPORT_WIDTH;
+    textureDesc.Height = (UINT)LV_VIEWPORT_HEIGHT;
+    textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+    //Clear color for the RTVs
+    //Normal and Position RTVs MUST BE CLEARED TO BLACK
+    D3D12_CLEAR_VALUE clearVal;
+    clearVal.Color[0] = clearColor[0];
+    clearVal.Color[1] = clearColor[1];
+    clearVal.Color[2] = clearColor[2];
+    clearVal.Color[3] = clearColor[3];
+    clearVal.Format = textureDesc.Format;
+
+    //Render Target View Description
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+    rtvDesc.Texture2D.MipSlice = 0;
+    rtvDesc.Texture2D.PlaneSlice = 0;
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+    rtvDesc.Format = textureDesc.Format;
+
+    //Shader Resource View Description
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	// Create RTVs:
+    // 1 for each frame * 1 for each gbuffer resource
+	for (UINT n = 0; n < (LV_FRAME_COUNT * LV_NUM_RTV); n++)
 	{
-		ThrowIfFailed(swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
-		device->CreateRenderTargetView(renderTargets[n].Get(), nullptr, rtvHandle);
+		ThrowIfFailed(device->CreateCommittedResource(
+            &heapProperty, 
+            D3D12_HEAP_FLAG_NONE, 
+            &textureDesc, 
+            D3D12_RESOURCE_STATE_RENDER_TARGET, 
+            &clearVal, 
+            IID_PPV_ARGS(rtvTextures[n].GetAddressOf()))
+        );
+        ThrowIfFailed(swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
+		device->CreateRenderTargetView(renderTargets[n].Get(), &rtvDesc, rtvHandle);
 		rtvHandle.Offset(1, rtvDescriptorSize);
         NAME_D3D12_OBJECT_INDEXED(renderTargets, n);
 	}
@@ -620,6 +709,8 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 
 		device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
 		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+
+        //TO DO: Add CreateShaderResourceView for each RT
 	}
 
 	//close the command list and transfer static data
@@ -671,6 +762,17 @@ inline HRESULT GraphicsCore::InitSynchronizationObjects()
 	WaitForSingleObject(fenceEvent, INFINITE);
 
 	return S_OK;
+}
+
+inline HRESULT GraphicsCore::InitLightPassGeometry()
+{
+    ObjLoader objl;
+    MeshData meshData;
+    objl.GenerateFullScreenQuad(meshData);
+    
+    //TO DO: Create Vertex Buffer for Screen Quad
+
+    return S_OK;
 }
 
 inline void GraphicsCore::BeginFrame()
@@ -735,13 +837,23 @@ inline void GraphicsCore::EndFrame()
 	ThrowIfFailed(currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->Close());
 }
 
-inline void GraphicsCore::SetCommonPipelineState(ID3D12GraphicsCommandList * commandList)
+inline void GraphicsCore::SetGBufferPSO(ID3D12GraphicsCommandList * commandList)
 {
-	commandList->SetGraphicsRootSignature(rootSignature.Get());
+    commandList->SetPipelineState(pso.Get());
+    
+    commandList->SetGraphicsRootSignature(rootSignature.Get());
 
 	ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get() };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
+    rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    for (auto i = 0; i < (LV_FRAME_COUNT * LV_NUM_RTV); ++i)
+    {
+        commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+        rtvHandle.Offset(1, rtvDescriptorSize);
+    }
+        
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -749,8 +861,38 @@ inline void GraphicsCore::SetCommonPipelineState(ID3D12GraphicsCommandList * com
 	commandList->IASetIndexBuffer(&indexBufferView);
 	commandList->OMSetStencilRef(0);
 
+    commandList->OMSetRenderTargets(
+        LV_FRAME_COUNT * LV_NUM_RTV,
+        &rtvHeap->GetCPUDescriptorHandleForHeapStart(),
+        true,
+        &dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
+
+    //TO DO: SetGraphicsRootDescriptorTable
+
 	//D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = cbvSrvHeap->GetGPUDescriptorHandleForHeapStart();
 	//const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	//CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvHandle(cbvSrvHeapStart, 2, cbvSrvDescriptorSize);
 	//commandList->SetGraphicsRootDescriptorTable(0, cbvSrvHandle);
+}
+
+inline void GraphicsCore::SetLightPassPSO(ID3D12GraphicsCommandList * commandList)
+{
+    D3D12_RESOURCE_BARRIER RBdesc{};
+    RBdesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    RBdesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    RBdesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    RBdesc.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+    for (auto i = 0; i < (LV_FRAME_COUNT * LV_NUM_RTV); ++i)
+    {
+        RBdesc.Transition.pResource = rtvTextures[i].Get();
+        commandList->ResourceBarrier(1, &RBdesc);
+    }
+
+    RBdesc.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ;
+    RBdesc.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+    RBdesc.Transition.pResource = depthStencilView.Get();
+    commandList->ResourceBarrier(1, &RBdesc);
+
+    commandList->SetPipelineState(lightPso.Get());
 }
