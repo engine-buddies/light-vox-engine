@@ -9,6 +9,7 @@
 
 Engine* Engine::engineInstance = nullptr;
 
+
 /* LIFE CYCLE */
 
 Engine::Engine(HINSTANCE hInstance)
@@ -31,6 +32,8 @@ Engine::~Engine()
 
     // Releases the instance of the entity manager
     EntityManager::ReleaseInstance();
+    Jobs::JobManager::ReleaseInstance();
+    
 }
 
 HRESULT Engine::InitWindow()
@@ -103,7 +106,12 @@ HRESULT Engine::InitSystems()
     enMan->Init();
     enMan = nullptr;
 
-    ThrowIfFailed(graphics->Init());
+    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
+    // Add any jobs you need here, like this: 
+    //man->AddJobA( &FunctionName, void* args );
+    man = nullptr;
+
+	ThrowIfFailed(graphics->Init());
     time->Init();
 
     return S_OK;
@@ -111,7 +119,8 @@ HRESULT Engine::InitSystems()
 
 HRESULT Engine::Run()
 {
-    MSG msg = { };
+    MSG msg = { };    
+
     while (msg.message != WM_QUIT)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -164,7 +173,6 @@ HRESULT Engine::Run()
             time->UpdateTimer();
         }
     }
-
     return (HRESULT)msg.wParam;
 }
 
