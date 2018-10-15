@@ -5,7 +5,7 @@ Physics::Physics()
 {
     gravity = { .0f, .0f, .0f };
     componentManager = ComponentManager::GetInstance();
-    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
         componentManager->transform[i].transformMatrix = glm::mat4(1.0);
     }
@@ -23,9 +23,9 @@ void Physics::Update(float dt)
 void Physics::Collide()
 {
     //Basic box to box collision 
-    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
-        for (int j = 0; j < LV_MAX_INSTANCE_COUNT; ++j)
+        for (size_t j = 0; j < LV_MAX_INSTANCE_COUNT; ++j)
         {
             if (i == j)
                 continue;
@@ -72,21 +72,21 @@ inline bool Physics::BoxIntersect(glm::vec3 posA, glm::vec3 posB, glm::vec3 size
         (aMinZ <= bMaxZ && aMaxZ >= bMinZ);
 }
 
-void Physics::Move(glm::vec3 pos, Entity e)
+void Physics::Move(glm::vec3 pos, UINT index)
 {
-    componentManager->transform[e.index].pos = pos;
+    componentManager->transform[index].pos = pos;
 }
 
-void Physics::RotateAxisAngle(glm::vec3 rotationAxis, float angle, Entity e)
+void Physics::RotateAxisAngle(glm::vec3 rotationAxis, float angle, UINT index)
 {
-    componentManager->transform[e.index].rot = rotationAxis;
-    componentManager->transform[e.index].angle = angle;
+    componentManager->transform[index].rot = rotationAxis;
+    componentManager->transform[index].angle = angle;
 }
 
 void Physics::Integrate(float dt)
 {
     //semi implicit euler 
-    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
         glm::vec3& acceleration = componentManager->bodyProperties[i].acceleration;
         glm::vec3& velocity = componentManager->bodyProperties[i].velocity;
@@ -100,7 +100,7 @@ void Physics::Integrate(float dt)
 
 void Physics::AccumlateForces()
 {
-    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
         glm::vec3& acceleration = componentManager->bodyProperties[i].acceleration;
         glm::vec3& force = componentManager->bodyProperties[i].force;
@@ -111,7 +111,7 @@ void Physics::AccumlateForces()
 
 void Physics::ModelToWorld()
 {
-    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
         glm::mat4& transformMatrix = componentManager->transform[i].transformMatrix;
         glm::vec3& pos= componentManager->transform[i].pos;

@@ -73,6 +73,16 @@ Entity EntityManager::Get_Entity(int index) const
     return {};
 }
 
+EntityManager::EntityManager()
+{
+
+}
+
+EntityManager::~EntityManager()
+{
+
+}
+
 unsigned int EntityManager::Get_Free_Entry()
 {
     if (firstFree != NONE)

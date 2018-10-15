@@ -177,8 +177,8 @@ HRESULT Engine::Run()
                         glm::mat4 rotationMatrix = glm::rotate(rotation, rotationAxis);
                         glmtransforMatrix *= rotationMatrix;
 
-                        physics->Move(glm::vec3(x, y, z), entityList[i * count + j]);
-                        physics->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityList[i * count + j]);
+                        physics->Move(glm::vec3(x, y, z), entityList[i * count + j].index);
+                        physics->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityList[i * count + j].index);
                        /* Mat4x4toXMFLOAT4x4(
                             glmtransforMatrix,
                             transforms[i * count + j]);*/

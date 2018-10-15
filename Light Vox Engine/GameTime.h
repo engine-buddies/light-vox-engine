@@ -30,11 +30,11 @@ public:
     /// <summary>
     /// return total time (time since starting program) as float 
     /// </summary>
-    double GetTotalFloatTime();
+    float GetTotalFloatTime();
     /// <summary>
     /// Return delta time as float
     /// </summary>
-    double GetDeltaFloatTime();
+	float GetDeltaFloatTime();
 
 private:
 	static GameTime* instance;

@@ -8,7 +8,7 @@
 /// Singleton for controlling the creation of game entities.
 /// A structure of array's for each entity's components
 /// </summary>
-/// <author>Ben Hoffman</author>
+/// <author>Arturo Kuang</author>
 
 class EntityManager
 {
@@ -59,10 +59,13 @@ public:
     Entity Get_Entity(int index) const;
 
     // We don't want anything making copies of this class so delete these operators
-    //EntityManager(EntityManager const&) = delete;
-    //void operator=(EntityManager const&) = delete;
+    EntityManager(EntityManager const&) = delete;
+    void operator=(EntityManager const&) = delete;
 
 private:
+	EntityManager();
+	~EntityManager();
+
     static EntityManager* Instance;
     struct index_entry
     {

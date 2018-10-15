@@ -59,12 +59,12 @@ double GameTime::GetDeltaDoubleTime()
     return deltaDoubleTime;
 }
 
-double GameTime::GetTotalFloatTime()
+float GameTime::GetTotalFloatTime()
 {
     return totalFloatTime;
 }
 
-double GameTime::GetDeltaFloatTime()
+float GameTime::GetDeltaFloatTime()
 {
     return deltaFloatTime;
 }

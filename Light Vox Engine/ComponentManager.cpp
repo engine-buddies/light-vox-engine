@@ -23,3 +23,4 @@ void ComponentManager::Release()
         Instance = nullptr;
     }
 }
+

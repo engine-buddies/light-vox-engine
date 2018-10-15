@@ -23,7 +23,7 @@ public:
     /// </summary>
     /// <param name="pos"></param>
     /// <param name="e"></param>
-    void Move(glm::vec3 pos , Entity e);
+    void Move(glm::vec3 pos , UINT index);
     /// <summary>
     /// Set quaternion roation for entity
     /// </summary>
@@ -32,7 +32,7 @@ public:
     /// <param name="e"></param>
     void RotateAxisAngle(glm::vec3 rotationAxis, 
         float angle, 
-        Entity e);
+		UINT index);
 
 private:
 
