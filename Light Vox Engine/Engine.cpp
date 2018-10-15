@@ -11,6 +11,30 @@ Engine* Engine::engineInstance = nullptr;
 
 /* LIFE CYCLE */
 
+//DEBUG :: converts glm mat4x4 to directx xmfloat 4x4
+inline void Mat4x4toXMFLOAT4x4(glm::mat4x4& a, DirectX::XMFLOAT4X4& b)
+{
+    b._11 = a[0][0];
+    b._21 = a[0][1];
+    b._31 = a[0][2];
+    b._41 = a[0][3];
+
+    b._12 = a[1][0];
+    b._22 = a[1][1];
+    b._32 = a[1][2];
+    b._42 = a[1][3];
+    
+    b._13 = a[2][0];
+    b._23 = a[2][1];
+    b._33 = a[2][2];
+    b._43 = a[2][3];
+    
+    b._14 = a[3][0];
+    b._24 = a[3][1];
+    b._34 = a[3][2];
+    b._44 = a[3][3];
+}
+
 Engine::Engine(HINSTANCE hInstance)
 {
     this->hInstance = hInstance;
@@ -101,6 +125,7 @@ HRESULT Engine::InitSystems()
 
     // Calling get instance will create the entity manager
     entityManager = EntityManager::GetInstance();
+    componentManager = ComponentManager::GetInstance();
 
     ThrowIfFailed(graphics->Init());
     time->Init();
@@ -109,15 +134,15 @@ HRESULT Engine::InitSystems()
     //DEBUG::ECS
     for (int i = 0; i < LV_MAX_INSTANCE_COUNT; i++)
     {
-        entityManager->Create_Entity();
+        entityList.push_back(entityManager->Create_Entity());
     }
+
     return S_OK;
 }
 
 HRESULT Engine::Run()
 {
     MSG msg = { };
-
 
     while (msg.message != WM_QUIT)
     {
@@ -129,7 +154,9 @@ HRESULT Engine::Run()
         else
         {
             //DEBUG CODE for basic transform update;
+           
             static DirectX::XMFLOAT4X4 transforms[LV_MAX_INSTANCE_COUNT];
+            static glm::mat4x4 glmTransforms[LV_MAX_INSTANCE_COUNT];
             static bool init = false;
             static int count = sqrtf(LV_MAX_INSTANCE_COUNT);
             static float rotation = 0.001f;
@@ -138,15 +165,28 @@ HRESULT Engine::Run()
 
                 float x = -count / 2.0f;
                 float y = -count / 2.0f;
-                float z = 0;
+                float z = -80;
                 for (int i = 0; i < count; i++)
                 {
                     for (int j = 0; j < count; j++)
                     {
-                        DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation(x, y, z);
+                        //DirectX::XMMATRIX transformMatrix;
+
+                        glm::mat4 glmtransforMatrix = glm::translate(glm::vec3(x, y, z));
+                        glm::vec3 rotationAxis(.0f, 1.0f, .0f);
+                        glm::mat4 rotationMatrix = glm::rotate(rotation, rotationAxis);
+                        glmtransforMatrix *= rotationMatrix;
+
+                        physics->Move(glm::vec3(x, y, z), entityList[i * count + j]);
+                        physics->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityList[i * count + j]);
+                       /* Mat4x4toXMFLOAT4x4(
+                            glmtransforMatrix,
+                            transforms[i * count + j]);*/
+
+                        /*DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation(x, y, z);
                         transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixRotationY(rotation), transformMatrix);
                         DirectX::XMStoreFloat4x4(transforms + i * count + j, transformMatrix);
-
+                        */
                         x += 1;
                     }
 
@@ -167,6 +207,15 @@ HRESULT Engine::Run()
                 DirectX::XMLoadFloat3(&forward),
                 DirectX::XMLoadFloat3(&up)
             );
+
+            physics->Update(time->GetTotalFloatTime());
+
+            for (int i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+            {
+                Mat4x4toXMFLOAT4x4(
+                    componentManager->transform[i].transformMatrix,
+                    transforms[i]);
+            }
 
             graphics->Update(transforms, camera);
             graphics->Render();

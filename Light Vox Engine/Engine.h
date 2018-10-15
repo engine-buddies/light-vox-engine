@@ -6,6 +6,7 @@
 #include "EntityManager.h"
 //#include "Entity.h"
 #include "Physics.h"
+#include "ComponentManager.h"
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -40,6 +41,8 @@ private:
 
     //ECS
     EntityManager* entityManager;
+    std::vector<Entity> entityList;
+    ComponentManager* componentManager;
 
     //Systems
 	GraphicsCore* graphics;

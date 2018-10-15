@@ -78,8 +78,6 @@ private:
     
     unsigned int Get_Free_Entry();
     ///////////////////////////////////////////////////
-    // Entity components
     //TODO:: Align and Pack 
     
-
 };
