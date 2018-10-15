@@ -31,6 +31,8 @@ HRESULT GraphicsCore::Init()
 	ThrowIfFailed(InitDeviceCommandQueueSwapChain());
 	ThrowIfFailed(InitRootSignature());
 	ThrowIfFailed(InitPSO());
+	ThrowIfFailed(InitLightPassPSO());
+	ThrowIfFailed(InitLightPassGeometry());
 	ThrowIfFailed(InitRTV());
 	ThrowIfFailed(InitDepthStencil());
 	ThrowIfFailed(InitViewportScissorRectangle());
@@ -159,7 +161,7 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 
 	//describe the swap chain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { };
-	swapChainDesc.BufferCount = LV_FRAME_COUNT * LV_NUM_RTV;
+	swapChainDesc.BufferCount = LV_FRAME_COUNT;
 	swapChainDesc.Width = windowWidth; // adjust width
 	swapChainDesc.Height = windowHeight; // adjust Height
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -379,7 +381,7 @@ inline HRESULT GraphicsCore::InitRTV()
 {
 	// Create heap of render target descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_RTV;
+	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	ThrowIfFailed(device->CreateDescriptorHeap(
@@ -402,8 +404,8 @@ inline HRESULT GraphicsCore::InitRTV()
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.MipLevels = 1;
     textureDesc.DepthOrArraySize = 1;
-    textureDesc.Width = (UINT)LV_VIEWPORT_WIDTH;
-    textureDesc.Height = (UINT)LV_VIEWPORT_HEIGHT;
+    textureDesc.Width = windowWidth;
+    textureDesc.Height = windowWidth;
     textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
     textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -432,18 +434,22 @@ inline HRESULT GraphicsCore::InitRTV()
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	// Create RTVs:
-    // 1 for each frame * 1 for each gbuffer resource
-	for (UINT n = 0; n < (LV_FRAME_COUNT * LV_NUM_RTV); n++)
+	for (UINT i = 0; i < LV_NUM_RTV; ++i)
 	{
 		ThrowIfFailed(device->CreateCommittedResource(
-            &heapProperty, 
-            D3D12_HEAP_FLAG_NONE, 
-            &textureDesc, 
-            D3D12_RESOURCE_STATE_RENDER_TARGET, 
-            &clearVal, 
-            IID_PPV_ARGS(rtvTextures[n].GetAddressOf()))
-        );
+			&heapProperty,
+			D3D12_HEAP_FLAG_NONE,
+			&textureDesc,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			&clearVal,
+			IID_PPV_ARGS(rtvTextures[i].GetAddressOf()))
+		);
+	}
+
+	// Create RTVs:
+    // 1 for each frame * 1 for each gbuffer resource
+	for (UINT n = 0; n < LV_FRAME_COUNT; n++)
+	{
         ThrowIfFailed(swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
 		device->CreateRenderTargetView(renderTargets[n].Get(), &rtvDesc, rtvHandle);
 		rtvHandle.Offset(1, rtvDescriptorSize);
@@ -883,7 +889,7 @@ inline void GraphicsCore::SetLightPassPSO(ID3D12GraphicsCommandList * commandLis
     RBdesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
     RBdesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
     RBdesc.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
-    for (auto i = 0; i < (LV_FRAME_COUNT * LV_NUM_RTV); ++i)
+    for (auto i = 0; i < LV_NUM_RTV; ++i)
     {
         RBdesc.Transition.pResource = rtvTextures[i].Get();
         commandList->ResourceBarrier(1, &RBdesc);

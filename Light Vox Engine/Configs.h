@@ -1,9 +1,6 @@
 #pragma once
 /*Our 'fake' config file*/
 
-#define LV_VIEWPORT_WIDTH 1280
-#define LV_VIEWPORT_HEIGHT 720
-
 #define LV_FRAME_COUNT 2		//how many frames for swap chain
 #define LV_NUM_CONTEXTS 1		//for multi-threading
 #define LV_NUM_RTV 3
