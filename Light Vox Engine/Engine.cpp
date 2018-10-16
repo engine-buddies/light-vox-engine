@@ -52,9 +52,11 @@ Engine::~Engine()
     time->ReleaseInstance();
     delete graphics;
     delete camera;
+    delete physics;
 
     // Releases the instance of the entity manager
     entityManager->ReleaseInstance();
+    componentManager->Release();
 }
 
 HRESULT Engine::InitWindow()

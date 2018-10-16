@@ -12,6 +12,7 @@ public:
     /// -intializies transform matrix
     /// </summary>
     Physics();
+    ~Physics();
     /// <summary>
     /// updates physics calls by solving collision, solving forces,
     /// integrating position, and calc. model to world matrix

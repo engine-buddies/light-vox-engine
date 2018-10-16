@@ -79,8 +79,5 @@ private:
     int lastFree;
     std::vector<index_entry> entries;
     
-    unsigned int Get_Free_Entry();
-    ///////////////////////////////////////////////////
-    //TODO:: Align and Pack 
-    
+    unsigned int Get_Free_Entry();    
 };

@@ -16,12 +16,12 @@ public:
     void Init();
     void Release();
 
-	//ComponentManager(ComponentManager const&) = delete;
-	//void operator=(ComponentManager const&) = delete;
+	ComponentManager(ComponentManager const&) = delete;
+	void operator=(ComponentManager const&) = delete;
 
 private:
-	//ComponentManager();
-	//~ComponentManager();
+	ComponentManager();
+	~ComponentManager();
 
     static ComponentManager* Instance;
 };

@@ -5,10 +5,10 @@ Physics::Physics()
 {
     gravity = { .0f, .0f, .0f };
     componentManager = ComponentManager::GetInstance();
-    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
-    {
-        componentManager->transform[i].transformMatrix = glm::mat4(1.0);
-    }
+}
+
+Physics::~Physics()
+{
 }
 
 void Physics::Update(float dt)
