@@ -15,7 +15,7 @@ ComponentManager* ComponentManager::GetInstance()
     return Instance;
 }
 
-void ComponentManager::Release()
+void ComponentManager::ReleaseInstance()
 {
     if (Instance != nullptr)
     {

@@ -14,7 +14,7 @@ public:
     EntityComponents::BodyProperties bodyProperties[LV_MAX_INSTANCE_COUNT];
     static ComponentManager* GetInstance();
     void Init();
-    void Release();
+    void ReleaseInstance();
 
 	ComponentManager(ComponentManager const&) = delete;
 	void operator=(ComponentManager const&) = delete;
