@@ -16,6 +16,15 @@
 #include "lvUtils.h"
 #include "DXSampleHelper.h"
 #include "Configs.h"
+#include <cstdint>
+
+//Math 
+#define GLM_FORCE_SSE2 // or GLM_FORCE_SSE42 if your processor supports it
+#define GLM_FORCE_ALIGNED
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 //Debug
 #if defined(_DEBUG)

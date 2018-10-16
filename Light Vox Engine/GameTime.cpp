@@ -20,15 +20,18 @@ void GameTime::UpdateTimer()
 {
 	__int64 now;
 	QueryPerformanceCounter((LARGE_INTEGER*)&now);
-	currentTime = (double)now;
+	currentTime = static_cast<double>(now);
 
 	//Calc delta time and clamp to zero
 	//Could go negitive if CPU goes into power saver mode
 	//or the process itself gets moves to another core
-	deltaTime = max(((currentTime - previousTime) * perfCounterSeconds), 0.0f);
-	totalTime = ((currentTime - startTime) * perfCounterSeconds);
+	deltaDoubleTime = max(((currentTime - previousTime) * perfCounterSeconds), 0.0f);
+	totalDoubleTime = ((currentTime - startTime) * perfCounterSeconds);
+    totalFloatTime = static_cast<float>(totalDoubleTime);
+    deltaFloatTime = static_cast<float>(deltaDoubleTime);
 
 	previousTime = currentTime;
+
 }
 
 void GameTime::Init()
@@ -40,17 +43,28 @@ void GameTime::Init()
 
 	__int64 now;
 	QueryPerformanceCounter((LARGE_INTEGER*)&now);
-	startTime = now;
-	currentTime = now;
-	previousTime = now;
+    double doubleNow = static_cast<double>(now);
+	startTime = doubleNow;
+	currentTime = doubleNow;
+	previousTime = doubleNow;
 }
 
-double GameTime::GetTotalTime()
+double GameTime::GetTotalDoubleTime()
 {
-	return totalTime;
+	return totalDoubleTime;
 }
 
-double GameTime::GetDeltaTime()
+double GameTime::GetDeltaDoubleTime()
 {
-    return deltaTime;
+    return deltaDoubleTime;
+}
+
+float GameTime::GetTotalFloatTime()
+{
+    return totalFloatTime;
+}
+
+float GameTime::GetDeltaFloatTime()
+{
+    return deltaFloatTime;
 }

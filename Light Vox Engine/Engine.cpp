@@ -12,6 +12,30 @@ Engine* Engine::engineInstance = nullptr;
 
 /* LIFE CYCLE */
 
+//DEBUG :: converts glm mat4x4 to directx xmfloat 4x4
+inline void Mat4x4toXMFLOAT4x4(glm::mat4x4& a, DirectX::XMFLOAT4X4& b)
+{
+    b._11 = a[0][0];
+    b._21 = a[0][1];
+    b._31 = a[0][2];
+    b._41 = a[0][3];
+
+    b._12 = a[1][0];
+    b._22 = a[1][1];
+    b._32 = a[1][2];
+    b._42 = a[1][3];
+    
+    b._13 = a[2][0];
+    b._23 = a[2][1];
+    b._33 = a[2][2];
+    b._43 = a[2][3];
+    
+    b._14 = a[3][0];
+    b._24 = a[3][1];
+    b._34 = a[3][2];
+    b._44 = a[3][3];
+}
+
 Engine::Engine(HINSTANCE hInstance)
 {
     this->hInstance = hInstance;
@@ -29,9 +53,11 @@ Engine::~Engine()
     time->ReleaseInstance();
     delete graphics;
     delete camera;
+    delete physics;
 
     // Releases the instance of the entity manager
-    EntityManager::ReleaseInstance();
+    entityManager->ReleaseInstance();
+    componentManager->ReleaseInstance();
     Jobs::JobManager::ReleaseInstance();
     
 }
@@ -99,12 +125,12 @@ HRESULT Engine::InitSystems()
 {
     InitWindow();
     graphics = new GraphicsCore(hWindow, static_cast<UINT>(windowWidth), static_cast<UINT>(windowHeight));
+    physics = new Physics();
     time = GameTime::GetInstance();
 
     // Calling get instance will create the entity manager
-    EntityManager* enMan = EntityManager::GetInstance();
-    enMan->Init();
-    enMan = nullptr;
+    entityManager = EntityManager::GetInstance();
+    componentManager = ComponentManager::GetInstance();
 
     Jobs::JobManager* man = Jobs::JobManager::GetInstance();
     // Add any jobs you need here, like this: 
@@ -113,7 +139,8 @@ HRESULT Engine::InitSystems()
 
 	ThrowIfFailed(graphics->Init());
     time->Init();
-
+    entityManager->Init();
+    
     return S_OK;
 }
 
@@ -168,6 +195,7 @@ HRESULT Engine::Run()
                 DirectX::XMLoadFloat3(&up)
             );
 
+            physics->Update(time->GetTotalFloatTime());
             graphics->Update(transforms, camera);
             graphics->Render();
             time->UpdateTimer();

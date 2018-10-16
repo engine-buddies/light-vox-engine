@@ -18,6 +18,12 @@
     <Filter Include="Source Files\JobSystem">
       <UniqueIdentifier>{3fb5184a-369a-4a24-b088-92d5f92b670c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ECS">
+      <UniqueIdentifier>{01586b5d-acae-414f-8c75-480f8572e640}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Physics">
+      <UniqueIdentifier>{7f34a583-fe28-48c3-bcf4-d8af7bd531da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -38,9 +44,6 @@
     <ClCompile Include="ObjLoader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="EntityManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GameTime.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -49,6 +52,15 @@
     </ClCompile>
     <ClCompile Include="JobSequence.cpp">
       <Filter>Source Files\JobSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentManager.cpp">
+      <Filter>Source Files\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityManager.cpp">
+      <Filter>Source Files\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics.cpp">
+      <Filter>Source Files\Physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -79,9 +91,6 @@
     <ClInclude Include="Configs.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="EntityManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameTime.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
@@ -90,9 +99,6 @@
     </ClInclude>
     <ClInclude Include="ShaderDefinitions.h">
       <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="EntityComponents.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="JobManager.h">
       <Filter>Source Files\JobSystem</Filter>
@@ -105,6 +111,21 @@
     </ClInclude>
     <ClInclude Include="ConcurrentQueue.h">
       <Filter>Source Files\JobSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityComponents.h">
+      <Filter>Source Files\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityManager.h">
+      <Filter>Source Files\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Source Files\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentManager.h">
+      <Filter>Source Files\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics.h">
+      <Filter>Source Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

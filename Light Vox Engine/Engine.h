@@ -1,10 +1,13 @@
 #pragma once
 #include <Windows.h>
+#include <vector>
 #include "GraphicsCore.h"
 #include "GameTime.h"
 #include "EntityManager.h"
+#include "Entity.h"
+#include "Physics.h"
 #include "JobManager.h"
-
+#include "ComponentManager.h"
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -37,10 +40,17 @@ private:
 	float windowWidth;
 	float windowHeight;
 
+    //ECS
+    EntityManager* entityManager;
+    std::vector<Entity> entityList;
+    ComponentManager* componentManager;
+
+    //Systems
 	GraphicsCore* graphics;
     Camera* camera;
     GameTime* time;
-
+    Physics* physics;
+   
 	HRESULT InitWindow();
 
 #if defined(_DEBUG)
