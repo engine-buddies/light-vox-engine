@@ -9,6 +9,7 @@
 
 Engine* Engine::engineInstance = nullptr;
 
+
 /* LIFE CYCLE */
 
 //DEBUG :: converts glm mat4x4 to directx xmfloat 4x4
@@ -57,6 +58,8 @@ Engine::~Engine()
     // Releases the instance of the entity manager
     entityManager->ReleaseInstance();
     componentManager->Release();
+    Jobs::JobManager::ReleaseInstance();
+    
 }
 
 HRESULT Engine::InitWindow()
@@ -121,7 +124,7 @@ HRESULT Engine::InitWindow()
 HRESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new GraphicsCore(hWindow, windowWidth, windowHeight);
+    graphics = new GraphicsCore(hWindow, static_cast<UINT>(windowWidth), static_cast<UINT>(windowHeight));
     physics = new Physics();
     time = GameTime::GetInstance();
 
@@ -129,22 +132,21 @@ HRESULT Engine::InitSystems()
     entityManager = EntityManager::GetInstance();
     componentManager = ComponentManager::GetInstance();
 
-    ThrowIfFailed(graphics->Init());
+    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
+    // Add any jobs you need here, like this: 
+    //man->AddJobA( &FunctionName, void* args );
+    man = nullptr;
+
+	ThrowIfFailed(graphics->Init());
     time->Init();
     entityManager->Init();
-
-    //DEBUG::ECS
-    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; i++)
-    {
-        entityList.push_back(entityManager->Create_Entity());
-    }
-
+    
     return S_OK;
 }
 
 HRESULT Engine::Run()
 {
-    MSG msg = { };
+    MSG msg = { };    
 
     while (msg.message != WM_QUIT)
     {
@@ -156,52 +158,35 @@ HRESULT Engine::Run()
         else
         {
             //DEBUG CODE for basic transform update;
-           
             static DirectX::XMFLOAT4X4 transforms[LV_MAX_INSTANCE_COUNT];
-            static glm::mat4x4 glmTransforms[LV_MAX_INSTANCE_COUNT];
             static bool init = false;
             static int count = sqrtf(LV_MAX_INSTANCE_COUNT);
             static float rotation = 0.001f;
-  //          if (!init)
             {
 
                 float x = -count / 2.0f;
                 float y = -count / 2.0f;
-                float z = -80;
+                float z = 0;
                 for (int i = 0; i < count; i++)
                 {
                     for (int j = 0; j < count; j++)
                     {
-                        //DirectX::XMMATRIX transformMatrix;
-
-                        glm::mat4 glmtransforMatrix = glm::translate(glm::vec3(x, y, z));
-                        glm::vec3 rotationAxis(.0f, 1.0f, .0f);
-                        glm::mat4 rotationMatrix = glm::rotate(rotation, rotationAxis);
-                        glmtransforMatrix *= rotationMatrix;
-
-                        physics->Move(glm::vec3(x, y, z), entityList[i * count + j].index);
-                        physics->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityList[i * count + j].index);
-                       /* Mat4x4toXMFLOAT4x4(
-                            glmtransforMatrix,
-                            transforms[i * count + j]);*/
-
-                        /*DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation(x, y, z);
-                        transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixRotationY(rotation), transformMatrix);
+                        DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation(x + rotation, y, z);
+                        //transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixRotationY(rotation), transformMatrix);
+                        transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixIdentity(), transformMatrix);
                         DirectX::XMStoreFloat4x4(transforms + i * count + j, transformMatrix);
-                        */
-                        x += 1;
+
+                        x += 2;
                     }
 
-                    y += 1;
+                    y += 2;
                     x = -count / 2.0f;
                 }
-
-//                init = true;
             }
             rotation += 0.01f;
 
             //DEBUG CODE for basic camera update
-            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -95.f);
+            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -40.f);
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
             DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
             camera->SetTransform(
@@ -211,20 +196,11 @@ HRESULT Engine::Run()
             );
 
             physics->Update(time->GetTotalFloatTime());
-
-            for (int i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
-            {
-                Mat4x4toXMFLOAT4x4(
-                    componentManager->transform[i].transformMatrix,
-                    transforms[i]);
-            }
-
             graphics->Update(transforms, camera);
             graphics->Render();
             time->UpdateTimer();
         }
     }
-
     return (HRESULT)msg.wParam;
 }
 

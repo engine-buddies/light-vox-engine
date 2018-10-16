@@ -4,8 +4,9 @@
 #include "GraphicsCore.h"
 #include "GameTime.h"
 #include "EntityManager.h"
-//#include "Entity.h"
+#include "Entity.h"
 #include "Physics.h"
+#include "JobManager.h"
 #include "ComponentManager.h"
 
 /*

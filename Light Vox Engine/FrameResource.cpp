@@ -11,12 +11,13 @@ FrameResource::FrameResource(
     D3D12_VIEWPORT * viewport, 
     UINT frameResourceIndex)
 {
-    instanceBufferWO = new InstanceBuffer[LV_MAX_INSTANCE_COUNT];
+    //instanceBufferWO = new InstanceBuffer[LV_MAX_INSTANCE_COUNT];
+    //sceneConstantBufferWO = new SceneConstantBuffer;
 	fenceValue = 0;
 	this->pso = pso;
 
 	//create the main command list
-	for (UINT i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
+	for (size_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		ThrowIfFailed(device->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -34,7 +35,7 @@ FrameResource::FrameResource(
 	}
 
 	//create the scene rendering command list (split through cores)
-	for (UINT i = 0; i < LV_NUM_CONTEXTS; ++i)
+	for (size_t i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		ThrowIfFailed(device->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT, 
@@ -127,15 +128,22 @@ FrameResource::FrameResource(
 
 FrameResource::~FrameResource()
 {
-	for (int i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
+
+    if (sceneConstantBuffer != nullptr)
+        sceneConstantBuffer->Unmap(0, nullptr);
+    sceneConstantBuffer = nullptr;
+
+    if (instanceUploadBuffer != nullptr)
+        instanceUploadBuffer->Unmap(0, nullptr);
+    instanceUploadBuffer = nullptr;
+
+	for (size_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		commandAllocators[i] = nullptr;
 		commandLists[i] = nullptr;
 	}
 
-	sceneConstantBuffer = nullptr;
-
-	for (int i = 0; i < LV_NUM_CONTEXTS; ++i)
+	for (size_t i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		sceneCommandLists[i] = nullptr;
 		sceneCommandAllocators[i] = nullptr;
@@ -159,7 +167,7 @@ void FrameResource::Bind(
 void FrameResource::Init()
 {
 	// Reset the command allocators and lists for the main thread.
-	for (int i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
+	for (size_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i)
 	{
 		ThrowIfFailed(commandAllocators[i]->Reset());
 		ThrowIfFailed(commandLists[i]->Reset(
@@ -169,7 +177,7 @@ void FrameResource::Init()
 	}
 
 	// Reset the worker command allocators and lists.
-	for (int i = 0; i < LV_NUM_CONTEXTS; ++i)
+	for (size_t i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
 		ThrowIfFailed(sceneCommandAllocators[i]->Reset());
 		ThrowIfFailed(sceneCommandLists[i]->Reset(
@@ -202,11 +210,6 @@ void FrameResource::WriteConstantBuffers(
         viewport->Height
     );
 
-    for (int i = 0; i < LV_MAX_INSTANCE_COUNT; i++)
-    {
-        instanceBufferWO[i].model = transforms[i];
-    }
-
-	//copy over
 	memcpy(sceneConstantBufferWO, &sceneConsts, sizeof(SceneConstantBuffer));
+    memcpy(instanceBufferWO, transforms, sizeof(InstanceBuffer) * LV_MAX_INSTANCE_COUNT);
 }

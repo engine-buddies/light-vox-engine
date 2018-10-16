@@ -17,6 +17,8 @@
     </Filter>
     <Filter Include="Source Files\ECS">
       <UniqueIdentifier>{57cfea49-981f-4e86-a5ba-66c7a791db7b}</UniqueIdentifier>
+    <Filter Include="Source Files\JobSystem">
+      <UniqueIdentifier>{3fb5184a-369a-4a24-b088-92d5f92b670c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Physics">
       <UniqueIdentifier>{e586a8fc-5210-4e05-93b3-b11604a19675}</UniqueIdentifier>
@@ -44,6 +46,8 @@
     <ClCompile Include="GameTime.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="JobManager.cpp">
+      <Filter>Source Files\JobSystem</Filter>
     <ClCompile Include="EntityManager.cpp">
       <Filter>Source Files\ECS</Filter>
     </ClCompile>
@@ -99,12 +103,21 @@
     </ClInclude>
     <ClInclude Include="EntityManager.h">
       <Filter>Source Files\ECS</Filter>
+    <ClInclude Include="JobManager.h">
+      <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
     <ClInclude Include="Physics.h">
       <Filter>Source Files\Physics</Filter>
+    <ClInclude Include="JobSequence.h">
+      <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
     <ClInclude Include="ComponentManager.h">
       <Filter>Source Files\ECS</Filter>
+    <ClInclude Include="CpuJob.h">
+      <Filter>Source Files\JobSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ConcurrentQueue.h">
+      <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
