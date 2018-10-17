@@ -1,4 +1,7 @@
-#pragma once
+
+#ifndef SHADER_DEF_H
+#define SHADER_DEF_H
+
 /* This file is meant for graphics/pipeline defintions that is shared between
 *  GPU/shader and cpu-type pipeliney stuff
 */
@@ -112,3 +115,5 @@ struct PSInput
     float2 uv : TEXCOORD0;
 };
 #endif
+
+#endif// SHADER_DEF_H

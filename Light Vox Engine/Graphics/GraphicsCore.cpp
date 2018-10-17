@@ -445,13 +445,13 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     ObjLoader::LoadObj( vertices, indices, "Assets/Models/voxel.obj" );
 
     //make vertex buffer for 'n' floats
-    UINT vertexDataSize = vertices->size() * sizeof( Vertex );
+    UINT vertexDataSize = static_cast<UINT>(vertices->size()) * sizeof( Vertex );
     UINT vertexDataOffset = 0;
     UINT vertexStride = sizeof( Vertex );
-    UINT indexDataSize = indices->size() * sizeof( uint16_t );
+    UINT indexDataSize = static_cast<UINT>(indices->size()) * sizeof( uint16_t );
     UINT indexDataOffset = 0;
 
-    verticesCount = indices->size();
+    verticesCount = static_cast<UINT>(indices->size());
 
     //vertex buffer
     {
@@ -613,7 +613,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 
 inline HRESULT GraphicsCore::InitFrameResources()
 {
-    for ( size_t i = 0; i < LV_FRAME_COUNT; i++ )
+    for ( UINT i = 0; i < LV_FRAME_COUNT; i++ )
     {
         frameResources[ i ] = new FrameResource(
             device.Get(),

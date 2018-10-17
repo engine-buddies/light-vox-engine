@@ -30,7 +30,7 @@ FrameResource::FrameResource(
             IID_PPV_ARGS( &commandLists[ i ] )
         ) );
 
-        NAME_D3D12_OBJECT_INDEXED( commandLists, i );
+        NAME_D3D12_OBJECT_INDEXED( commandLists, static_cast<UINT>( i ) );
         ThrowIfFailed( commandLists[ i ]->Close() );
     }
 
@@ -48,7 +48,7 @@ FrameResource::FrameResource(
             IID_PPV_ARGS( &sceneCommandLists[ i ] )
         ) );
 
-        NAME_D3D12_OBJECT_INDEXED( sceneCommandLists, i );
+        NAME_D3D12_OBJECT_INDEXED( sceneCommandLists, static_cast<UINT>(i) );
         ThrowIfFailed( sceneCommandLists[ i ]->Close() );
     }
 

@@ -248,9 +248,6 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="Physics\Physics.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Configs.h" />
-    <ClInclude Include="d3dx12.h" />
-    <ClInclude Include="DXSampleHelper.h" />
     <ClInclude Include="ECS\ComponentManager.h" />
     <ClInclude Include="ECS\Entity.h" />
     <ClInclude Include="ECS\EntityComponents.h" />
@@ -265,10 +262,13 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="JobSystem\CpuJob.h" />
     <ClInclude Include="JobSystem\JobManager.h" />
     <ClInclude Include="JobSystem\JobSequence.h" />
-    <ClInclude Include="LVutils.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="GameTime.h" />
+    <ClInclude Include="Utils\Configs.h" />
+    <ClInclude Include="Utils\d3dx12.h" />
+    <ClInclude Include="Utils\DXSampleHelper.h" />
+    <ClInclude Include="Utils\LVutils.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">

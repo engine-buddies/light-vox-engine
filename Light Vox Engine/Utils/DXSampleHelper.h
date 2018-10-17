@@ -20,20 +20,18 @@
 // referenced by the GPU.
 using Microsoft::WRL::ComPtr;
 
-
-inline char* HrToString( HRESULT hr )
-{
-    char s_str[ 64 ] = {};
-    sprintf_s( s_str, "HRESULT of 0x%08X", static_cast<UINT>( hr ) );
-    return s_str;
-}
-
+#ifdef _DEBUG
 class HrException : public std::runtime_error
 {
 public:
-    HrException( HRESULT hr ) : std::runtime_error( HrToString( hr ) ), m_hr( hr ) {}
+    HrException( HRESULT hr ) : std::runtime_error( s_str ), m_hr( hr )
+    {
+        sprintf_s( s_str, "HRESULT of 0x%08X", static_cast<UINT>( hr ) );
+    }
+
     HRESULT Error() const { return m_hr; }
 private:
+    char s_str[ 64 ] = {};
     const HRESULT m_hr;
 };
 
@@ -44,6 +42,13 @@ inline void ThrowIfFailed( HRESULT hr )
         throw HrException( hr );
     }
 }
+#else // _DEBUG
+
+inline void ThrowIfFailed( HRESULT hr ) { }
+#endif
+
+
+
 
 //commented out because it requires <string>, and we don't need it
 /*
@@ -69,6 +74,7 @@ inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
 }
 */
 
+#ifdef _DEBUG
 inline HRESULT ReadDataFromFile( LPCWSTR filename, byte** data, UINT* size )
 {
     using namespace Microsoft::WRL;
@@ -110,7 +116,6 @@ inline HRESULT ReadDataFromFile( LPCWSTR filename, byte** data, UINT* size )
 }
 
 // Assign a name to the object to aid with debugging.
-#if defined(_DEBUG) || defined(DBG)
 inline void SetName( ID3D12Object* pObject, LPCWSTR name )
 {
     pObject->SetName( name );
@@ -124,12 +129,8 @@ inline void SetNameIndexed( ID3D12Object* pObject, LPCWSTR name, UINT index )
     }
 }
 #else
-inline void SetName( ID3D12Object*, LPCWSTR )
-{
-}
-inline void SetNameIndexed( ID3D12Object*, LPCWSTR, UINT )
-{
-}
+inline void SetName( ID3D12Object*, LPCWSTR ) { }
+inline void SetNameIndexed( ID3D12Object*, LPCWSTR, UINT ) { }
 #endif
 
 // Naming helper for ComPtr<T>.

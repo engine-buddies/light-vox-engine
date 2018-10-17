@@ -160,7 +160,7 @@ HRESULT Engine::Run()
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
             static bool init = false;
-            static int count = sqrtf( LV_MAX_INSTANCE_COUNT );
+            static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
             static float rotation = 0.001f;
             {
 
