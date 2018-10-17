@@ -1,5 +1,8 @@
 #pragma once
 
+#include <functional>
+
+
 namespace Jobs
 {
     /// <summary>
@@ -15,7 +18,7 @@ namespace Jobs
     };
 
     typedef void( *CpuJobFuncPtr ) ( void * args, int index );
-
+    
     /// <summary>
     /// A job that will be run in parallel with others on the CPU
     /// A function pointer for the worker threads to use
@@ -31,6 +34,8 @@ namespace Jobs
 
         int index = 0;
     };
+
+    
 };      // namespace jobs
 
 // This is the definition of a CPU job that we have to roll with

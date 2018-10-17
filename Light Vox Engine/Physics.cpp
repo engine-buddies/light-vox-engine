@@ -11,11 +11,24 @@ Physics::~Physics()
 {
 }
 
+void TestFunc( void* args, int index )
+{
+    printf( "we" );
+}
+
 void Physics::Update(float dt)
 {
     Collide();
     AccumlateForces();
-    Integrate(dt);
+
+    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
+
+    //man->AddJob_Std( std::bind( &Physics::Integrate ), &dt );
+    //man->AddJobA( &Physics::Integrate, (&dt) );    
+
+    //Integrate( &dt, 0 );
+    man = nullptr;
+    
     ModelToWorld();
     //SatisfyConstraints();
 }
@@ -83,7 +96,7 @@ void Physics::RotateAxisAngle(glm::vec3 rotationAxis, float angle, UINT index)
     componentManager->transform[index].angle = angle;
 }
 
-void Physics::Integrate(float dt)
+void Physics::Integrate( void* dt, int index )
 {
     //semi implicit euler 
     for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
@@ -92,8 +105,8 @@ void Physics::Integrate(float dt)
         glm::vec3& velocity = componentManager->bodyProperties[i].velocity;
         glm::vec3& position = componentManager->transform[i].pos;
 
-        velocity += acceleration * dt;
-        position += velocity * dt;
+        velocity += acceleration * (*static_cast<float*>(dt));
+        position += velocity * ( *static_cast<float*>( dt ) );
         acceleration = { .0f, .0f, .0f };
     }
 }

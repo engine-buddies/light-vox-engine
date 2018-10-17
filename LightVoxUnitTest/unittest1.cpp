@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
+//#include "../Light Vox Engine/JobManager.h"
+
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -9,8 +11,17 @@ namespace LightVoxUnitTest
 	{
 	public:
 		
-		TEST_METHOD(TestMethod1)
+		TEST_METHOD(AddJobTest)
 		{
+            //using namespace Jobs;
+            //JobManager* man = JobManager::GetInstance();
+            //
+            Assert::AreEqual( 1, 1 );
+
+
+            //Assert::IsNotNull( man );
+
+            //JobManager::ReleaseInstance();
 			// TODO: Your test code here
 		}
 

@@ -2,6 +2,7 @@
 #include <DirectXMath.h>
 #include "Entity.h"
 #include "ComponentManager.h"
+#include "JobManager.h"
 
 class Physics
 {
@@ -45,7 +46,8 @@ private:
     /// Semi Implicit euler intergration for position
     /// </summary>
     /// <param name="dt"></param>
-    void Integrate(float dt);
+    void Integrate( void* args , int index);
+
     /// <summary>
     /// Calc. total force
     /// </summary>

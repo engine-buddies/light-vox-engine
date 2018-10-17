@@ -135,6 +135,7 @@ HRESULT Engine::InitSystems()
     Jobs::JobManager* man = Jobs::JobManager::GetInstance();
     // Add any jobs you need here, like this: 
     //man->AddJobA( &FunctionName, void* args );
+
     man = nullptr;
 
 	ThrowIfFailed(graphics->Init());
