@@ -5,9 +5,9 @@
 #include "GameTime.h"
 #include "EntityManager.h"
 #include "Entity.h"
-#include "Physics.h"
-#include "JobManager.h"
-#include "ComponentManager.h"
+#include "Physics/Physics.h"
+#include "JobSystem/JobManager.h"
+#include "JobSystem/ConcurrentQueue.h"
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
