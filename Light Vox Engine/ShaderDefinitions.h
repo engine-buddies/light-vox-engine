@@ -14,7 +14,7 @@ struct D3D12_INPUT_ELEMENT_DESC;
 class ShaderDefinitions
 {
 public:
-    static inline void SetInputLayout(D3D12_INPUT_ELEMENT_DESC* inputLayout);
+    static inline void SetInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
 };
 #endif
 
@@ -37,7 +37,7 @@ struct InstanceBuffer
 
 // -- PER-SCENE CONSTANT BUFFER ---
 #ifdef _VSHADER
-cbuffer SceneConstantBuffer : register(b0)
+cbuffer SceneConstantBuffer : register( b0 )
 {
     float4x4 cView;
     float4x4 cProjection;
@@ -68,9 +68,9 @@ struct VSInput
 /// Defer input layout logic to PipelineDefinitions (so that's it's easier to 
 /// sync with how the shader is defined).
 /// </summary>
-inline void ShaderDefinitions::SetInputLayout(D3D12_INPUT_ELEMENT_DESC* inputLayout)
+inline void ShaderDefinitions::SetInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout )
 {
-    inputLayout[0] = {
+    inputLayout[ 0 ] = {
         "POSITION",                                     //semantic name                         
         0,                                              //semantic index
         DXGI_FORMAT_R32G32B32_FLOAT,                    //format of data
@@ -80,7 +80,7 @@ inline void ShaderDefinitions::SetInputLayout(D3D12_INPUT_ELEMENT_DESC* inputLay
         0                                               //istance rate
     };
 
-    inputLayout[1] = {
+    inputLayout[ 1 ] = {
         "NORMAL",
         0,
         DXGI_FORMAT_R32G32B32_FLOAT,
@@ -90,7 +90,7 @@ inline void ShaderDefinitions::SetInputLayout(D3D12_INPUT_ELEMENT_DESC* inputLay
         0
     };
 
-    inputLayout[2] = {
+    inputLayout[ 2 ] = {
         "TEXCOORD",
         0,
         DXGI_FORMAT_R32G32_FLOAT,

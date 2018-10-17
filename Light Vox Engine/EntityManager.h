@@ -41,12 +41,12 @@ public:
     /// <summary>
     /// Removes Entity from index and makes it available
     /// </summary>
-    void Free_Entity(Entity e);
+    void Free_Entity( Entity e );
 
     /// <summary>
     /// Checks if Entity exist 
     /// </summary>
-    bool Is_Valid(Entity e) const;
+    bool Is_Valid( Entity e ) const;
 
     /// <summary>
     /// Removes all entities
@@ -56,15 +56,15 @@ public:
     /// <summary>
     /// Returns Entity at index
     /// </summary>
-    Entity Get_Entity(int index) const;
+    Entity Get_Entity( int index ) const;
 
     // We don't want anything making copies of this class so delete these operators
-    EntityManager(EntityManager const&) = delete;
-    void operator=(EntityManager const&) = delete;
+    EntityManager( EntityManager const& ) = delete;
+    void operator=( EntityManager const& ) = delete;
 
 private:
-	EntityManager();
-	~EntityManager();
+    EntityManager();
+    ~EntityManager();
 
     static EntityManager* Instance;
     struct index_entry
@@ -72,12 +72,12 @@ private:
         unsigned int counter;
         int next_free;
 
-        index_entry() : counter(0), next_free(NONE) {}
+        index_entry() : counter( 0 ), next_free( NONE ) {}
     };
 
     int firstFree;
     int lastFree;
     std::vector<index_entry> entries;
-    
-    unsigned int Get_Free_Entry();    
+
+    unsigned int Get_Free_Entry();
 };

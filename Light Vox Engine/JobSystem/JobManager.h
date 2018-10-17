@@ -42,20 +42,20 @@ namespace Jobs
         // TODO: Sequence factory interface
 
         // We don't want anything making copies of this class so delete these operators
-        JobManager( JobManager const& )     = delete;
+        JobManager( JobManager const& ) = delete;
         void operator=( JobManager const& ) = delete;
 
         ////////////////////////////////////////
         // Accessors
 
         inline const size_t GetThreadCount() const;
-    
+
     private:
 
         JobManager();
 
         ~JobManager();
-    
+
         static JobManager* instance;
 
         /// <summary>
@@ -81,13 +81,13 @@ namespace Jobs
         // Worker threads for executing jobs
         // A worker thread extracts a job from the job queue and executes it
         std::vector<std::thread> workerThreads;
-    
+
         /// <summary>
         /// Atomic bool determining if we are done used for closing all threads
         /// </summary>
         std::atomic<bool> isDone;
 
-    
+
     };
 
 };      // namespace jobs
