@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "Entity.h"
 #include "EntityComponents.h"
 

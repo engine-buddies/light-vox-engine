@@ -1,10 +1,10 @@
 #pragma once
 #include <Windows.h>
 #include <vector>
-#include "GraphicsCore.h"
+#include "Graphics/GraphicsCore.h"
 #include "GameTime.h"
-#include "EntityManager.h"
-#include "Entity.h"
+#include "ECS/EntityManager.h"
+#include "ECS/Entity.h"
 #include "Physics/Physics.h"
 #include "JobSystem/JobManager.h"
 #include "JobSystem/ConcurrentQueue.h"

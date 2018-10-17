@@ -3,7 +3,7 @@
 #define _VSHADER
 
 //contains all defitnitions for shader-to-shader and shader-to-CPU stuff
-#include "../ShaderDefinitions.h"
+#include "../Graphics/ShaderDefinitions.h"
 
 //basically a SRV of instanced data
 StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);

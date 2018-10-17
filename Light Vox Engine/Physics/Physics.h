@@ -1,7 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
-#include "../Entity.h"
-#include "../ComponentManager.h"
+#include "../ECS/Entity.h"
+#include "../ECS/ComponentManager.h"
 
 class Physics
 {

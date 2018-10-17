@@ -1,6 +1,6 @@
 #include "engine.h"
 #include "stdafx.h"
-#include "Camera.h"
+#include "Graphics/Camera.h"
 
 #include <WindowsX.h>
 #if defined(_DEBUG)

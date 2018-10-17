@@ -1,6 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "EntityComponents.h"
 
 using namespace DirectX;
