@@ -13,9 +13,9 @@ template<typename T>
 /// <author>Ben Hoffman</author>
 class ConcurrentQueue
 {
-    
+
 public:
-    
+
     /// <summary>
     /// Emplace data at the front of the deque
     /// -- Uses lock on mutex --
@@ -43,14 +43,14 @@ public:
         // Notify any threads that may be waiting on a condition for new data
         DataAvailableCondition.notify_one();
     }
-    
+
     /// <summary>
     /// Pop's the front item off of the deque 
     /// and puts it's values to the item passed in
     /// -- Uses mutex -- 
     /// </summary>
     /// <param name="aItem">Out variable</param>
-    void pop_front(T& aItem)
+    void pop_front( T& aItem )
     {
         std::unique_lock<std::mutex> waitLock( My_Mutex );
 
@@ -61,8 +61,8 @@ public:
         aItem = front();
         TheDequeue.pop_front();
     }
-    
-    
+
+
     /// <summary>
     /// returns the first element of the mutable sequence
     /// -- Uses lock on mutex --

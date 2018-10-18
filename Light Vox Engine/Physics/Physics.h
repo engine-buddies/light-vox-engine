@@ -1,7 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
-#include "Entity.h"
-#include "ComponentManager.h"
+#include "../ECS/Entity.h"
+#include "../ECS/ComponentManager.h"
 
 class Physics
 {
@@ -18,22 +18,22 @@ public:
     /// integrating position, and calc. model to world matrix
     /// </summary>
     /// <param name="dt"></param>
-    void Update(float dt);
+    void Update( float dt );
     /// <summary>
     /// set a position for an entity
     /// </summary>
     /// <param name="pos"></param>
     /// <param name="e"></param>
-    void Move(glm::vec3 pos , UINT index);
+    void Move( glm::vec3 pos, UINT index );
     /// <summary>
     /// Set quaternion roation for entity
     /// </summary>
     /// <param name="rotationAxis"></param>
     /// <param name="angle"></param>
     /// <param name="e"></param>
-    void RotateAxisAngle(glm::vec3 rotationAxis, 
-        float angle, 
-		UINT index);
+    void RotateAxisAngle( glm::vec3 rotationAxis,
+        float angle,
+        UINT index );
 
 private:
 
@@ -45,7 +45,7 @@ private:
     /// Semi Implicit euler intergration for position
     /// </summary>
     /// <param name="dt"></param>
-    void Integrate(float dt);
+    void Integrate( float dt );
     /// <summary>
     /// Calc. total force
     /// </summary>
@@ -56,7 +56,7 @@ private:
     void ModelToWorld();
 
     //helper function to check box to box intersect
-    inline bool BoxIntersect(glm::vec3 posA,
+    inline bool BoxIntersect( glm::vec3 posA,
         glm::vec3 posB,
         glm::vec3 sizeA,
         glm::vec3 sizeB

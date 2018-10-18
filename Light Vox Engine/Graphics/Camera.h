@@ -25,7 +25,7 @@ public:
     /// <param name="position">The position of the camera</param>
     /// <param name="forward">Where the camera is pointing to</param>
     /// <param name="up">What 'up' is in this world</param>
-    void SetTransform(DirectX::XMVECTOR position,
+    void SetTransform( DirectX::XMVECTOR position,
         DirectX::XMVECTOR forward,
         DirectX::XMVECTOR up
     );
@@ -37,7 +37,7 @@ public:
     /// <param name="proj">The location to save the projection matrix</param>
     /// <param name="screenWidth">The width of the screen</param>
     /// <param name="screenHeight">The height of the screen</param>
-    void GetViewProjMatrix(DirectX::XMFLOAT4X4 *view,
+    void GetViewProjMatrix( DirectX::XMFLOAT4X4 *view,
         DirectX::XMFLOAT4X4 *proj,
         float screenWidth,
         float screenHeight

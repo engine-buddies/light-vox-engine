@@ -3,7 +3,7 @@
 using namespace Jobs;
 
 JobSequence::JobSequence( UINT aMaxJobsAllowed, UINT aMaxBarriers, UINT aMaxWaits )
-    : maxJobs(aMaxJobsAllowed), maxBarriers(aMaxBarriers), maxWaits(aMaxWaits)
+    : maxJobs( aMaxJobsAllowed ), maxBarriers( aMaxBarriers ), maxWaits( aMaxWaits )
 {
 
 }
@@ -21,11 +21,11 @@ UINT JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
     // Of the job manager
     if ( sequenceJobs.size() + 1 >= maxJobs ) return 1;
     if ( aJob == nullptr ) return 2;
-    
+
     CpuJob TheJob { };
     // Cast to a correct type for now
-    TheJob.func_ptr = static_cast< CpuJobFuncPtr > ( aJob );
-    TheJob.args = aArgs;    
+    TheJob.func_ptr = static_cast<CpuJobFuncPtr> ( aJob );
+    TheJob.args = aArgs;
 
     sequenceJobs.emplace_front( TheJob );
 

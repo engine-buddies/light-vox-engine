@@ -3,7 +3,7 @@
 #define _PSHADER
 
 //contains all defitnitions for shader-to-shader and shader-to-CPU stuff
-#include "../ShaderDefinitions.h"
+#include "../Graphics/ShaderDefinitions.h"
 
 //[TEST]This is just here to make our demos look less ugly 
 struct DEBUG_DirectionalLight

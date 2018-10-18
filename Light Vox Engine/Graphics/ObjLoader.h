@@ -13,7 +13,7 @@ struct Vertex
 class ObjLoader
 {
 public:
-	static void LoadObj(std::vector<Vertex>* vertices, 
-        std::vector<uint16_t>* indices, 
-        std::string filePath);
+    static void LoadObj( std::vector<Vertex>* vertices,
+        std::vector<uint16_t>* indices,
+        std::string filePath );
 };
