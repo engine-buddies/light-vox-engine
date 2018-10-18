@@ -60,7 +60,7 @@ JobManager::~JobManager()
 void JobManager::AddJob( void( *func_ptr )( void *aArgs, int index ), void* jobArgs )
 {
     CpuJob tempJob { };
-    
+
     tempJob.func_ptr = func_ptr;
     tempJob.args = jobArgs;
 
@@ -73,7 +73,7 @@ void JobManager::AddJob( void( *func_ptr )( void *aArgs, int index ), void* jobA
 
 void JobManager::WorkerThread()
 {
-    std::unique_lock<std::mutex> workerLock ( readyQueueMutex );
+    std::unique_lock<std::mutex> workerLock( readyQueueMutex );
 
     while ( true )
     {
@@ -88,7 +88,7 @@ void JobManager::WorkerThread()
         {
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
-            
+
             CurJob.func_ptr( CurJob.args, CurJob.index );
 
             // Notify other threads that a job has been taken and we should probably
