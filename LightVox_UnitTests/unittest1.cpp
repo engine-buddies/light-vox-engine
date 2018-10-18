@@ -17,7 +17,6 @@ namespace LightVox_UnitTests
             size_t addedVals = 2;
             int val1 = 10;
             int val2 = 15;
-            //int val3 = 10;
 
             TestQueue.emplace_front( val1 );
             TestQueue.emplace_front( val2 );
@@ -25,8 +24,21 @@ namespace LightVox_UnitTests
             int outVal;
             TestQueue.pop_front( outVal );
 
-            // TODO: Your test code here
             Assert::AreEqual( outVal, val2 );
+        }
+
+        TEST_METHOD( PopTest)
+        {
+            ConcurrentQueue<int> TestQueue;
+            size_t addedVals = 2;
+            int val1 = 10;
+            
+            TestQueue.emplace_front( val1 );
+
+            int outVal;
+            TestQueue.pop_front( outVal );
+
+            Assert::AreEqual( outVal, val1 );
         }
 
         TEST_METHOD( SizeTest )
