@@ -165,7 +165,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="unittest1.cpp" />
+    <ClCompile Include="ConcurrentQueueTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Light Vox Engine\Light Vox Engine.vcxproj">
