@@ -152,7 +152,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
-	Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[LV_FRAME_COUNT * LV_NUM_RTV];
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV];
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilView;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
@@ -190,7 +190,10 @@ private:
 	UINT64 fenceValue;
 
     //Deferred Rendering members
-    ObjectData screenQuad;
-    Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[LV_NUM_RTV];
+    MeshData screenQuad;
+    Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[LV_NUM_GBUFFER_RTV];
     float clearColor[4] = { 0.0,0.0f,0.0f,1.0f };
+    Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBuffer; //For Full Screen Quad
+    Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBufferUpload;
+    D3D12_VERTEX_BUFFER_VIEW fsqVertexBufferView;
 };

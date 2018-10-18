@@ -14,6 +14,16 @@ struct SceneConstantBuffer
 };
 
 /// <summary>
+/// Constant Buffer for info needed for lighting calculations
+/// Unused at the moment
+/// </summary>
+struct LightConstantBuffer
+{
+    DirectX::XMFLOAT3 pos;
+};
+
+
+/// <summary>
 /// Wrapper for data that persists through one scene
 /// TODO: proper getters/setters, pack data correctly
 /// </summary>
@@ -104,9 +114,12 @@ private:
 
     //the gpu side of the scene constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> sceneConstantBuffer;
+    //Microsoft::WRL::ComPtr<ID3D12Resource> lightConstantBuffer;
 
     //write-only buffer for scene-level cbuffer stuff
 	SceneConstantBuffer* sceneConstantBufferWO;		
+    //LightConstantBuffer* lightConstantBufferWO;
+
 
     // Null SRV for out of bounds behavior (for shadow?)
 	D3D12_GPU_DESCRIPTOR_HANDLE nullSrvHandle;	

@@ -20,9 +20,10 @@ PSOutput PSMain(PSInput input) : SV_TARGET
     //re-normalize after rasterization
     input.normal = normalize(input.normal);
 
+    //TO DO: Texturing:
     output.albedo = float4(1.0f, 1.0f, 1.0f, 1.0f);
     output.normal = float4(input.normal, 1.0f);
-    output.position = input.position;
+    output.position = input.worldpos;
 
     return output;
 }

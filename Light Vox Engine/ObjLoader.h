@@ -16,7 +16,7 @@ struct MeshData
     std::vector<Vertex> vertices;
     std::vector<UINT> indices;
 };
-
+/*
 struct ObjectData
 {
     ID3D12Resource* vertexBuffer = nullptr;
@@ -29,7 +29,7 @@ struct ObjectData
         delete indexBuffer;
     }
 };
-
+*/
 class ObjLoader
 {
 public:

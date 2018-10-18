@@ -3,7 +3,7 @@
 
 #define LV_FRAME_COUNT 2		//how many frames for swap chain
 #define LV_NUM_CONTEXTS 1		//for multi-threading
-#define LV_NUM_RTV 3
+#define LV_NUM_GBUFFER_RTV 3
 
 //indices to the per-frame command list
 #define LV_COMMAND_LIST_COUNT 3	 

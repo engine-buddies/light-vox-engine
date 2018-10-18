@@ -51,8 +51,9 @@ FrameResource::FrameResource(
 	}
 
     // Null descriptors at the start of the heap (used for shadows)
-	const UINT nullSrvCount = 2;			
+	const UINT nullSrvCount = 0;			
 	const UINT textureCount = 0;
+    const UINT deferredSRVCount = LV_NUM_GBUFFER_RTV;
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//get handle to the cbv heap
@@ -60,11 +61,11 @@ FrameResource::FrameResource(
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle(cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
 	nullSrvHandle = cbvSrvGpuHandle;
 	cbvSrvCpuHandle.Offset(
-        nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), 
+        nullSrvCount + textureCount + deferredSRVCount + (frameResourceIndex * LV_FRAME_COUNT), 
         cbvSrvDescriptorSize
     );
 	cbvSrvGpuHandle.Offset(
-        nullSrvCount + textureCount + (frameResourceIndex * LV_FRAME_COUNT), 
+        nullSrvCount + textureCount + deferredSRVCount + (frameResourceIndex * LV_FRAME_COUNT), 
         cbvSrvDescriptorSize
     );
 
@@ -116,6 +117,7 @@ FrameResource::~FrameResource()
 	}
 
 	sceneConstantBuffer = nullptr;
+    //lightConstantBuffer = nullptr;
 
 	for (int i = 0; i < LV_NUM_CONTEXTS; ++i)
 	{
@@ -175,6 +177,7 @@ void FrameResource::WriteConstantBuffers(
     Camera * camera)
 {
 	SceneConstantBuffer sceneConsts = {};
+    //LightConstantBuffer lightConsts = {};
 
     sceneConsts.model = transforms[0];
 
@@ -185,6 +188,8 @@ void FrameResource::WriteConstantBuffers(
         viewport->Height
     );
 
+
 	//copy over
 	memcpy(sceneConstantBufferWO, &sceneConsts, sizeof(SceneConstantBuffer));
+    //memcpy(lightConstantBufferWO, &lightConsts, sizeof(LightConstantBuffer));
 }

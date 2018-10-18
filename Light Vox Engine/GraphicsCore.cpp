@@ -92,7 +92,7 @@ void GraphicsCore::Render()
 
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = cbvSrvHeap->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	const UINT nullSrvCount = 2;
+	const UINT nullSrvCount = 0;
 
 	pSceneCommandList->DrawIndexedInstanced(verticesCount, 1, 0, 0, 0);
 
@@ -198,22 +198,27 @@ inline HRESULT GraphicsCore::InitRootSignature()
 	}
 
 	//this should be ordered from most to least frequent
-	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[2];
-	CD3DX12_ROOT_PARAMETER1		rootParameters[2];
+    CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[LV_NUM_GBUFFER_RTV];
+	CD3DX12_ROOT_PARAMETER1		rootParameters[LV_NUM_GBUFFER_RTV];
 
-	//diffuse + normal SRV
-	descriptorRanges[0].Init(
+    //Init: Albedo + Normal + Position
+    descriptorRanges[0].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SRV,            //type of descriptor
-        2,                                          //number of descriptors
-        1,                                          //base shader register
+        LV_NUM_GBUFFER_RTV,                         //number of descriptors
+        0,                                          //base shader register
         0,                                          //space in register
         D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC     //data flag
     );
-	rootParameters[0].InitAsDescriptorTable(
-        1,                              //number of descriptor ranges
-        &descriptorRanges[0],           //address
-        D3D12_SHADER_VISIBILITY_PIXEL   //what it's visible to
-    );
+
+	//Deferred SRVs
+    for (auto i = 0; i < LV_NUM_GBUFFER_RTV; ++i)
+    {
+        rootParameters[i].InitAsDescriptorTable(
+            1,                              //number of descriptor ranges
+            &descriptorRanges[i],           //address
+            D3D12_SHADER_VISIBILITY_PIXEL   //what it's visible to
+        );
+    }
 
 	//constant buffer
 	descriptorRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 
@@ -381,7 +386,7 @@ inline HRESULT GraphicsCore::InitRTV()
 {
 	// Create heap of render target descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT;
+	rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	ThrowIfFailed(device->CreateDescriptorHeap(
@@ -434,7 +439,8 @@ inline HRESULT GraphicsCore::InitRTV()
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	for (UINT i = 0; i < LV_NUM_RTV; ++i)
+    //Create Textures
+	for (UINT i = 0; i < LV_NUM_GBUFFER_RTV; ++i)
 	{
 		ThrowIfFailed(device->CreateCommittedResource(
 			&heapProperty,
@@ -448,7 +454,7 @@ inline HRESULT GraphicsCore::InitRTV()
 
 	// Create RTVs:
     // 1 for each frame * 1 for each gbuffer resource
-	for (UINT n = 0; n < LV_FRAME_COUNT; n++)
+	for (UINT n = 0; n < LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV; n++)
 	{
         ThrowIfFailed(swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
 		device->CreateRenderTargetView(renderTargets[n].Get(), &rtvDesc, rtvHandle);
@@ -567,7 +573,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 
     verticesCount = indices->size();
 	
-	//vertex buffer
+	//vertex buffer(s)
 	{
 		//create vertex buffer
 		ThrowIfFailed(device->CreateCommittedResource(
@@ -622,11 +628,74 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 		vertexBufferView.SizeInBytes = vertexDataSize;
 		vertexBufferView.StrideInBytes = vertexStride;
+
+#pragma region FSQVertexBufferInit
+
+        //make vertex buffer for 'n' floats
+        UINT fsqVertexDataSize = _countof(screenQuad.vertices) * sizeof(Vertex);
+        UINT fsqVertexDataOffset = 0;
+        UINT fsqVertexStride = sizeof(Vertex);
+
+        //create FSQ vertex buffer
+        ThrowIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(fsqVertexDataSize),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&fsqVertexBuffer)
+        ));
+        NAME_D3D12_OBJECT(fsqVertexBuffer);
+
+        //create vertex upload buffer
+        ThrowIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(fsqVertexDataSize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&fsqVertexBufferUpload)
+        ));
+
+        D3D12_SUBRESOURCE_DATA fsqVertexData = { };
+        fsqVertexData.pData = &((*screenQuad.vertices)[0]) + fsqVertexDataOffset;
+        fsqVertexData.RowPitch = fsqVertexDataSize;
+        fsqVertexData.SlicePitch = fsqVertexData.RowPitch;
+
+
+        //this looks like it's pre-emptively loading all the static geometry 
+        PIXBeginEvent(commandList.Get(), 0, L"Copy vertex buffer to default resource");
+        UpdateSubresources<1>(
+            commandList.Get(),
+            fsqVertexBuffer.Get(),
+            fsqVertexBufferUpload.Get(),
+            0,
+            0,
+            1,
+            &fsqVertexData
+            );
+        commandList->ResourceBarrier(
+            1,
+            &CD3DX12_RESOURCE_BARRIER::Transition(
+                fsqVertexBuffer.Get(),
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            )
+        );
+        PIXEndEvent(commandList.Get());
+
+
+        fsqVertexBufferView = { };
+        fsqVertexBufferView.BufferLocation = fsqVertexBuffer->GetGPUVirtualAddress();
+        fsqVertexBufferView.SizeInBytes = fsqVertexDataSize;
+        fsqVertexBufferView.StrideInBytes = fsqVertexStride;
+#pragma endregion
+
 	}
 
 	//index buffer
 	{
-		//create vertex buffer
+		//create index buffer
 		ThrowIfFailed(device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
@@ -685,9 +754,9 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 	// Describe and create a shader resource view (SRV) and constant 
 	// buffer view (CBV) descriptor heap.  Heap layout: null views, 
 	// frame 1's constant buffer, frame 2's constant buffers, etc...
-	const UINT nullSrvCount = 2;		// Null descriptors are needed for out of bounds behavior reads.
-	const UINT cbvCount = LV_FRAME_COUNT * 2;
-	const UINT srvCount = 0; // _countof(SampleAssets::Textures) + (FrameCount * 1);
+	const UINT nullSrvCount = 0;		// Null descriptors are needed for out of bounds behavior reads.
+	const UINT cbvCount = LV_FRAME_COUNT * 1; //Frame Count * Number of CBVs
+	const UINT srvCount = LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV; // _countof(SampleAssets::Textures) + (FrameCount * 1);
 	D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
 	cbvSrvHeapDesc.NumDescriptors = nullSrvCount + cbvCount + srvCount;
 	cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -698,25 +767,19 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle(cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-
 	{
-		// Describe and create 2 null SRVs. Null descriptors are needed in order 
-		// to achieve the effect of an "unbound" resource.
-		D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
-		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		nullSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		nullSrvDesc.Texture2D.MipLevels = 1;
-		nullSrvDesc.Texture2D.MostDetailedMip = 0;
-		nullSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-		device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
-		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
-
-		device->CreateShaderResourceView(nullptr, &nullSrvDesc, cbvSrvHandle);
-		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
-
-        //TO DO: Add CreateShaderResourceView for each RT
+        //Deferred SRVs
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        for (auto i = 0; i < srvCount; ++i)
+        {
+            device->CreateShaderResourceView(rtvTextures[i % LV_NUM_GBUFFER_RTV].Get(), &srvDesc, cbvSrvHandle);
+            cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+        }
 	}
 
 	//close the command list and transfer static data
@@ -773,11 +836,7 @@ inline HRESULT GraphicsCore::InitSynchronizationObjects()
 inline HRESULT GraphicsCore::InitLightPassGeometry()
 {
     ObjLoader objl;
-    MeshData meshData;
-    objl.GenerateFullScreenQuad(meshData);
-    
-    //TO DO: Create Vertex Buffer for Screen Quad
-
+    objl.GenerateFullScreenQuad(screenQuad);
     return S_OK;
 }
 
@@ -854,7 +913,7 @@ inline void GraphicsCore::SetGBufferPSO(ID3D12GraphicsCommandList * commandList)
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
     rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    for (auto i = 0; i < (LV_FRAME_COUNT * LV_NUM_RTV); ++i)
+    for (auto i = 0; i < (LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV); ++i)
     {
         commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
         rtvHandle.Offset(1, rtvDescriptorSize);
@@ -868,9 +927,9 @@ inline void GraphicsCore::SetGBufferPSO(ID3D12GraphicsCommandList * commandList)
 	commandList->OMSetStencilRef(0);
 
     commandList->OMSetRenderTargets(
-        LV_FRAME_COUNT * LV_NUM_RTV,
+        LV_NUM_GBUFFER_RTV,
         &rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-        true,
+        TRUE,
         &dsvHeap->GetCPUDescriptorHandleForHeapStart()
     );
 
@@ -889,7 +948,7 @@ inline void GraphicsCore::SetLightPassPSO(ID3D12GraphicsCommandList * commandLis
     RBdesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
     RBdesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
     RBdesc.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
-    for (auto i = 0; i < LV_NUM_RTV; ++i)
+    for (auto i = 0; i < LV_NUM_GBUFFER_RTV; ++i)
     {
         RBdesc.Transition.pResource = rtvTextures[i].Get();
         commandList->ResourceBarrier(1, &RBdesc);
