@@ -6,10 +6,10 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace LightVox_UnitTests
-{		
-	TEST_CLASS( ConcurrentQueueTests )
-	{
-	public:
+{
+    TEST_CLASS( ConcurrentQueueTests )
+    {
+    public:
 
         TEST_METHOD( EmplaceTest )
         {
@@ -27,12 +27,12 @@ namespace LightVox_UnitTests
             Assert::AreEqual( outVal, val2 );
         }
 
-        TEST_METHOD( PopTest)
+        TEST_METHOD( PopTest )
         {
             ConcurrentQueue<int> TestQueue;
             size_t addedVals = 2;
             int val1 = 10;
-            
+
             TestQueue.emplace_front( val1 );
 
             int outVal;
@@ -53,5 +53,5 @@ namespace LightVox_UnitTests
 
         }
 
-	};
+    };
 }
