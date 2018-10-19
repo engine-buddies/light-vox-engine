@@ -27,9 +27,8 @@ JobManager::JobManager()
 {
     const unsigned int supportedThreads = std::thread::hardware_concurrency();
 
-#ifdef _DEBUG
-    printf( "The number of threads supported on this system is: %d\n", supportedThreads );
-#endif // DEBUG
+
+    DEBUG_PRINT( "The number of threads supported on this system is: %d\n", supportedThreads );
 
     isDone = false;
 
