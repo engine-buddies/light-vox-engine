@@ -11,6 +11,8 @@
 
 namespace Jobs
 {
+    typedef std::function<void()> job_t;
+
     /// <summary>
     /// Manage and execute jobs with an aim to increase
     /// efficiency in using a multicore CPU
@@ -37,7 +39,19 @@ namespace Jobs
         /// Add a job without making a cpu job
         /// </summary>
         /// <param name="func_ptr">A function pointer that is considered a job</param>
-        void AddJob( void( *func_ptr )( void* args, int index ), void* jobArgs );
+        //void AddJob( void( *func_ptr )( void* args, int index ), void* jobArgs );
+
+        void AddJob( std::function<void( void*, int )> aFunc, void* jobArgs );
+
+
+
+        template <typename F>
+        void AddJob_Generic( F&& function )
+        {
+            jobQueue.emplace_back( std::forward<F>( function ) );
+
+            jobAvailableCondition.notify_one();
+        }
 
         // TODO: Sequence factory interface
 
@@ -73,6 +87,10 @@ namespace Jobs
         // Ready queue for the jobs
         ConcurrentQueue<CpuJob> readyQueue;
 
+        // Temporary job queue to see if i can get this to work
+        // with member functions
+        ConcurrentQueue<job_t> jobQueue;
+
         /// <summary>
         /// Conditional variable for if a job is available
         /// </summary>
@@ -88,6 +106,7 @@ namespace Jobs
         std::atomic<bool> isDone;
 
 
+        void TestBoiMember();
     };
 
 };      // namespace jobs

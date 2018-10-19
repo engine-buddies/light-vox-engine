@@ -2,7 +2,6 @@
 
 #include <functional>
 
-
 namespace Jobs
 {
     /// <summary>
@@ -17,8 +16,6 @@ namespace Jobs
         LOW
     };
 
-    typedef void( *CpuJobFuncPtr ) ( void * args, int index );
-    
     /// <summary>
     /// A job that will be run in parallel with others on the CPU
     /// A function pointer for the worker threads to use
@@ -28,14 +25,12 @@ namespace Jobs
     {
         JobPriority priority = JobPriority::NORMAL;
 
-        CpuJobFuncPtr func_ptr = nullptr;
+        std::function<void( void*, int )> job_func;
 
         void* args = nullptr;
 
         int index = 0;
     };
 
-    
-};      // namespace jobs
 
-// This is the definition of a CPU job that we have to roll with
+};      // namespace jobs
