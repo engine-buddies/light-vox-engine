@@ -185,7 +185,7 @@ private:
 	UINT64 fenceValue;
 
     //Deferred Rendering members
-    Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[LV_NUM_GBUFFER_RTV];
+    Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[LV_NUM_GBUFFER_RTV * LV_FRAME_COUNT];
     float clearColor[4] = { 0.0,0.0f,0.0f,1.0f };
     Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBuffer; //For Full Screen Quad
     Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBufferUpload;

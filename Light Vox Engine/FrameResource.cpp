@@ -51,8 +51,6 @@ FrameResource::FrameResource(
 	}
 
     // Null descriptors at the start of the heap (used for shadows)
-	const UINT nullSrvCount = 0;			
-	const UINT textureCount = 0;
     const UINT deferredSRVCount = LV_NUM_GBUFFER_RTV;
 	const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -61,11 +59,11 @@ FrameResource::FrameResource(
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle(cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
 	nullSrvHandle = cbvSrvGpuHandle;
 	cbvSrvCpuHandle.Offset(
-        nullSrvCount + textureCount + deferredSRVCount + (frameResourceIndex * LV_FRAME_COUNT), 
+        deferredSRVCount * (frameResourceIndex + 1) + frameResourceIndex, 
         cbvSrvDescriptorSize
     );
 	cbvSrvGpuHandle.Offset(
-        nullSrvCount + textureCount + deferredSRVCount + (frameResourceIndex * LV_FRAME_COUNT), 
+		deferredSRVCount * (frameResourceIndex + 1) + frameResourceIndex,
         cbvSrvDescriptorSize
     );
 

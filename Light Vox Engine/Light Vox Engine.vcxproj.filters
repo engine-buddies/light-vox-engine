@@ -69,7 +69,7 @@
     </ClInclude>
     <ClInclude Include="ObjLoader.h">
       <Filter>Source Files\Graphics</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="Configs.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
@@ -88,6 +88,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\vs_basic.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ps_lighting.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
