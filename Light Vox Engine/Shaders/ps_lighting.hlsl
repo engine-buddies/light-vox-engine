@@ -7,9 +7,9 @@ struct PSInput
 };
 
 //Deferred SRVs
-Texture2D albedo    : register(t0);
-Texture2D normal    : register(t1);
-Texture2D position  : register(t2);
+Texture2D gAlbedoTexture    : register(t0);
+Texture2D gNormalTexture    : register(t1);
+Texture2D gPositionTexture  : register(t2);
 
 
 struct DirectionalLight
@@ -33,7 +33,7 @@ float4 main(PSInput input) : SV_TARGET
     dirLight.direction = float3(-0.5, -0.5, 0);
 
     float4 lights = float4(0.1, 0.1, 0.1, 1.0)
-        + dirLightDiffuse(dirLight, normal) * albedo;
+        + dirLightDiffuse(dirLight, normal) * float4(albedo, 1.0);
 
     return lights;
 }
