@@ -2,12 +2,6 @@
 
 using namespace Jobs;
 
-void TestBoi()
-{
-    printf( "TEST BOIIII \n" );
-
-}
-
 // Singleton requirement
 JobManager* JobManager::instance = nullptr;
 
@@ -33,7 +27,6 @@ JobManager::JobManager()
 {
     const unsigned int supportedThreads = std::thread::hardware_concurrency();
 
-
     DEBUG_PRINT( "The number of threads supported on this system is: %d\n", supportedThreads );
 
     isDone = false;
@@ -44,16 +37,8 @@ JobManager::JobManager()
         workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
     }
 
-    // Ohhhhhh yee
-    AddJob_Generic( std::bind( &TestBoi ) );
+    // AddJob( std::bind( &Jobs::JobManager::TestBoiMember, this, static_cast<void*>("Wait a minute"), 99 ) );
 
-    AddJob_Generic( std::bind( &Jobs::JobManager::TestBoiMember, this ) );
-
-}
-
-void JobManager::TestBoiMember()
-{
-    printf( "\tTEST MEMMMBER\n\n" );
 }
 
 JobManager::~JobManager()
@@ -72,18 +57,6 @@ JobManager::~JobManager()
     printf( "\tJob Manager dtor!\n" );
 }
 
-void Jobs::JobManager::AddJob( std::function<void( void*, int )> aFunc, void* jobArgs )
-{
-    CpuJob tempJob { };
-
-    tempJob.job_func = aFunc;
-    tempJob.args = jobArgs;
-
-    readyQueue.emplace_back( tempJob );
-
-    jobAvailableCondition.notify_one();
-}
-
 void JobManager::WorkerThread()
 {
     std::unique_lock<std::mutex> workerLock( readyQueueMutex );
@@ -97,28 +70,19 @@ void JobManager::WorkerThread()
         if ( isDone ) return;
 
         // If there is a job available, than work on it
-        /*if ( !readyQueue.empty() )
+        if ( !readyQueue.empty() )
         {
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
-
-            CurJob.job_func( CurJob.args, CurJob.index );
+   
+            CurJob.job_func( CurJob.args, CurJob.index );            
 
             // Notify other threads that a job has been taken and we should probably
             // check to make sure that there isn;t more
             jobAvailableCondition.notify_one();
-        }*/
-
-        if ( !jobQueue.empty() )
-        {
-            job_t curJob;
-            jobQueue.pop_front( curJob );
-            printf( "Inside worky" );
-            curJob();
         }
     }
 }
-
 
 ////////////////////////////////////////
 // Accessors

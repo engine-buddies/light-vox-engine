@@ -11,7 +11,6 @@
 
 namespace Jobs
 {
-    typedef std::function<void()> job_t;
 
     /// <summary>
     /// Manage and execute jobs with an aim to increase
@@ -33,27 +32,25 @@ namespace Jobs
         /// </summary>
         static void ReleaseInstance();
 
-        /// <summary>
-        /// Temporary add job function until I can get my hands on 
-        /// the SDK we need to abstract.
-        /// Add a job without making a cpu job
-        /// </summary>
-        /// <param name="func_ptr">A function pointer that is considered a job</param>
-        //void AddJob( void( *func_ptr )( void* args, int index ), void* jobArgs );
-
-        void AddJob( std::function<void( void*, int )> aFunc, void* jobArgs );
-
-
-
         template <typename F>
-        void AddJob_Generic( F&& function )
+        /// <summary>
+        /// Add a job to the job queue
+        /// </summary>
+        /// <param name="function"></param>
+        void AddJob( F&& function, void* jobArgs = nullptr, int aIndex = 0 )
         {
-            jobQueue.emplace_back( std::forward<F>( function ) );
+            CpuJob tempJob { };
+
+            tempJob.job_func = std::forward<F>( function );
+
+            tempJob.args = jobArgs;
+            tempJob.index = aIndex;
+            tempJob.priority = Jobs::JobPriority::NORMAL;
+
+            readyQueue.emplace_back( tempJob );
 
             jobAvailableCondition.notify_one();
         }
-
-        // TODO: Sequence factory interface
 
         // We don't want anything making copies of this class so delete these operators
         JobManager( JobManager const& ) = delete;
@@ -87,17 +84,15 @@ namespace Jobs
         // Ready queue for the jobs
         ConcurrentQueue<CpuJob> readyQueue;
 
-        // Temporary job queue to see if i can get this to work
-        // with member functions
-        ConcurrentQueue<job_t> jobQueue;
-
         /// <summary>
         /// Conditional variable for if a job is available
         /// </summary>
         std::condition_variable jobAvailableCondition;
 
-        // Worker threads for executing jobs
-        // A worker thread extracts a job from the job queue and executes it
+        /// <summary>
+        /// Worker threads for executing jobs
+        /// A worker thread extracts a job from the job queue and executes it
+        /// </summary>
         std::vector<std::thread> workerThreads;
 
         /// <summary>
@@ -105,8 +100,6 @@ namespace Jobs
         /// </summary>
         std::atomic<bool> isDone;
 
-
-        void TestBoiMember();
     };
 
 };      // namespace jobs
