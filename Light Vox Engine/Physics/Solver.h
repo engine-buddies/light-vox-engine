@@ -1,6 +1,10 @@
+/// <summary>
+/// By Arturo Kuang
+/// </summary>
 #pragma once
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
+
 
 namespace Physics
 {
