@@ -24,7 +24,7 @@ UINT JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
 
     CpuJob TheJob { };
     // Cast to a correct type for now
-    TheJob.func_ptr = static_cast<CpuJobFuncPtr> ( aJob );
+    //TheJob.func_ptr = static_cast<CpuJobFuncPtr> ( aJob );
     TheJob.args = aArgs;
 
     sequenceJobs.emplace_front( TheJob );
