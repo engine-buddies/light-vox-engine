@@ -13,9 +13,15 @@
 #include <pix3.h>
 
 //utils
+<<<<<<< HEAD
+#include "lvUtils.h"
+#include "DXSampleHelper.h"
+#include "Configs.h"
+=======
 #include "Utils/lvUtils.h"
 #include "Utils/DXSampleHelper.h"
 #include "Utils/Configs.h"
+>>>>>>> development
 #include <cstdint>
 
 //Math 
@@ -38,7 +44,10 @@
 #else
 #include <stdexcpt.h>
 #include <stdexcept>
+<<<<<<< HEAD
+=======
 #endif
+
 // Debug Macros
 
 #ifdef _DEBUG
@@ -49,4 +58,5 @@
 
 #define DEBUG_PRINT(a, ...)
 
+>>>>>>> development
 #endif

@@ -27,17 +27,17 @@ JobManager::JobManager()
 {
     const unsigned int supportedThreads = std::thread::hardware_concurrency();
 
-#ifdef _DEBUG
-    printf( "The number of threads supported on this system is: %d\n", supportedThreads );
-#endif // DEBUG
+    DEBUG_PRINT( "The number of threads supported on this system is: %d\n", supportedThreads );
 
     isDone = false;
 
     // Create worker threads that check to see if there is any work to do
     for ( size_t i = 0; i < supportedThreads; ++i )
     {
-        workerThreads.push_back( std::thread( &JobManager::WorkerThread, this ) );
+        workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
     }
+
+    // AddJob( std::bind( &Jobs::JobManager::TestBoiMember, this, static_cast<void*>("Wait a minute"), 99 ) );
 
 }
 
@@ -57,23 +57,9 @@ JobManager::~JobManager()
     printf( "\tJob Manager dtor!\n" );
 }
 
-void JobManager::AddJob( void( *func_ptr )( void *aArgs, int index ), void* jobArgs )
-{
-    CpuJob tempJob { };
-    
-    tempJob.func_ptr = func_ptr;
-    tempJob.args = jobArgs;
-
-    readyQueue.emplace_back( tempJob );
-
-    // Let one of the worker threads know that there is a job available
-    jobAvailableCondition.notify_one();
-
-}
-
 void JobManager::WorkerThread()
 {
-    std::unique_lock<std::mutex> workerLock ( readyQueueMutex );
+    std::unique_lock<std::mutex> workerLock( readyQueueMutex );
 
     while ( true )
     {
@@ -88,8 +74,8 @@ void JobManager::WorkerThread()
         {
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
-            
-            CurJob.func_ptr( CurJob.args, CurJob.index );
+   
+            CurJob.job_func( CurJob.args, CurJob.index );            
 
             // Notify other threads that a job has been taken and we should probably
             // check to make sure that there isn;t more
@@ -97,7 +83,6 @@ void JobManager::WorkerThread()
         }
     }
 }
-
 
 ////////////////////////////////////////
 // Accessors

@@ -1,5 +1,5 @@
 #pragma once
-#include "stdafx.h"
+#include "../stdafx.h"
 /// <summary>
 /// Structures of the different components that an entity can have
 /// </summary>

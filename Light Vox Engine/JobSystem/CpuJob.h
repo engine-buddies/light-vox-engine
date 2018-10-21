@@ -1,11 +1,17 @@
 #pragma once
 
+#include <functional>
+
 namespace Jobs
 {
+
+    typedef std::function<void( void*, int )> job_t;
+
     /// <summary>
     /// Priority of a CPU job. Will determine how the job 
     /// is sorted into the job queue
     /// </summary>
+    /// <author>Ben Hoffman</endif>
     enum JobPriority
     {
         CRITICAL,
@@ -14,8 +20,6 @@ namespace Jobs
         LOW
     };
 
-    typedef void( *CpuJobFuncPtr ) ( void * args, int index );
-
     /// <summary>
     /// A job that will be run in parallel with others on the CPU
     /// A function pointer for the worker threads to use
@@ -23,14 +27,13 @@ namespace Jobs
     /// <author>Ben Hoffman</author>
     struct CpuJob
     {
-        JobPriority priority = JobPriority::NORMAL;
-
-        CpuJobFuncPtr func_ptr = nullptr;
+        job_t job_func;     // This is 64 bytes!!!  Ahhhh
 
         void* args = nullptr;
 
         int index = 0;
-    };
-};      // namespace jobs
 
-// This is the definition of a CPU job that we have to roll with
+        JobPriority priority = JobPriority::NORMAL;
+    };
+
+};      // namespace jobs

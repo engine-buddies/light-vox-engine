@@ -11,6 +11,7 @@
 
 namespace Jobs
 {
+
     /// <summary>
     /// Manage and execute jobs with an aim to increase
     /// efficiency in using a multicore CPU
@@ -31,31 +32,41 @@ namespace Jobs
         /// </summary>
         static void ReleaseInstance();
 
+        template <typename F>
         /// <summary>
-        /// Temporary add job function until I can get my hands on 
-        /// the SDK we need to abstract.
-        /// Add a job without making a cpu job
+        /// Add a job to the job queue
         /// </summary>
-        /// <param name="func_ptr">A function pointer that is considered a job</param>
-        void AddJob( void( *func_ptr )( void* args, int index ), void* jobArgs );
+        /// <param name="function"></param>
+        void AddJob( F&& function, void* jobArgs = nullptr, int aIndex = 0 )
+        {
+            CpuJob tempJob { };
 
-        // TODO: Sequence factory interface
+            tempJob.job_func = std::forward<F>( function );
+
+            tempJob.args = jobArgs;
+            tempJob.index = aIndex;
+            tempJob.priority = Jobs::JobPriority::NORMAL;
+
+            readyQueue.emplace_back( tempJob );
+
+            jobAvailableCondition.notify_one();
+        }
 
         // We don't want anything making copies of this class so delete these operators
-        JobManager( JobManager const& )     = delete;
+        JobManager( JobManager const& ) = delete;
         void operator=( JobManager const& ) = delete;
 
         ////////////////////////////////////////
         // Accessors
 
         inline const size_t GetThreadCount() const;
-    
+
     private:
 
         JobManager();
 
         ~JobManager();
-    
+
         static JobManager* instance;
 
         /// <summary>
@@ -78,16 +89,17 @@ namespace Jobs
         /// </summary>
         std::condition_variable jobAvailableCondition;
 
-        // Worker threads for executing jobs
-        // A worker thread extracts a job from the job queue and executes it
+        /// <summary>
+        /// Worker threads for executing jobs
+        /// A worker thread extracts a job from the job queue and executes it
+        /// </summary>
         std::vector<std::thread> workerThreads;
-    
+
         /// <summary>
         /// Atomic bool determining if we are done used for closing all threads
         /// </summary>
         std::atomic<bool> isDone;
 
-    
     };
 
 };      // namespace jobs

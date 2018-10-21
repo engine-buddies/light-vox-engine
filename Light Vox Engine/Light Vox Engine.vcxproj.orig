@@ -234,8 +234,13 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+<<<<<<< HEAD
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ComponentManager.cpp" />
+=======
     <ClCompile Include="ECS\ComponentManager.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
+>>>>>>> development
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Graphics\FrameResource.cpp" />
@@ -245,6 +250,30 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="JobSystem\JobSequence.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="GameTime.cpp" />
+<<<<<<< HEAD
+    <ClCompile Include="Physics.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="ComponentManager.h" />
+    <ClInclude Include="ConcurrentQueue.h" />
+    <ClInclude Include="Configs.h" />
+    <ClInclude Include="CpuJob.h" />
+    <ClInclude Include="d3dx12.h" />
+    <ClInclude Include="DXSampleHelper.h" />
+    <ClInclude Include="Engine.h" />
+    <ClInclude Include="Entity.h" />
+    <ClInclude Include="EntityComponents.h" />
+    <ClInclude Include="EntityManager.h" />
+    <ClInclude Include="FrameResource.h" />
+    <ClInclude Include="GraphicsCore.h" />
+    <ClInclude Include="JobManager.h" />
+    <ClInclude Include="JobSequence.h" />
+    <ClInclude Include="LVutils.h" />
+    <ClInclude Include="ObjLoader.h" />
+    <ClInclude Include="Physics.h" />
+    <ClInclude Include="ShaderDefinitions.h" />
+=======
     <ClCompile Include="Physics\Physics.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -263,6 +292,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="JobSystem\JobManager.h" />
     <ClInclude Include="JobSystem\JobSequence.h" />
     <ClInclude Include="Physics\Physics.h" />
+>>>>>>> development
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="Utils\Configs.h" />
