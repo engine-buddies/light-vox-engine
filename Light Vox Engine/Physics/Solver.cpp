@@ -14,7 +14,7 @@ Solver::~Solver()
 
 void Solver::Update( float dt )
 {
-    Collide();
+    //Collide();
     AccumlateForces();
     Integrate( dt );
     ModelToWorld();
@@ -39,10 +39,7 @@ void Solver::Collide()
 
             if ( BoxIntersect( posA, posB, sizeA, sizeB ) )
             {
-#ifdef DEBUG
-                printf( "Entity: %i hit Entity: %i \n", i, j );
-#endif // DEBUG
-
+                DEBUG_PRINT("Entity: %i hit Entity: %i \n", i, j);
             }
 
         }

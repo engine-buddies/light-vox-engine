@@ -223,7 +223,11 @@ HRESULT Engine::Run()
             //rotation += 0.01f;
 
             //DEBUG collision code 
-
+            float x = sinf(time->GetTotalFloatTime());
+            for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+            {
+                componentManager->transform[i].pos.x += x;
+            }
 
             //DEBUG CODE for basic camera update
             DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -40.f );
