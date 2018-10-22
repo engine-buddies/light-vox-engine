@@ -77,7 +77,7 @@ private:
     /// Create the Render Target View Heap and initialize our render
     /// targets for the back buffers we'll need
     /// </summary>
-	inline HRESULT InitRTV();						
+	inline HRESULT InitRtvHeap();						
 
     /// <summary>
     /// Create the Depth Stencil View Heap and initialize our depth stencil 
@@ -112,7 +112,7 @@ private:
     /// Clears our depth & color buffer and transitions the back buffer to be
     /// used for rendering
     /// </summary>
-	inline void BeginFrame();
+	inline void PrepareForGeometryPass();
 
     /// <summary>
     /// Transitions our resources for our 2nd pass
@@ -147,7 +147,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
-	Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[LV_FRAME_COUNT * (LV_NUM_GBUFFER_RTV + 1)];
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilView;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
@@ -160,12 +159,14 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> lightPso;
 
     //frame resources
+    Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[ LV_FRAME_COUNT ];
     FrameResource* frameResources[LV_FRAME_COUNT];
     FrameResource* currentFrameResource;
     int currentFrameResourceIndex;
 
     //cached size of rtv descriptor (used to index through the heap)
-    UINT rtvDescriptorSize;		
+    UINT rtvDescriptorSize;
+    UINT cbvSrvDescriptorSize;
 
 	//vaiables for rendering one mesh
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
@@ -185,8 +186,6 @@ private:
 	UINT64 fenceValue;
 
     //Deferred Rendering members
-    Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[LV_NUM_GBUFFER_RTV * LV_FRAME_COUNT];
-    float clearColor[4] = { 0.0,0.0f,0.0f,1.0f };
     Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBuffer; //For Full Screen Quad
     Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBufferUpload;
     D3D12_VERTEX_BUFFER_VIEW fsqVertexBufferView;
