@@ -11,6 +11,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #endif
         Engine engine( hInstance );
 
+
         LV_PRINT_DEBUG( "Initializing Systems" );
         ThrowIfFailed( engine.InitSystems() );	//init all 
         ThrowIfFailed( engine.Run() );			//run that baby

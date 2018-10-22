@@ -161,9 +161,9 @@ HRESULT Engine::InitSystems()
         float x = -count / 2.0f;
         float y = -count / 2.0f;
         float z = 0;
-        for ( int i = 0; i < count; i++ )
+        for ( int i = 0; i < count; ++i )
         {
-            for ( int j = 0; j < count; j++ )
+            for ( int j = 0; j < count; ++j )
             {
                 int index = i * count + j;
                 UINT entityID = entityManager->Get_Entity(index).index;
@@ -196,32 +196,6 @@ HRESULT Engine::Run()
         {
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
-            //static bool init = false;
-            //static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
-            //static float rotation = 0.001f;
-            //{
-
-            //    float x = -count / 2.0f;
-            //    float y = -count / 2.0f;
-            //    float z = 0;
-            //    for ( int i = 0; i < count; i++ )
-            //    {
-            //        for ( int j = 0; j < count; j++ )
-            //        {
-            //            DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation( x + rotation, y, z );
-            //            //transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixRotationY(rotation), transformMatrix);
-            //            transformMatrix = DirectX::XMMatrixMultiplyTranspose( DirectX::XMMatrixIdentity(), transformMatrix );
-            //            DirectX::XMStoreFloat4x4( transforms + i * count + j, transformMatrix );
-
-            //            x += 2;
-            //        }
-
-            //        y += 2;
-            //        x = -count / 2.0f;
-            //    }
-            //}
-            //rotation += 0.01f;
-
             //DEBUG collision code 
             float x = sinf(time->GetTotalFloatTime());
             for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
