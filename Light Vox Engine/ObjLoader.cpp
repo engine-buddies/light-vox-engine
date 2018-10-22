@@ -174,9 +174,9 @@ void ObjLoader::GenerateFullScreenQuad(MeshData & meshData)
     meshData.vertices.resize(4);
     meshData.indices.resize(6);
 
-    meshData.vertices[0] = { { -1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } };
-    meshData.vertices[1] = { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } };
-    meshData.vertices[2] = { {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } };
+    meshData.vertices[0] = { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } };
+    meshData.vertices[1] = { {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } };
+    meshData.vertices[2] = { { -1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } };
     meshData.vertices[3] = { {  1.0f, -1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } };
 
     meshData.indices[0] = 0;

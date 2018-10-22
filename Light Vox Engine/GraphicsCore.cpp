@@ -425,7 +425,7 @@ inline HRESULT GraphicsCore::InitLightPassPSO()
     ComPtr<ID3DBlob> vs;
     ComPtr<ID3DBlob> ps;
 
-    D3DReadFileToBlob( L"Assets/Shaders/vs_basic.cso", &vs );
+    D3DReadFileToBlob( L"Assets/Shaders/vs_FSQ.cso", &vs );
     D3DReadFileToBlob( L"Assets/Shaders/ps_lighting.cso", &ps );
 
 
