@@ -24,6 +24,9 @@
     <Filter Include="Source Files\ECS">
       <UniqueIdentifier>{31004666-e0be-4365-80ad-b1493839b90d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{14a77699-7938-43aa-a9de-018468608f0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -126,6 +129,9 @@
     </ClInclude>
     <ClInclude Include="Utils\LVutils.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\InputManager.h">
+      <Filter>Source Files\Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

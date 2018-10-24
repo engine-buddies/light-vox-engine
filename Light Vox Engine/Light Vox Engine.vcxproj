@@ -258,6 +258,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="Graphics\GraphicsCore.h" />
     <ClInclude Include="Graphics\ObjLoader.h" />
     <ClInclude Include="Graphics\ShaderDefinitions.h" />
+    <ClInclude Include="Input\InputManager.h" />
     <ClInclude Include="JobSystem\ConcurrentQueue.h" />
     <ClInclude Include="JobSystem\CpuJob.h" />
     <ClInclude Include="JobSystem\JobManager.h" />
