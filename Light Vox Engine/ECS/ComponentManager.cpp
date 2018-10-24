@@ -1,5 +1,7 @@
 #include "ComponentManager.h"
 
+using namespace ECS;
+
 ComponentManager* ComponentManager::Instance = nullptr;
 
 void ComponentManager::Init()

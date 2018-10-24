@@ -54,6 +54,7 @@ Engine::~Engine()
     delete graphics;
     delete camera;
     delete physics;
+    delete rigidBody;
 
     // Releases the instance of the entity manager
     entityManager->ReleaseInstance();
@@ -125,12 +126,15 @@ HRESULT Engine::InitSystems()
 {
     InitWindow();
     graphics = new GraphicsCore( hWindow, static_cast<UINT>( windowWidth ), static_cast<UINT>( windowHeight ) );
-    physics = new Physics();
+    //Physics
+    physics = new Physics::Solver();
+    rigidBody = new Physics::Rigidbody();
+    //Time
     time = GameTime::GetInstance();
 
     // Calling get instance will create the entity manager
-    entityManager = EntityManager::GetInstance();
-    componentManager = ComponentManager::GetInstance();
+    entityManager = ECS::EntityManager::GetInstance();
+    componentManager = ECS::ComponentManager::GetInstance();
 
     Jobs::JobManager* man = Jobs::JobManager::GetInstance();
     // Add any jobs you need here, like this: 
@@ -141,6 +145,38 @@ HRESULT Engine::InitSystems()
     ThrowIfFailed( graphics->Init() );
     time->Init();
     entityManager->Init();
+
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    {
+        entityManager->Create_Entity();
+    }
+
+
+    //DEBUG:: INTIALIZE ENTITY POSSITIONS
+    static bool init = false;
+    static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
+    static float rotation = 0.001f;
+    {
+
+        float x = -count / 2.0f;
+        float y = -count / 2.0f;
+        float z = 0;
+        for ( int i = 0; i < count; ++i )
+        {
+            for ( int j = 0; j < count; ++j )
+            {
+                int index = i * count + j;
+                UINT entityID = entityManager->Get_Entity(index).index;
+                rigidBody->Pos(glm::vec3(x + rotation, y, z), entityID);
+                rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
+
+                x += 2;
+            }
+
+            y += 2;
+            x = -count / 2.0f;
+        }
+    }
 
     return S_OK;
 }
@@ -160,31 +196,12 @@ HRESULT Engine::Run()
         {
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
-            static bool init = false;
-            static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
-            static float rotation = 0.001f;
+            //DEBUG collision code 
+            float x = sinf(time->GetTotalFloatTime());
+            for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
             {
-
-                float x = -count / 2.0f;
-                float y = -count / 2.0f;
-                float z = 0;
-                for ( int i = 0; i < count; i++ )
-                {
-                    for ( int j = 0; j < count; j++ )
-                    {
-                        DirectX::XMMATRIX transformMatrix = DirectX::XMMatrixTranslation( x + rotation, y, z );
-                        //transformMatrix = DirectX::XMMatrixMultiplyTranspose(DirectX::XMMatrixRotationY(rotation), transformMatrix);
-                        transformMatrix = DirectX::XMMatrixMultiplyTranspose( DirectX::XMMatrixIdentity(), transformMatrix );
-                        DirectX::XMStoreFloat4x4( transforms + i * count + j, transformMatrix );
-
-                        x += 2;
-                    }
-
-                    y += 2;
-                    x = -count / 2.0f;
-                }
+                componentManager->transform[i].pos.x += x;
             }
-            rotation += 0.01f;
 
             //DEBUG CODE for basic camera update
             DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -40.f );
@@ -197,6 +214,12 @@ HRESULT Engine::Run()
             );
 
             physics->Update( time->GetTotalFloatTime() );
+            //DEBUG:: Transfrom glm matrix4x4 to directxMat4x4
+            for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+            {
+                Mat4x4toXMFLOAT4x4(componentManager->transform[i].transformMatrix, transforms[i]);
+            }
+
             graphics->Update( transforms, camera );
             graphics->Render();
             time->UpdateTimer();

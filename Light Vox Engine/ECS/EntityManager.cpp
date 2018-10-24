@@ -1,6 +1,6 @@
 #include "EntityManager.h"
 
-
+using namespace ECS;
 // Singleton requirement
 EntityManager* EntityManager::Instance = nullptr;
 
