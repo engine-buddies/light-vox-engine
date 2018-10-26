@@ -68,13 +68,15 @@ public:
 	void BindGBuffer(
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle[],
         UINT rtvCount,
-		D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle
+		D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle,
+        D3D12_GPU_DESCRIPTOR_HANDLE cbvHandle
 	);
 
     void BindDeferred(
         D3D12_CPU_DESCRIPTOR_HANDLE* rtvHandle,
         D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle,
-        D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
+        D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle,
+        D3D12_GPU_DESCRIPTOR_HANDLE gBufferHandle
     );
 
 
@@ -141,7 +143,4 @@ private:
     //LightConstantBuffer* lightConstantBufferWO;
 
     //handle to cbv required for the scene
-    D3D12_GPU_DESCRIPTOR_HANDLE sceneCbvHandle;
-    D3D12_GPU_DESCRIPTOR_HANDLE gBufferSrvHandle;
-    D3D12_GPU_DESCRIPTOR_HANDLE backBufferSrvHandle;
 };

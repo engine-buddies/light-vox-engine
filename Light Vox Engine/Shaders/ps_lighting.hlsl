@@ -38,6 +38,6 @@ float4 main(PSInput input) : SV_TARGET
     float4 lights = float4(0.1, 0.1, 0.1, 1.0)
         + dirLightDiffuse(dirLight, normal) * float4(albedo, 1.0);
         */
-    float4 diffuse = gAlbedoTexture.Sample(gSampler, input.uv);
+    float4 diffuse = gPositionTexture.Sample(gSampler, input.uv);
     return diffuse;
 }

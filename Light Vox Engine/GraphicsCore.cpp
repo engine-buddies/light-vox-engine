@@ -119,7 +119,14 @@ void GraphicsCore::Render()
 
 
         SetGBufferPSO( geometryBufferCommandList );
-        currentFrameResource->BindGBuffer( gBufferHandles, LV_NUM_GBUFFER_RTV, &dsvHandle );
+
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandleFirstPass( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(),
+            currentFrameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ) + LV_NUM_GBUFFER_RTV,
+            cbvSrvDescriptorSize
+        );
+
+        currentFrameResource->BindGBuffer( gBufferHandles, LV_NUM_GBUFFER_RTV, &dsvHandle , cbvHandleFirstPass );
         geometryBufferCommandList->DrawIndexedInstanced( verticesCount, 1, 0, 0, 0 );
 
         //transition our depth stencil view
@@ -157,7 +164,15 @@ void GraphicsCore::Render()
 
 
         SetLightPassPSO( deferredCommandList );
-        currentFrameResource->BindDeferred( &rtvHandle, &dsvHandle, samplerHeap->GetGPUDescriptorHandleForHeapStart());
+
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandleFirstPass( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(),
+            currentFrameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ) ,
+            cbvSrvDescriptorSize
+        );
+
+
+        currentFrameResource->BindDeferred( &rtvHandle, &dsvHandle, samplerHeap->GetGPUDescriptorHandleForHeapStart(), cbvHandleFirstPass );
         deferredCommandList->DrawInstanced( 4, 1, 0, 0 );
         currentFrameResource->Finish();
         //transition our depth stencil view

@@ -99,7 +99,6 @@ FrameResource::FrameResource(
             rtvDescriptorSize
         );
 
-        gBufferSrvHandle = cbvSrvGpuHandle;
         for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; i++ )
         {
             device->CreateRenderTargetView( rtvTextures[ i ].Get(), &rtvDesc, rtvHandle );
@@ -141,8 +140,6 @@ FrameResource::FrameResource(
     cbvDesc.BufferLocation = sceneConstantBuffer->GetGPUVirtualAddress();
     device->CreateConstantBufferView( &cbvDesc, cbvSrvCpuHandle );
 
-    sceneCbvHandle = cbvSrvGpuHandle;
-
     //combine all of our command lists
 
     //const UINT batchSize = 2 + LV_COMMAND_LIST_COUNT;
@@ -181,22 +178,22 @@ FrameResource::~FrameResource()
 void FrameResource::BindGBuffer(
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle[],
     UINT rtvCount,
-    D3D12_CPU_DESCRIPTOR_HANDLE * dsvHandle
+    D3D12_CPU_DESCRIPTOR_HANDLE * dsvHandle,
+    D3D12_GPU_DESCRIPTOR_HANDLE cbvHandle
 )
 {
-    //geometryBufferCommandList->SetGraphicsRootDescriptorTable( 0, gBufferSrvHandle );
-    geometryBufferCommandList->SetGraphicsRootDescriptorTable( 1, sceneCbvHandle );
+    geometryBufferCommandList->SetGraphicsRootDescriptorTable( 1, cbvHandle );
     geometryBufferCommandList->OMSetRenderTargets( rtvCount, rtvHandle, FALSE, dsvHandle );
 }
 
 void FrameResource::BindDeferred(
     D3D12_CPU_DESCRIPTOR_HANDLE * rtvHandle,
     D3D12_CPU_DESCRIPTOR_HANDLE * dsvHandle,
-    D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
+    D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle,
+    D3D12_GPU_DESCRIPTOR_HANDLE gBufferHandle
 )
 {
-    deferredCommandList->SetGraphicsRootDescriptorTable( 0, gBufferSrvHandle );
-    deferredCommandList->SetGraphicsRootDescriptorTable( 1, sceneCbvHandle );
+    deferredCommandList->SetGraphicsRootDescriptorTable( 0, gBufferHandle );
     deferredCommandList->SetGraphicsRootDescriptorTable(2, samplerHandle);
     deferredCommandList->OMSetRenderTargets( 1, rtvHandle, FALSE, dsvHandle );
 }
