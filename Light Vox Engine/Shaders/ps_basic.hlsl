@@ -13,7 +13,7 @@ struct PSOutput
     float4 position : SV_TARGET2;
 };
 
-PSOutput PSMain(PSInput input) : SV_TARGET
+PSOutput PSMain(PSInput input)
 {
     PSOutput output;
 

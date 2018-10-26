@@ -191,11 +191,13 @@ void FrameResource::BindGBuffer(
 
 void FrameResource::BindDeferred(
     D3D12_CPU_DESCRIPTOR_HANDLE * rtvHandle,
-    D3D12_CPU_DESCRIPTOR_HANDLE * dsvHandle
+    D3D12_CPU_DESCRIPTOR_HANDLE * dsvHandle,
+    D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
 )
 {
     deferredCommandList->SetGraphicsRootDescriptorTable( 0, gBufferSrvHandle );
     deferredCommandList->SetGraphicsRootDescriptorTable( 1, sceneCbvHandle );
+    deferredCommandList->SetGraphicsRootDescriptorTable(2, samplerHandle);
     deferredCommandList->OMSetRenderTargets( 1, rtvHandle, FALSE, dsvHandle );
 }
 

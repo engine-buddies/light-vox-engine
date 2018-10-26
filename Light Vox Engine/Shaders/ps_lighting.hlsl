@@ -11,6 +11,8 @@ Texture2D gAlbedoTexture    : register(t0);
 Texture2D gNormalTexture    : register(t1);
 Texture2D gPositionTexture  : register(t2);
 
+//Sampler
+SamplerState gSampler       : register(s0);
 
 struct DirectionalLight
 {
@@ -24,6 +26,7 @@ float4 dirLightDiffuse(DirectionalLight dirLight, float3 normal) {
 
 float4 main(PSInput input) : SV_TARGET
 {   
+    /*
     //lighting calculations (deferred)
     float3 albedo = gAlbedoTexture[input.position.xy].xyz;
     float3 normal = normalize(gNormalTexture[input.position.xy].xyz);
@@ -34,6 +37,7 @@ float4 main(PSInput input) : SV_TARGET
 
     float4 lights = float4(0.1, 0.1, 0.1, 1.0)
         + dirLightDiffuse(dirLight, normal) * float4(albedo, 1.0);
-
-    return lights;
+        */
+    float4 diffuse = gAlbedoTexture.Sample(gSampler, input.uv);
+    return diffuse;
 }

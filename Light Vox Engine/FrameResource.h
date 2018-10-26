@@ -73,7 +73,8 @@ public:
 
     void BindDeferred(
         D3D12_CPU_DESCRIPTOR_HANDLE* rtvHandle,
-        D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle
+        D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle,
+        D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
     );
 
 

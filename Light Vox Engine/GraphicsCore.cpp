@@ -157,7 +157,7 @@ void GraphicsCore::Render()
 
 
         SetLightPassPSO( deferredCommandList );
-        currentFrameResource->BindDeferred( &rtvHandle, &dsvHandle );
+        currentFrameResource->BindDeferred( &rtvHandle, &dsvHandle, samplerHeap->GetGPUDescriptorHandleForHeapStart());
         deferredCommandList->DrawInstanced( 4, 1, 0, 0 );
         currentFrameResource->Finish();
         //transition our depth stencil view
@@ -273,8 +273,8 @@ inline HRESULT GraphicsCore::InitRootSignature()
     }
 
     //this should be ordered from most to least frequent
-    CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[ 2 ];
-    CD3DX12_ROOT_PARAMETER1		rootParameters[ 2 ];
+    CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[ 3 ];
+    CD3DX12_ROOT_PARAMETER1		rootParameters[ 3 ];
 
     //Init: Albedo + Normal + Position
     descriptorRanges[ 0 ].Init(
@@ -283,12 +283,10 @@ inline HRESULT GraphicsCore::InitRootSignature()
         0,                                          //base shader register
         0                                           //space in register
     );
-
-    //Deferred SRVs
     rootParameters[ 0 ].InitAsDescriptorTable(
-        1,             //number of descriptor ranges
-        &descriptorRanges[ 0 ],           //address
-        D3D12_SHADER_VISIBILITY_PIXEL   //what it's visible to
+        1,                                          //number of descriptor ranges
+        &descriptorRanges[ 0 ],                     //address
+        D3D12_SHADER_VISIBILITY_PIXEL               //what it's visible to
     );
 
     //constant buffer
@@ -301,6 +299,18 @@ inline HRESULT GraphicsCore::InitRootSignature()
     rootParameters[ 1 ].InitAsDescriptorTable( 1,
         &descriptorRanges[ 1 ],
         D3D12_SHADER_VISIBILITY_ALL
+    );
+
+    //Sampler
+    descriptorRanges[2].Init(
+        D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER,
+        1,
+        0
+    );
+    rootParameters[2].InitAsDescriptorTable(
+        1,
+        &descriptorRanges[2],
+        D3D12_SHADER_VISIBILITY_PIXEL
     );
 
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
@@ -833,8 +843,33 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart() );
     cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
-    {
 
+    D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
+    samplerHeapDesc.NumDescriptors = 1;
+    samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+    samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    ThrowIfFailed(device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap)));
+    NAME_D3D12_OBJECT(samplerHeap);
+
+    //Create samplers
+    {
+        // Get the sampler descriptor size for the current device.
+        const UINT samplerDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+        // Get a handle to the start of the descriptor heap.
+        CD3DX12_CPU_DESCRIPTOR_HANDLE samplerHandle(samplerHeap->GetCPUDescriptorHandleForHeapStart());
+
+        D3D12_SAMPLER_DESC clampSamplerDesc = {};
+        clampSamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        clampSamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        clampSamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        clampSamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        clampSamplerDesc.MinLOD = 0;
+        clampSamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+        clampSamplerDesc.MipLODBias = 0.0f;
+        clampSamplerDesc.MaxAnisotropy = 1;
+        clampSamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        device->CreateSampler(&clampSamplerDesc, samplerHandle);
     }
 
     //close the command list and transfer static data
@@ -927,7 +962,7 @@ inline void GraphicsCore::SetLightPassPSO( ID3D12GraphicsCommandList * commandLi
 {
     commandList->SetGraphicsRootSignature( rootSignature.Get() );
     commandList->SetPipelineState( lightPso.Get() );
-    ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get() };
+    ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get(), samplerHeap.Get() };
     commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
     commandList->RSSetViewports( 1, &viewport );
     commandList->RSSetScissorRects( 1, &scissorRect );
