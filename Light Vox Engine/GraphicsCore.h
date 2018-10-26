@@ -180,7 +180,7 @@ private:
     UINT verticesCount;
 
 	//fence & synch related vars
-	UINT frameIndex;
+	UINT fenceFrameIndex;
 	HANDLE fenceEvent;
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	UINT64 fenceValue;

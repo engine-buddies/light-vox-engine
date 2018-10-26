@@ -13,7 +13,8 @@ GraphicsCore::GraphicsCore( HWND hWindow, UINT windowW, UINT windowH )
     windowWidth = windowW;
     windowHeight = windowH;
     fenceValue = 0;
-    frameIndex = 0;
+    fenceFrameIndex = 0;
+    currentFrameResourceIndex = 0;
     currentFrameResource = nullptr;
 }
 
@@ -47,8 +48,8 @@ void GraphicsCore::Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera )
     PIXSetMarker( commandQueue.Get(), 0, L"Getting last completed fence" );
 
     const UINT64 lastCompletedFence = fence->GetCompletedValue();
-    currentFrameResourceIndex = ( currentFrameResourceIndex + 1 ) % LV_FRAME_COUNT;
-    currentFrameResource = frameResources[ currentFrameResourceIndex ];
+    fenceFrameIndex = ( fenceFrameIndex + 1 ) % LV_FRAME_COUNT;
+    currentFrameResource = frameResources[ fenceFrameIndex ];
 
     //make sure the frame we're on isn't currently in use by the GPU
     if ( currentFrameResource->fenceValue > lastCompletedFence )
@@ -72,7 +73,7 @@ void GraphicsCore::Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera )
 void GraphicsCore::Render()
 {
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle( rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-        currentFrameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ),
+        currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME,
         rtvDescriptorSize
     );
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
@@ -84,7 +85,7 @@ void GraphicsCore::Render()
     {
         gBufferHandles[ i ] = CD3DX12_CPU_DESCRIPTOR_HANDLE(
             rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-            frameIndex * ( LV_NUM_GBUFFER_RTV + 1 ) + i,
+            currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME + i,
             rtvDescriptorSize
         );
     }
@@ -122,7 +123,7 @@ void GraphicsCore::Render()
 
 
         CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandleFirstPass( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(),
-            currentFrameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ) + LV_NUM_GBUFFER_RTV,
+            currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME + LV_NUM_GBUFFER_RTV,
             cbvSrvDescriptorSize
         );
 
@@ -148,7 +149,7 @@ void GraphicsCore::Render()
 
         currentFrameResource->SwapBarriers();
         currentFrameResource->commandLists[ LV_COMMAND_LIST_MID ]->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets[ 1 - frameIndex ].Get(),
+            renderTargets[ currentFrameResourceIndex ].Get(),
             D3D12_RESOURCE_STATE_PRESENT,
             D3D12_RESOURCE_STATE_RENDER_TARGET
         ) );
@@ -167,7 +168,7 @@ void GraphicsCore::Render()
 
 
         CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandleFirstPass( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(),
-            currentFrameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ) ,
+            currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME ,
             cbvSrvDescriptorSize
         );
 
@@ -182,7 +183,7 @@ void GraphicsCore::Render()
             D3D12_RESOURCE_STATE_DEPTH_WRITE
         ) );
         currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets[1 - frameIndex].Get(),
+            renderTargets[currentFrameResourceIndex ].Get(),
             D3D12_RESOURCE_STATE_RENDER_TARGET,
             D3D12_RESOURCE_STATE_PRESENT
         ) );
@@ -200,7 +201,7 @@ void GraphicsCore::Render()
     PIXBeginEvent( commandQueue.Get(), 0, L"Presenting to screen" );
     ThrowIfFailed( swapChain->Present( 1, 0 ) );
     PIXEndEvent( commandQueue.Get() );
-    frameIndex = swapChain->GetCurrentBackBufferIndex();
+    currentFrameResourceIndex = swapChain->GetCurrentBackBufferIndex();
 
     currentFrameResource->fenceValue = fenceValue;
     ThrowIfFailed( commandQueue->Signal( fence.Get(), fenceValue ) );
@@ -247,7 +248,7 @@ inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 
     //create it
     ThrowIfFailed( device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &commandQueue ) ) );
-    NAME_D3D12_OBJECT( commandQueue );
+    NAME_D3D12_OBJECT_WITH_NAME( commandQueue, "%s", "Main" );
 
     //describe the swap chain
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { };
@@ -428,7 +429,7 @@ inline HRESULT GraphicsCore::InitPSO()
     psoDesc.DepthStencilState = depthStencilDesc;
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    psoDesc.NumRenderTargets = 3;
+    psoDesc.NumRenderTargets = LV_NUM_GBUFFER_RTV;
     psoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.RTVFormats[ 1 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.RTVFormats[ 2 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -440,7 +441,7 @@ inline HRESULT GraphicsCore::InitPSO()
         &psoDesc,
         IID_PPV_ARGS( &pso )
     ) );
-    NAME_D3D12_OBJECT( pso );
+    NAME_D3D12_OBJECT_WITH_NAME( pso, "%s", "First pass" );
 
     return S_OK;
 }
@@ -482,7 +483,7 @@ inline HRESULT GraphicsCore::InitLightPassPSO()
     lightPsoDesc.RasterizerState.DepthClipEnable = false;
     lightPsoDesc.SampleMask = UINT_MAX;
     lightPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    lightPsoDesc.NumRenderTargets = 2;
+    lightPsoDesc.NumRenderTargets = 1;
     //descPipelineState.RTVFormats[0] = mRtvFormat[0];
     lightPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
     lightPsoDesc.SampleDesc.Count = 1;
@@ -492,7 +493,7 @@ inline HRESULT GraphicsCore::InitLightPassPSO()
         &lightPsoDesc,
         IID_PPV_ARGS( &lightPso )
     ) );
-    NAME_D3D12_OBJECT( lightPso );
+    NAME_D3D12_OBJECT_WITH_NAME( lightPso, "%s", "Second Pass" );
     return S_OK;
 }
 
@@ -506,7 +507,7 @@ inline HRESULT GraphicsCore::InitRtvHeap()
 
     //create actual heap
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * ( LV_NUM_GBUFFER_RTV + 1 );
+    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_CBV_SRV_PER_FRAME;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     ThrowIfFailed( device->CreateDescriptorHeap(
@@ -530,17 +531,16 @@ inline HRESULT GraphicsCore::InitRtvHeap()
 
     for ( UINT i = 0; i < LV_FRAME_COUNT; ++i )
     {
-        for( UINT j = 0; j < LV_NUM_GBUFFER_RTV; ++j )
-            rtvHandle.Offset( 1, rtvDescriptorSize );
+        rtvHandle.Offset( LV_NUM_GBUFFER_RTV, rtvDescriptorSize );
 
-        ThrowIfFailed( swapChain->GetBuffer( 1 - i, IID_PPV_ARGS( &renderTargets[i] ) ) );
+        ThrowIfFailed( swapChain->GetBuffer( i, IID_PPV_ARGS( &renderTargets[i] ) ) );
         device->CreateRenderTargetView(
             renderTargets[i].Get(),
             &rtvDesc,
             rtvHandle );
-        NAME_D3D12_OBJECT_INDEXED( renderTargets, i );
+        NAME_D3D12_OBJECT_WITH_NAME( renderTargets[i], "%s (%d)", "Back Buffer", i );
 
-        rtvHandle.Offset( 1, rtvDescriptorSize );
+        rtvHandle.Offset( rtvDescriptorSize );
     }
 
     return S_OK;
@@ -629,7 +629,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         IID_PPV_ARGS( &commandAllocator )
     ) );
-    NAME_D3D12_OBJECT( commandAllocator );
+    NAME_D3D12_OBJECT_WITH_NAME( commandAllocator, "%s", "Shader Resource" );
 
     //create a command list
     ComPtr<ID3D12GraphicsCommandList> commandList;
@@ -640,7 +640,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
         pso.Get(),
         IID_PPV_ARGS( &commandList )
     ) );
-    NAME_D3D12_OBJECT( commandList );
+    NAME_D3D12_OBJECT_WITH_NAME( commandList, "%s", "Shader Resource" );
 
     PIXBeginEvent( commandList.Get(), 0, L"Resetting commandlist" );
     commandList->Close();
@@ -845,7 +845,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     // Describe and create a shader resource view (SRV) and constant 
     // buffer view (CBV) descriptor heap.  Heap layout: null views, 
     // frame 1's constant buffer, frame 2's constant buffers, etc...
-    const UINT nullSrvCount = 0;		// Null descriptors are needed for out of bounds behavior reads.
+    const UINT nullSrvCount = LV_NUM_GBUFFER_RTV;		// Null descriptors are needed for out of bounds behavior reads.
     const UINT cbvCount = LV_FRAME_COUNT * 1; //Frame Count * Number of CBVs
     const UINT srvCount = LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV; // _countof(SampleAssets::Textures) + (FrameCount * 1);
     D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
@@ -858,6 +858,21 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart() );
     cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
+    for (UINT i = 0; i < LV_NUM_NULL_SRV ; i++)
+    {
+        // Describe and create 2 null SRVs. Null descriptors are needed in order 
+        // to achieve the effect of an "unbound" resource.
+        D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
+        nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        nullSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        nullSrvDesc.Texture2D.MipLevels = 1;
+        nullSrvDesc.Texture2D.MostDetailedMip = 0;
+        nullSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+        device->CreateShaderResourceView( nullptr, &nullSrvDesc, cbvSrvHandle );
+        cbvSrvHandle.Offset( cbvSrvDescriptorSize );
+    }
 
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
     samplerHeapDesc.NumDescriptors = 1;

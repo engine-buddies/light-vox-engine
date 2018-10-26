@@ -126,7 +126,9 @@ public:
 	UINT64 fenceValue;
 private:
 
-    inline void CreateCommandAllocatorsAndLists(ID3D12Device * device);
+    inline void CreateCommandAllocatorsAndLists( 
+        ID3D12Device * device,
+        UINT frameResourceIndex );
 
 	//pointer to things we need to properly render
     Microsoft::WRL::ComPtr<ID3D12PipelineState> geometryBufferPso;
@@ -143,4 +145,7 @@ private:
     //LightConstantBuffer* lightConstantBufferWO;
 
     //handle to cbv required for the scene
+    D3D12_GPU_DESCRIPTOR_HANDLE nullHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE sceneCbvHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gBufferSrvHandle;
 };

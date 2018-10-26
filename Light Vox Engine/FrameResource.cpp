@@ -20,33 +20,39 @@ FrameResource::FrameResource(
     const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
     //create the scene rendering command list (one for g-buffer, one for deferred)
-    CreateCommandAllocatorsAndLists( device );
+    CreateCommandAllocatorsAndLists( device, frameResourceIndex );
 
     //get handle to the SRV of the current frame (the g-buffer SRVs)
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvCpuHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(),
-        frameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ),
+        LV_NUM_NULL_SRV + frameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME,
         cbvSrvDescriptorSize
     );
 
-    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(),
-        frameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ),
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart() );
+    nullHandle = cbvSrvGpuHandle;
+    cbvSrvGpuHandle.Offset(
+        LV_NUM_NULL_SRV + frameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME,
         cbvSrvDescriptorSize
     );
+
+    gBufferSrvHandle = cbvSrvGpuHandle;
 
     {
         //Texture Description for G Buffer
         D3D12_RESOURCE_DESC textureDesc = { };
-        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        textureDesc.Alignment = 0;
-        textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 0;
-        textureDesc.MipLevels = 1;
-        textureDesc.DepthOrArraySize = 1;
-        textureDesc.Width = viewport->Width;
-        textureDesc.Height = viewport->Height;
-        textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-        textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        {
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Alignment = 0;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.SampleDesc.Quality = 0;
+            textureDesc.MipLevels = 1;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.Width = viewport->Width;
+            textureDesc.Height = viewport->Height;
+            textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        }
 
         //Clear color for the RTVs
         //Normal and Position RTVs MUST BE CLEARED TO BLACK
@@ -58,7 +64,6 @@ FrameResource::FrameResource(
         clearVal.Color[ 2 ] = gBufferClearColor[ 2 ];
         clearVal.Color[ 3 ] = gBufferClearColor[ 3 ];
         clearVal.Format = textureDesc.Format;
-
 
         //Render Target View Description
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = { };
@@ -87,7 +92,7 @@ FrameResource::FrameResource(
                 &clearVal,
                 IID_PPV_ARGS( rtvTextures[ i ].GetAddressOf() ) )
             );
-            NAME_D3D12_OBJECT_INDEXED( rtvTextures, i );
+            NAME_D3D12_OBJECT_WITH_NAME( rtvTextures[i], "%dth gBuffer of frame %d", i, frameResourceIndex );
         }
 
         // Create RTVs:
@@ -95,16 +100,17 @@ FrameResource::FrameResource(
         UINT rtvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
             rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-            frameResourceIndex * ( LV_NUM_GBUFFER_RTV + 1 ),
+            frameResourceIndex * ( LV_NUM_RTV_PER_FRAME ),
             rtvDescriptorSize
         );
 
         for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; i++ )
         {
+            //create RTV and SRV and stay consistent
             device->CreateRenderTargetView( rtvTextures[ i ].Get(), &rtvDesc, rtvHandle );
+            device->CreateShaderResourceView( rtvTextures[ i ].Get(), &srvDesc, cbvSrvCpuHandle );
             rtvHandle.Offset( 1, rtvDescriptorSize );
 
-            device->CreateShaderResourceView( rtvTextures[ i ].Get(), &srvDesc, cbvSrvCpuHandle );
             cbvSrvCpuHandle.Offset( cbvSrvDescriptorSize );
             cbvSrvGpuHandle.Offset( cbvSrvDescriptorSize );
         }
@@ -122,14 +128,14 @@ FrameResource::FrameResource(
         nullptr,
         IID_PPV_ARGS( &sceneConstantBuffer ) )
     );
+    NAME_D3D12_OBJECT_WITH_NAME( sceneConstantBuffer, "%d", frameResourceIndex );
 
     // Map the constant buffers and cache their heap pointers.
     CD3DX12_RANGE readRange( 0, 0 );		// We do not intend to read from this resource on the CPU.
     ThrowIfFailed( sceneConstantBuffer->Map( 0,
         &readRange,
         reinterpret_cast<void**>( &sceneConstantBufferWO )
-    )
-    );
+    ) );
 
     // Create the constant buffer view for scene pass
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
@@ -140,21 +146,14 @@ FrameResource::FrameResource(
     cbvDesc.BufferLocation = sceneConstantBuffer->GetGPUVirtualAddress();
     device->CreateConstantBufferView( &cbvDesc, cbvSrvCpuHandle );
 
-    //combine all of our command lists
+    sceneCbvHandle = cbvSrvGpuHandle;
 
-    //const UINT batchSize = 2 + LV_COMMAND_LIST_COUNT;
+    //combine all of our command lists
     batchedCommandList[ 0 ] = commandLists[ LV_COMMAND_LIST_PRE ].Get();
     batchedCommandList[ 1 ] = geometryBufferCommandList.Get();
     batchedCommandList[ 2 ] = commandLists[ LV_COMMAND_LIST_MID ].Get();
     batchedCommandList[ 3 ] = deferredCommandList.Get();
     batchedCommandList[ 4 ] = commandLists[ LV_COMMAND_LIST_POST ].Get();
-
-
-
-    //batchedCommandList[ 0 ] = geometryBufferCommandList.Get();
-    //batchedCommandList[ 1 ] = commandLists[ LV_COMMAND_LIST_MID ].Get();
-    //batchedCommandList[ 2 ] = deferredCommandList.Get();
-    //batchedCommandList[ 3 ] = commandLists[ LV_COMMAND_LIST_POST ].Get();
 }
 
 FrameResource::~FrameResource()
@@ -182,7 +181,8 @@ void FrameResource::BindGBuffer(
     D3D12_GPU_DESCRIPTOR_HANDLE cbvHandle
 )
 {
-    geometryBufferCommandList->SetGraphicsRootDescriptorTable( 1, cbvHandle );
+    geometryBufferCommandList->SetGraphicsRootDescriptorTable( 0, nullHandle );
+    geometryBufferCommandList->SetGraphicsRootDescriptorTable( 1, sceneCbvHandle );
     geometryBufferCommandList->OMSetRenderTargets( rtvCount, rtvHandle, FALSE, dsvHandle );
 }
 
@@ -193,8 +193,8 @@ void FrameResource::BindDeferred(
     D3D12_GPU_DESCRIPTOR_HANDLE gBufferHandle
 )
 {
-    deferredCommandList->SetGraphicsRootDescriptorTable( 0, gBufferHandle );
-    deferredCommandList->SetGraphicsRootDescriptorTable(2, samplerHandle);
+    deferredCommandList->SetGraphicsRootDescriptorTable( 0, gBufferSrvHandle );
+    deferredCommandList->SetGraphicsRootDescriptorTable( 2, samplerHandle );
     deferredCommandList->OMSetRenderTargets( 1, rtvHandle, FALSE, dsvHandle );
 }
 
@@ -309,12 +309,20 @@ void FrameResource::WriteConstantBuffers(
     //memcpy(lightConstantBufferWO, &lightConsts, sizeof(LightConstantBuffer));
 }
 
-inline void FrameResource::CreateCommandAllocatorsAndLists( ID3D12Device * device )
+inline void FrameResource::CreateCommandAllocatorsAndLists(
+    ID3D12Device * device,
+    UINT frameResourceIndex )
 {
     //  then create command list, name it, and close it
     ThrowIfFailed( device->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         IID_PPV_ARGS( &geometryBufferCommandAllocator ) ) );
+    NAME_D3D12_OBJECT_WITH_NAME( geometryBufferCommandAllocator,
+        "%s (%d)",
+        "Geometry",
+        frameResourceIndex
+    );
+
     ThrowIfFailed( device->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -322,13 +330,22 @@ inline void FrameResource::CreateCommandAllocatorsAndLists( ID3D12Device * devic
         this->geometryBufferPso.Get(),
         IID_PPV_ARGS( &geometryBufferCommandList )
     ) );
-    NAME_D3D12_OBJECT( geometryBufferCommandList );
+    NAME_D3D12_OBJECT_WITH_NAME( geometryBufferCommandList,
+        "%s (%d)",
+        "Geometry",
+        frameResourceIndex
+    );
     ThrowIfFailed( geometryBufferCommandList->Close() );
 
     //do the same for deferred stuff (2nd pass)
     ThrowIfFailed( device->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         IID_PPV_ARGS( &deferredCommandAllocator ) ) );
+    NAME_D3D12_OBJECT_WITH_NAME( deferredCommandAllocator,
+        "%s (%d)",
+        "Deferred",
+        frameResourceIndex
+    );
     ThrowIfFailed( device->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -336,9 +353,12 @@ inline void FrameResource::CreateCommandAllocatorsAndLists( ID3D12Device * devic
         this->deferredPso.Get(),
         IID_PPV_ARGS( &deferredCommandList )
     ) );
-    NAME_D3D12_OBJECT( deferredCommandList );
+    NAME_D3D12_OBJECT_WITH_NAME( deferredCommandList,
+        "%s (%d)",
+        "Deferred",
+        frameResourceIndex
+    );
     ThrowIfFailed( deferredCommandList->Close() );
-
 
     for ( UINT i = 0; i < LV_COMMAND_LIST_COUNT; i++ )
     {
@@ -346,6 +366,11 @@ inline void FrameResource::CreateCommandAllocatorsAndLists( ID3D12Device * devic
             D3D12_COMMAND_LIST_TYPE_DIRECT,
             IID_PPV_ARGS( &commandAllocators[ i ] )
         ) );
+        NAME_D3D12_OBJECT_WITH_NAME( commandAllocators[ i ],
+            "%s (%d)",
+            "Base",
+            i
+        );
 
         if ( i == 0 )
         {
@@ -356,6 +381,10 @@ inline void FrameResource::CreateCommandAllocatorsAndLists( ID3D12Device * devic
                 geometryBufferPso.Get(),
                 IID_PPV_ARGS( &commandLists[ i ] )
             ) );
+            NAME_D3D12_OBJECT_WITH_NAME( commandLists[ i ],
+                "%s",
+                "Pre"
+            );
         }
         else
         {
@@ -366,9 +395,22 @@ inline void FrameResource::CreateCommandAllocatorsAndLists( ID3D12Device * devic
                 deferredPso.Get(),
                 IID_PPV_ARGS( &commandLists[ i ] )
             ) );
+            if ( i == 1 )
+            {
+                NAME_D3D12_OBJECT_WITH_NAME( commandLists[ i ],
+                    "%s",
+                    "Mid"
+                );
+            }
+            else
+            {
+                NAME_D3D12_OBJECT_WITH_NAME( commandLists[ i ],
+                    "%s",
+                    "Post"
+                );
+            }
         }
 
-        NAME_D3D12_OBJECT_INDEXED( commandLists, i );
         ThrowIfFailed( commandLists[ i ]->Close() );
     }
 }
