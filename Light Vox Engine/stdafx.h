@@ -39,7 +39,6 @@
 #include <stdexcpt.h>
 #include <stdexcept>
 #endif
-
 // Debug Macros
 
 #ifdef _DEBUG

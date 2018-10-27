@@ -5,7 +5,8 @@
 #include "GameTime.h"
 #include "ECS/EntityManager.h"
 #include "ECS/Entity.h"
-#include "Physics/Physics.h"
+#include "Physics/Solver.h"
+#include "Physics/RigidBody.h"
 #include "JobSystem/JobManager.h"
 #include "JobSystem/ConcurrentQueue.h"
 #include "Input/InputManager.h"
@@ -42,15 +43,17 @@ private:
     float windowHeight;
 
     //ECS
-    EntityManager* entityManager;
-    std::vector<Entity> entityList;
-    ComponentManager* componentManager;
+    ECS::EntityManager* entityManager;
+    ECS::ComponentManager* componentManager;
 
     //Systems
     GraphicsCore* graphics;
     Camera* camera;
     GameTime* time;
-    Physics* physics;
+
+    //Physics 
+    Physics::Solver* physics;
+    Physics::Rigidbody* rigidBody;
 
     HRESULT InitWindow();
 

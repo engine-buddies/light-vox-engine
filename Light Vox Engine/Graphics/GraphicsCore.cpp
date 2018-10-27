@@ -608,6 +608,8 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     ID3D12CommandList* ppCommandList[] = { commandList.Get() };
     commandQueue->ExecuteCommandLists( _countof( ppCommandList ), ppCommandList );
 
+	Sleep(1000);
+
     return S_OK;
 }
 

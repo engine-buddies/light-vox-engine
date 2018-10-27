@@ -24,9 +24,6 @@
     <Filter Include="Source Files\ECS">
       <UniqueIdentifier>{31004666-e0be-4365-80ad-b1493839b90d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Input">
-      <UniqueIdentifier>{14a77699-7938-43aa-a9de-018468608f0a}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -43,9 +40,6 @@
     </ClCompile>
     <ClCompile Include="JobSystem\JobSequence.cpp">
       <Filter>Source Files\JobSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="Physics\Physics.cpp">
-      <Filter>Source Files\Physics</Filter>
     </ClCompile>
     <ClCompile Include="ECS\ComponentManager.cpp">
       <Filter>Source Files\ECS</Filter>
@@ -64,6 +58,12 @@
     </ClCompile>
     <ClCompile Include="Graphics\ObjLoader.cpp">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\Solver.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\RigidBody.cpp">
+      <Filter>Source Files\Physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -84,9 +84,6 @@
     </ClInclude>
     <ClInclude Include="JobSystem\ConcurrentQueue.h">
       <Filter>Source Files\JobSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\Physics.h">
-      <Filter>Source Files\Physics</Filter>
     </ClInclude>
     <ClInclude Include="ECS\ComponentManager.h">
       <Filter>Source Files\ECS</Filter>
@@ -130,8 +127,11 @@
     <ClInclude Include="Utils\LVutils.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Input\InputManager.h">
-      <Filter>Source Files\Input</Filter>
+    <ClInclude Include="Physics\Solver.h">
+      <Filter>Source Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\RigidBody.h">
+      <Filter>Source Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

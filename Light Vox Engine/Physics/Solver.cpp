@@ -1,26 +1,27 @@
-#include "Physics.h"
+#include "Solver.h"
 
+using namespace Physics;
 
-Physics::Physics()
+Solver::Solver()
 {
     gravity = { .0f, .0f, .0f };
-    componentManager = ComponentManager::GetInstance();
+    componentManager = ECS::ComponentManager::GetInstance();
 }
 
-Physics::~Physics()
+Solver::~Solver()
 {
 }
 
-void Physics::Update( float dt )
+void Solver::Update( float dt )
 {
-    Collide();
+    //Collide();
     AccumlateForces();
     Integrate( dt );
     ModelToWorld();
     //SatisfyConstraints();
 }
 
-void Physics::Collide()
+void Solver::Collide()
 {
     //Basic box to box collision 
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
@@ -38,17 +39,14 @@ void Physics::Collide()
 
             if ( BoxIntersect( posA, posB, sizeA, sizeB ) )
             {
-#ifdef DEBUG
-                printf( "Entity: %i hit Entity: %i \n", i, j );
-#endif // DEBUG
-
+                DEBUG_PRINT("Entity: %i hit Entity: %i \n", i, j);
             }
 
         }
     }
 }
 
-inline bool Physics::BoxIntersect( glm::vec3 posA, glm::vec3 posB, glm::vec3 sizeA, glm::vec3 sizeB )
+inline bool Solver::BoxIntersect( glm::vec3 posA, glm::vec3 posB, glm::vec3 sizeA, glm::vec3 sizeB )
 {
     //Bounding box min and max for A
     float aMaxX = posA.x + sizeA.x;
@@ -72,18 +70,7 @@ inline bool Physics::BoxIntersect( glm::vec3 posA, glm::vec3 posB, glm::vec3 siz
         ( aMinZ <= bMaxZ && aMaxZ >= bMinZ );
 }
 
-void Physics::Move( glm::vec3 pos, UINT index )
-{
-    componentManager->transform[ index ].pos = pos;
-}
-
-void Physics::RotateAxisAngle( glm::vec3 rotationAxis, float angle, UINT index )
-{
-    componentManager->transform[ index ].rot = rotationAxis;
-    componentManager->transform[ index ].angle = angle;
-}
-
-void Physics::Integrate( float dt )
+void Solver::Integrate( float dt )
 {
     //semi implicit euler 
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
@@ -98,7 +85,7 @@ void Physics::Integrate( float dt )
     }
 }
 
-void Physics::AccumlateForces()
+void Solver::AccumlateForces()
 {
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
@@ -109,7 +96,7 @@ void Physics::AccumlateForces()
     }
 }
 
-void Physics::ModelToWorld()
+void Solver::ModelToWorld()
 {
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
