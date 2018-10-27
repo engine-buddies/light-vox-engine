@@ -1,33 +1,34 @@
-struct PSInput
-{
-	float4 position : SV_POSITION;
-    float4 worldpos : POSITION;
-    float3 normal : NORMAL;
-	float2 uv : TEXCOORD0;
-};
+//these #defines are used to selectively compile from PipelineDefinitions.h
+#define _SHADER
+#define _VSHADER
 
-cbuffer SceneConstantBuffer : register(b0)
-{
-	float4x4 model;
-	float4x4 view;
-	float4x4 projection;
-};
+//contains all defitnitions for shader-to-shader and shader-to-CPU stuff
+#include "../Graphics/ShaderDefinitions.h"
+
+//basically a SRV of instanced data
+StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);
 
 PSInput VSMain(
-	float3 position : POSITION,
-	float2 uv : TEXCOORD0,
-	float3 normal : NORMAL)
+    VSInput vInput,
+    uint instanceID : SV_InstanceID)
 {
-	PSInput result;
-	float4 pos = float4(position, 1.0f);
-	pos = mul(pos, model);
-	result.worldpos = pos;
-	
-	pos = mul(pos, view);
-	pos = mul(pos, projection);
-	result.position = pos;
-	result.uv = uv;
-    result.normal = mul(normal, (float3x3)model);
+    //Declare PSInput
+    PSInput result;
 
-	return result;
+    //define position and world position
+    float4 pos = float4(vInput.position, 1.0f);
+    float4x4 model = gInstanceData[instanceID].model;
+    
+    pos = mul(pos, model);
+    result.worldpos = pos;
+
+    //move to screen space
+    pos = mul(pos, cView);
+    pos = mul(pos, cProjection);
+    result.position = pos;
+
+    //supply uv and normal
+    result.uv = vInput.uv;
+    result.normal = mul(vInput.normal, (float3x3)model);
+    return result;
 }

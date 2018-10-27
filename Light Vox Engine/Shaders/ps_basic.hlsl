@@ -1,19 +1,18 @@
-struct PSInput
-{
-    float4 position : SV_POSITION;
-    float4 worldpos : POSITION;
-    float3 normal : NORMAL;
-    float2 uv : TEXCOORD0;
-};
+//these #defines are used to selectively compile from PipelineDefinitions.h
+#define _SHADER
+#define _PSHADER
+
+//contains all defitnitions for shader-to-shader and shader-to-CPU stuff
+#include "../Graphics/ShaderDefinitions.h"
 
 struct PSOutput
 {
-	float4 albedo  : SV_TARGET0;
+	float4 albedo   : SV_TARGET0;
 	float4 normal   : SV_TARGET1;
     float4 position : SV_TARGET2;
 };
 
-PSOutput PSMain(PSInput input)
+PSOutput PSMain( PSInput input )
 {
     PSOutput output;
 

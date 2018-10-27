@@ -1,17 +1,9 @@
 #pragma once
-#include "stdafx.h"		
+#include "../stdafx.h"		
+#include "ShaderDefinitions.h"
 
 class Camera;
 
-/// <summary>
-/// Whatever goes into the constant buffer for our main 'scene' render
-/// </summary>
-struct SceneConstantBuffer
-{
-    DirectX::XMFLOAT4X4 model;
-    DirectX::XMFLOAT4X4 view;
-    DirectX::XMFLOAT4X4 projection;
-};
 
 /// <summary>
 /// Constant Buffer for info needed for lighting calculations
@@ -22,7 +14,6 @@ struct LightConstantBuffer
     DirectX::XMFLOAT3 pos;
 };
 
-/// <summary>
 /// Wrapper for data that persists through one scene
 /// TODO: proper getters/setters, pack data correctly
 /// </summary>
@@ -73,6 +64,7 @@ public:
 
     void ResetCommandListsAndAllocators();
 
+
     /// <summary>
     /// For swapping between render passes (not used right now)
     /// </summary>
@@ -82,6 +74,7 @@ public:
     /// Cleans up the resource states for next use
     /// </summary>
     void Cleanup();
+
 
     /// <summary>
     /// Updates the constant buffer
@@ -127,12 +120,14 @@ private:
 
     //the gpu side of the scene constant buffer
     Microsoft::WRL::ComPtr<ID3D12Resource> sceneConstantBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> instanceUploadBuffer;
     //Microsoft::WRL::ComPtr<ID3D12Resource> lightConstantBuffer;
 
     Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[ LV_NUM_GBUFFER_RTV ];
 
     //write-only buffer for scene-level cbuffer stuff
     SceneConstantBuffer* sceneConstantBufferWO;
+    InstanceBuffer* instanceBufferWO;
     //LightConstantBuffer* lightConstantBufferWO;
 
     //handle to cbv required for the scene
@@ -143,5 +138,4 @@ private:
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvGbufferHandles[ LV_NUM_GBUFFER_RTV ];
     D3D12_CPU_DESCRIPTOR_HANDLE rtvbackBufferHandle;
-
 };

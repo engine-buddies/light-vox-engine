@@ -27,7 +27,7 @@ HRESULT GraphicsCore::Init()
 {
     ThrowIfFailed( InitDeviceCommandQueueSwapChain() );
     ThrowIfFailed( InitRootSignature() );
-    ThrowIfFailed( InitPSO() );
+    ThrowIfFailed( InitGeometryPSO() );
     ThrowIfFailed( InitLightPassPSO() );
     ThrowIfFailed( InitRtvHeap() );
     ThrowIfFailed( InitDepthStencil() );
@@ -132,7 +132,7 @@ void GraphicsCore::Render()
 
         SetGBufferPSO( geometryBufferCommandList );
         currentFrameResource->BindGBuffer();
-        geometryBufferCommandList->DrawIndexedInstanced( verticesCount, 1, 0, 0, 0 );
+        geometryBufferCommandList->DrawIndexedInstanced( verticesCount, LV_MAX_INSTANCE_COUNT, 0, 0, 0 );
 
         PIXEndEvent( geometryBufferCommandList );
         ThrowIfFailed( geometryBufferCommandList->Close() );
@@ -202,43 +202,49 @@ HRESULT GraphicsCore::InitRootSignature()
     }
 
     //this should be ordered from most to least frequent
-    CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[ 3 ];
-    CD3DX12_ROOT_PARAMETER1		rootParameters[ 3 ];
+    CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[ LV_ROOT_SIGNATURE_COUNT ];
+    CD3DX12_ROOT_PARAMETER1		rootParameters[ LV_ROOT_SIGNATURE_COUNT ];
 
-    //Init: Albedo + Normal + Position
-    descriptorRanges[ 0 ].Init(
+    //Instancing data
+    rootParameters[ LV_ROOT_SIGNATURE_INSTANCED_DATA ].InitAsShaderResourceView(
+        0,       //register
+        1        //space
+    );  
+
+    //G-Buffer: Albedo + Normal + Position
+    descriptorRanges[ LV_ROOT_SIGNATURE_GBUFFER_SRV ].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SRV,            //type of descriptor
         LV_NUM_GBUFFER_RTV,                         //number of descriptors
         0,                                          //base shader register
         0                                           //space in register
     );
-    rootParameters[ 0 ].InitAsDescriptorTable(
-        1,                                          //number of descriptor ranges
-        &descriptorRanges[ 0 ],                     //address
-        D3D12_SHADER_VISIBILITY_PIXEL               //what it's visible to
+    rootParameters[ LV_ROOT_SIGNATURE_GBUFFER_SRV ].InitAsDescriptorTable(
+        1,                                                  //number of descriptor ranges
+        &descriptorRanges[ LV_ROOT_SIGNATURE_GBUFFER_SRV ], //address
+        D3D12_SHADER_VISIBILITY_PIXEL                       //what it's visible to
     );
 
     //constant buffer
-    descriptorRanges[ 1 ].Init( D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
+    descriptorRanges[ LV_ROOT_SIGNATURE_CBV ].Init( D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
         1,
         0,
         0,
         D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC
     );
-    rootParameters[ 1 ].InitAsDescriptorTable( 1,
-        &descriptorRanges[ 1 ],
+    rootParameters[ LV_ROOT_SIGNATURE_CBV ].InitAsDescriptorTable( 1,
+        &descriptorRanges[ LV_ROOT_SIGNATURE_CBV ],
         D3D12_SHADER_VISIBILITY_ALL
     );
 
     //Sampler
-    descriptorRanges[ 2 ].Init(
+    descriptorRanges[ LV_ROOT_SIGNATURE_SAMPLER ].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER,
         1,
         0
     );
-    rootParameters[ 2 ].InitAsDescriptorTable(
+    rootParameters[ LV_ROOT_SIGNATURE_SAMPLER ].InitAsDescriptorTable(
         1,
-        &descriptorRanges[ 2 ],
+        &descriptorRanges[ LV_ROOT_SIGNATURE_SAMPLER ],
         D3D12_SHADER_VISIBILITY_PIXEL
     );
 
@@ -280,7 +286,7 @@ HRESULT GraphicsCore::InitRootSignature()
     return S_OK;
 }
 
-HRESULT GraphicsCore::InitPSO()
+HRESULT GraphicsCore::InitGeometryPSO()
 {
     ComPtr<ID3DBlob> vs;
     ComPtr<ID3DBlob> ps;
@@ -288,38 +294,10 @@ HRESULT GraphicsCore::InitPSO()
     D3DReadFileToBlob( L"Assets/Shaders/vs_basic.cso", &vs );
     D3DReadFileToBlob( L"Assets/Shaders/ps_basic.cso", &ps );
 
-    //input from our vertices
-    D3D12_INPUT_ELEMENT_DESC vertexInputDescription[] = {
-        {
-            "POSITION",                                     //semantic name                         
-            0,                                              //semantic index
-            DXGI_FORMAT_R32G32B32_FLOAT,                    //format of data
-            0,                                              //input slot
-            0,                                              //the offset
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,     //input classification
-            0                                               //istance rate
-        },
-        {
-            "TEXCOORD",
-            0,
-            DXGI_FORMAT_R32G32_FLOAT,
-            0,
-            12,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-        {
-            "NORMAL",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT,
-            0,
-            20,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-    };
-
     //build the input layout
+    D3D12_INPUT_ELEMENT_DESC vertexInputDescription[ LV_NUM_VS_INPUT_COUNT ];
+    ShaderDefinitions::SetInputLayout( vertexInputDescription );
+    
     D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
     inputLayoutDescription.pInputElementDescs = vertexInputDescription;
     inputLayoutDescription.NumElements = _countof( vertexInputDescription );
@@ -332,29 +310,29 @@ HRESULT GraphicsCore::InitPSO()
     depthStencilDesc.StencilEnable = FALSE;
 
     //describe our PSO
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { };
-    psoDesc.InputLayout = inputLayoutDescription;
-    psoDesc.pRootSignature = rootSignature.Get();
-    psoDesc.VS = CD3DX12_SHADER_BYTECODE( vs.Get() );
-    psoDesc.PS = CD3DX12_SHADER_BYTECODE( ps.Get() );
-    psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC( D3D12_DEFAULT );
-    psoDesc.BlendState = CD3DX12_BLEND_DESC( D3D12_DEFAULT );
-    psoDesc.DepthStencilState = depthStencilDesc;
-    psoDesc.SampleMask = UINT_MAX;
-    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    psoDesc.NumRenderTargets = LV_NUM_GBUFFER_RTV;
-    psoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    psoDesc.RTVFormats[ 1 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    psoDesc.RTVFormats[ 2 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    psoDesc.SampleDesc.Count = 1;
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC geometryPsoDesc = { };
+    geometryPsoDesc.InputLayout = inputLayoutDescription;
+    geometryPsoDesc.pRootSignature = rootSignature.Get();
+    geometryPsoDesc.VS = CD3DX12_SHADER_BYTECODE( vs.Get() );
+    geometryPsoDesc.PS = CD3DX12_SHADER_BYTECODE( ps.Get() );
+    geometryPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC( D3D12_DEFAULT );
+    geometryPsoDesc.BlendState = CD3DX12_BLEND_DESC( D3D12_DEFAULT );
+    geometryPsoDesc.DepthStencilState = depthStencilDesc;
+    geometryPsoDesc.SampleMask = UINT_MAX;
+    geometryPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    geometryPsoDesc.NumRenderTargets = LV_NUM_GBUFFER_RTV;
+    geometryPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    geometryPsoDesc.RTVFormats[ 1 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    geometryPsoDesc.RTVFormats[ 2 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    geometryPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    geometryPsoDesc.SampleDesc.Count = 1;
 
     //create our PSO
     ThrowIfFailed( device->CreateGraphicsPipelineState(
-        &psoDesc,
-        IID_PPV_ARGS( &pso )
+        &geometryPsoDesc,
+        IID_PPV_ARGS( &geometryPso )
     ) );
-    NAME_D3D12_OBJECT_WITH_NAME( pso, "%s", "First pass" );
+    NAME_D3D12_OBJECT_WITH_NAME( geometryPso, "%s", "First pass" );
 
     return S_OK;
 }
@@ -367,11 +345,8 @@ HRESULT GraphicsCore::InitLightPassPSO()
     D3DReadFileToBlob( L"Assets/Shaders/vs_FSQ.cso", &vs );
     D3DReadFileToBlob( L"Assets/Shaders/ps_lighting.cso", &ps );
 
-    D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-    };
+    D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[ LV_NUM_VS_INPUT_COUNT ];
+    ShaderDefinitions::SetInputLayout( screenQuadVertexDesc );
 
     //describe the PSO
     D3D12_GRAPHICS_PIPELINE_STATE_DESC lightPsoDesc{};
@@ -388,7 +363,6 @@ HRESULT GraphicsCore::InitLightPassPSO()
     lightPsoDesc.SampleMask = UINT_MAX;
     lightPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     lightPsoDesc.NumRenderTargets = 1;
-    //descPipelineState.RTVFormats[0] = mRtvFormat[0];
     lightPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
     lightPsoDesc.SampleDesc.Count = 1;
 
@@ -520,7 +494,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         commandAllocator.Get(),
-        pso.Get(),
+        geometryPso.Get(),
         IID_PPV_ARGS( &commandList )
     ) );
     NAME_D3D12_OBJECT_WITH_NAME( commandList, "%s", "Shader Resource" );
@@ -528,21 +502,21 @@ HRESULT GraphicsCore::InitInputShaderResources()
     PIXBeginEvent( commandList.Get(), 0, L"Resetting commandlist" );
     commandList->Close();
     commandAllocator->Reset();
-    commandList->Reset( commandAllocator.Get(), pso.Get() );
+    commandList->Reset( commandAllocator.Get(), geometryPso.Get() );
     PIXEndEvent( commandList.Get() );
 
     std::vector<Vertex>* vertices = new std::vector<Vertex>();
     std::vector<uint16_t>* indices = new std::vector<uint16_t>();
-    ObjLoader::LoadObj( vertices, indices, "Assets/Models/bus.obj" );
+    ObjLoader::LoadObj( vertices, indices, "Assets/Models/voxel.obj" );
 
     //make vertex buffer for 'n' floats
-    UINT vertexDataSize = vertices->size() * sizeof( Vertex );
+    UINT vertexDataSize = static_cast<UINT>(vertices->size() * sizeof( Vertex ));
     UINT vertexDataOffset = 0;
     UINT vertexStride = sizeof( Vertex );
-    UINT indexDataSize = indices->size() * sizeof( uint16_t );
+    UINT indexDataSize = static_cast<UINT>(indices->size() * sizeof( uint16_t ));
     UINT indexDataOffset = 0;
 
-    verticesCount = indices->size();
+    verticesCount = static_cast<UINT>(indices->size());
 
     //vertex buffer(s)
     {
@@ -606,7 +580,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         objl.GenerateFullScreenQuad( screenQuad );
 
         //make vertex buffer for 'n' floats
-        UINT fsqVertexDataSize = screenQuad.vertices.size() * sizeof( Vertex );
+        UINT fsqVertexDataSize = static_cast<UINT>(screenQuad.vertices.size() * sizeof( Vertex ));
         UINT fsqVertexDataOffset = 0;
         UINT fsqVertexStride = sizeof( Vertex );
 
@@ -806,7 +780,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
 inline void GraphicsCore::SetGBufferPSO( ID3D12GraphicsCommandList * commandList )
 {
     commandList->SetGraphicsRootSignature( rootSignature.Get() );
-    commandList->SetPipelineState( pso.Get() );
+    commandList->SetPipelineState( geometryPso.Get() );
     ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get() };
     commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
     commandList->RSSetViewports( 1, &viewport );

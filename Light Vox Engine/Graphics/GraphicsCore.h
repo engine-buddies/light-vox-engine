@@ -1,5 +1,5 @@
 #pragma once
-#include "stdafx.h"
+#include "../stdafx.h"
 
 class Camera;
 class FrameResource;
@@ -17,36 +17,36 @@ public:
     /// <param name="hWindow">Handle to the window</param>
     /// <param name="windowW">Width of the window</param>
     /// <param name="windowH">Height of the window</param>
-	GraphicsCore(HWND hWindow, UINT windowW, UINT windowH);
+    GraphicsCore( HWND hWindow, UINT windowW, UINT windowH );
 
     /// <summary>
     /// Destructorino
     /// </summary>
-	~GraphicsCore();
+    ~GraphicsCore();
 
     /// <summary>
     /// Initializes the graphics core for all that rendering
     /// </summary>
     /// <returns>Wether initialization was successful</returns>
-	HRESULT Init();
+    HRESULT Init();
 
     /// <summary>
     /// Handles our event fences and makes sure we're not writing to a frame
     /// that the GPU is still processing
     /// </summary>
-	void Update(DirectX::XMFLOAT4X4 transforms[], Camera* camera);
+    void Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera );
 
     /// <summary>
     /// Where all the render logic lives
     /// </summary>
-	void Render();
+    void Render();
 
     /// <summary>
     /// Adjusts assets to the new window size
     /// </summary>
     /// <param name="width">New width of the window</param>
     /// <param name="height">New Height of the window</param>
-        void OnResize(UINT width, UINT height);
+    void OnResize( UINT width, UINT height );
 private:
 
     /*INITIALIZATION HELPERS*/
@@ -66,7 +66,7 @@ private:
     /// <summary>
     /// Loads in our shaders and builds out a PSO
     /// </summary>
-	HRESULT InitPSO();	
+	HRESULT InitGeometryPSO();	
 
     /// <summary>
     /// Loads in our shaders and builds out a PSO for the Second Pass
@@ -107,6 +107,7 @@ private:
 	HRESULT InitSynchronizationObjects();	
 
     /*RENDER HELPERS*/
+
     /// <summary>
     /// Sets the pipeline with common stuff for rendering to the first pass
     /// </summary>
@@ -138,7 +139,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> cbvSrvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> samplerHeap;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> geometryPso;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> lightPso;
 
     //frame resources

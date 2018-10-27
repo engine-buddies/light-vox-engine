@@ -3,6 +3,8 @@
 
 GraphicsCore::~GraphicsCore()
 {
+    for ( size_t i = 0; i < LV_FRAME_COUNT; ++i )
+        delete frameResources[ i ];
 }
 
 HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
@@ -116,7 +118,7 @@ HRESULT GraphicsCore::InitFrameResources()
     {
         frameResources[ i ] = new FrameResource(
             device.Get(),
-            pso.Get(),
+            geometryPso.Get(),
             lightPso.Get(),
             dsvHeap.Get(),
             rtvHeap.Get(),

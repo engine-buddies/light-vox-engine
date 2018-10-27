@@ -237,18 +237,36 @@ inline void FrameResource::InitGraphicsResources(
     }
 }
 
-inline void FrameResource::InitCBV( 
-    ID3D12Device * device, 
-    ID3D12DescriptorHeap * cbvSrvHeap, 
+inline void FrameResource::InitCBV(
+    ID3D12Device * device,
+    ID3D12DescriptorHeap * cbvSrvHeap,
     UINT frameResourceIndex )
 {
     const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+    CD3DX12_RANGE zeroReadRange( 0, 0 );
 
     //Get CPU handle to the start of the frame's SRVs (g-buffers)
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvCpuHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(),
         LV_NUM_NULL_SRV + frameResourceIndex * LV_NUM_CBVSRV_PER_FRAME + LV_NUM_GBUFFER_RTV,
         cbvSrvDescriptorSize
     );
+
+    //create the upload buffer for instance data
+    ThrowIfFailed( device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer( sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT ),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS( &instanceUploadBuffer )
+    ) );;
+
+    // map it to a WO struct buffer thing
+    ThrowIfFailed( instanceUploadBuffer->Map( 0,
+        &zeroReadRange,
+        reinterpret_cast<void**>( &instanceBufferWO )
+    ) );
+
 
     // Create the constant buffers.
     const UINT constantBufferSize = ( sizeof( SceneConstantBuffer )
@@ -265,9 +283,8 @@ inline void FrameResource::InitCBV(
     NAME_D3D12_OBJECT_WITH_NAME( sceneConstantBuffer, "frame#%d", frameResourceIndex );
 
     // Map the constant buffers and cache their heap pointers.
-    CD3DX12_RANGE readRange( 0, 0 );		// We do not intend to read from this resource on the CPU.
     ThrowIfFailed( sceneConstantBuffer->Map( 0,
-        &readRange,
+        &zeroReadRange,
         reinterpret_cast<void**>( &sceneConstantBufferWO )
     ) );
 
@@ -295,7 +312,13 @@ FrameResource::~FrameResource()
         commandAllocators[ i ] = nullptr;
     }
 
+    if ( sceneConstantBuffer != nullptr )
+        sceneConstantBuffer->Unmap( 0, nullptr );
     sceneConstantBuffer = nullptr;
+
+    if ( instanceUploadBuffer != nullptr )
+        instanceUploadBuffer->Unmap( 0, nullptr );
+    instanceUploadBuffer = nullptr;
     //lightConstantBuffer = nullptr;
 }
 
@@ -331,8 +354,9 @@ void FrameResource::ResetCommandListsAndAllocators()
 
 void FrameResource::BindGBuffer()
 {
-    geometryCmdLists[ 0 ]->SetGraphicsRootDescriptorTable( 0, nullHandle );
-    geometryCmdLists[ 0 ]->SetGraphicsRootDescriptorTable( 1, sceneCbvHandle );
+    geometryCmdLists[ 0 ]->SetGraphicsRootShaderResourceView( LV_ROOT_SIGNATURE_INSTANCED_DATA, instanceUploadBuffer->GetGPUVirtualAddress() );
+    geometryCmdLists[ 0 ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_GBUFFER_SRV, nullHandle );
+    geometryCmdLists[ 0 ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_CBV, sceneCbvHandle );
     geometryCmdLists[ 0 ]->OMSetRenderTargets( LV_NUM_GBUFFER_RTV, rtvGbufferHandles, FALSE, &dsvHandle );
 }
 
@@ -341,8 +365,8 @@ void FrameResource::BindDeferred(
     D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
 )
 {
-    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( 0, gBufferSrvHandle );
-    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( 2, samplerHandle );
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_GBUFFER_SRV, gBufferSrvHandle );
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_SAMPLER, samplerHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->OMSetRenderTargets( 1, rtvHandle, FALSE, &dsvHandle );
 }
 
@@ -385,10 +409,6 @@ void FrameResource::WriteConstantBuffers(
     Camera * camera )
 {
     SceneConstantBuffer sceneConsts = {};
-    //LightConstantBuffer lightConsts = {};
-
-    sceneConsts.model = transforms[ 0 ];
-
     camera->GetViewProjMatrix(
         &sceneConsts.view,
         &sceneConsts.projection,
@@ -396,10 +416,9 @@ void FrameResource::WriteConstantBuffers(
         viewport->Height
     );
 
-
     //copy over
     memcpy( sceneConstantBufferWO, &sceneConsts, sizeof( SceneConstantBuffer ) );
+    memcpy( instanceBufferWO, transforms, sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
     //memcpy(lightConstantBufferWO, &lightConsts, sizeof(LightConstantBuffer));
 }
-
 #pragma endregion
