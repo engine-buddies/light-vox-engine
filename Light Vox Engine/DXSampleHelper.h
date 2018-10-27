@@ -132,7 +132,7 @@ inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ...
     va_end( args );
 
 
-    WCHAR fullName[ 50 ];
+    WCHAR fullName[ 75 ];
     if ( swprintf_s( fullName, L"%s-%hs", name, extra ) > 0 )
     {
         pObject->SetName( fullName );

@@ -55,75 +55,58 @@ private:
     /// Initializes everything that is required by the IDXGIFactory
     /// (this function should rarely change)
     /// </summary>
-	inline HRESULT InitDeviceCommandQueueSwapChain();
+	HRESULT InitDeviceCommandQueueSwapChain();
 
     /// <summary>
     /// Initializes the root signature and the descriptor tables that
     /// goes into its parameters (this changes as we add more functionality)
     /// </summary>
-	inline HRESULT InitRootSignature();			
+	HRESULT InitRootSignature();			
 
     /// <summary>
     /// Loads in our shaders and builds out a PSO
     /// </summary>
-	inline HRESULT InitPSO();	
+	HRESULT InitPSO();	
 
     /// <summary>
     /// Loads in our shaders and builds out a PSO for the Second Pass
     /// </summary>
-    inline HRESULT InitLightPassPSO();
+    HRESULT InitLightPassPSO();
 
     /// <summary>
     /// Create the Render Target View Heap and initialize our render
     /// targets for the back buffers we'll need
     /// </summary>
-	inline HRESULT InitRtvHeap();						
+	HRESULT InitRtvHeap();						
 
     /// <summary>
     /// Create the Depth Stencil View Heap and initialize our depth stencil 
     /// buffer and how it will clear out our values 
     /// </summary>
-	inline HRESULT InitDepthStencil();		
+	HRESULT InitDepthStencil();		
 
     /// <summary>
     /// Creates the viewport and scissor rectangle
     /// </summary>
-	inline HRESULT InitViewportScissorRectangle();	
+	HRESULT InitViewportScissorRectangle();	
 
     /// <summary>
     /// Creates the vertex buffer, the index buffer, shader resource view, and
     /// samplers.
     /// </summary>
-    inline HRESULT InitInputShaderResources();
+    HRESULT InitInputShaderResources();
 
     /// <summary>
     /// Creates our frame resouces for all the rendering
     /// </summary>
-	inline HRESULT InitFrameResources();	
+	HRESULT InitFrameResources();	
 
     /// <summary>
     /// Builds the fences we need to synchronize between CPU and GPU
     /// </summary>
-	inline HRESULT InitSynchronizationObjects();	
+	HRESULT InitSynchronizationObjects();	
 
     /*RENDER HELPERS*/
-
-    /// <summary>
-    /// Clears our depth & color buffer and transitions the back buffer to be
-    /// used for rendering
-    /// </summary>
-	inline void PrepareForGeometryPass();
-
-    /// <summary>
-    /// Transitions our resources for our 2nd pass
-    /// </summary>
-	inline void MidFrame();
-
-    /// <summary>
-    /// Transitions our resources for presenting to screen, and cleans up
-    /// </summary>
-	inline void EndFrame();
-
     /// <summary>
     /// Sets the pipeline with common stuff for rendering to the first pass
     /// </summary>

@@ -18,10 +18,6 @@ GraphicsCore::GraphicsCore( HWND hWindow, UINT windowW, UINT windowH )
     currentFrameResource = nullptr;
 }
 
-GraphicsCore::~GraphicsCore()
-{
-}
-
 void GraphicsCore::OnResize( UINT width, UINT height )
 {
     //TODO - recreate scssisor rectangle, viewport, and back buffers
@@ -72,43 +68,52 @@ void GraphicsCore::Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera )
 
 void GraphicsCore::Render()
 {
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle( dsvHeap->GetCPUDescriptorHandleForHeapStart() );
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle( rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-        currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME,
-        rtvDescriptorSize
-    );
-    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
-        dsvHeap->GetCPUDescriptorHandleForHeapStart()
-    );
+        LV_NUM_RTV_PER_FRAME * currentFrameResourceIndex,
+        rtvDescriptorSize );
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE gBufferHandles[ LV_NUM_GBUFFER_RTV ];
-    for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
-    {
-        gBufferHandles[ i ] = CD3DX12_CPU_DESCRIPTOR_HANDLE(
-            rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-            currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME + i,
-            rtvDescriptorSize
-        );
-    }
-    const float clearColor[] = { 0.f, 0.f, 0.f, 1.0f };
-
+    //reset for current frame
     currentFrameResource->ResetCommandListsAndAllocators();
-    {
-        ID3D12GraphicsCommandList* geometryBufferCommandList = currentFrameResource->geometryBufferCommandList.Get();
-        PIXBeginEvent( geometryBufferCommandList, 0, L"Worker drawing scene pass..." );
 
-        for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
+    //clear all RTVs and DSV as part of init
+    {
+        ID3D12GraphicsCommandList* initCommandList = currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ].Get();
+        float albedoClear[ 4 ] = LV_RTV_CLEAR_BG_COLOR;
+        float blackClear[ 4 ] = LV_RTV_CLEAR_COLOR;
+        currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ]->ClearRenderTargetView(
+            rtvHandle,
+            albedoClear,
+            0,
+            nullptr
+        );
+        rtvHandle.Offset( rtvDescriptorSize );
+        for ( UINT i = 1; i < LV_NUM_GBUFFER_RTV; ++i )
         {
-            currentFrameResource->commandLists[ LV_COMMAND_LIST_PRE ]->ClearRenderTargetView(
+            currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ]->ClearRenderTargetView(
                 rtvHandle,
-                clearColor,
+                blackClear,
                 0,
                 nullptr
             );
-            rtvHandle.Offset( 1, rtvDescriptorSize );
+            rtvHandle.Offset( rtvDescriptorSize );
         }
 
+        //transition the back-bufffer over and clear it
+        initCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargets[ currentFrameResourceIndex ].Get(),
+            D3D12_RESOURCE_STATE_PRESENT,
+            D3D12_RESOURCE_STATE_RENDER_TARGET
+        ) );
+        initCommandList->ClearRenderTargetView(
+            rtvHandle,
+            blackClear,
+            0,
+            nullptr
+        );
+
         //clear depth-stencil view (dsv)
-        currentFrameResource->commandLists[ LV_COMMAND_LIST_PRE ]->ClearDepthStencilView(
+        currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ]->ClearDepthStencilView(
             dsvHeap->GetCPUDescriptorHandleForHeapStart(),
             D3D12_CLEAR_FLAG_DEPTH,
             1.0f,
@@ -116,78 +121,53 @@ void GraphicsCore::Render()
             0,
             nullptr
         );
-        ThrowIfFailed( currentFrameResource->commandLists[ LV_COMMAND_LIST_PRE ]->Close() );
 
+        ThrowIfFailed( initCommandList->Close() );
+    }
+
+    //geometry pass
+    {
+        ID3D12GraphicsCommandList* geometryBufferCommandList = currentFrameResource->geometryCmdLists[ 0 ].Get();
+        PIXBeginEvent( geometryBufferCommandList, 0, L"Worker drawing scene pass..." );
 
         SetGBufferPSO( geometryBufferCommandList );
-
-
-        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandleFirstPass( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(),
-            currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME + LV_NUM_GBUFFER_RTV,
-            cbvSrvDescriptorSize
-        );
-
-        currentFrameResource->BindGBuffer( gBufferHandles, LV_NUM_GBUFFER_RTV, &dsvHandle , cbvHandleFirstPass );
+        currentFrameResource->BindGBuffer();
         geometryBufferCommandList->DrawIndexedInstanced( verticesCount, 1, 0, 0, 0 );
-
-        //transition our depth stencil view
-        geometryBufferCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            depthStencilView.Get(),
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            D3D12_RESOURCE_STATE_GENERIC_READ
-        ) );
-
 
         PIXEndEvent( geometryBufferCommandList );
         ThrowIfFailed( geometryBufferCommandList->Close() );
     }
 
-
+    //lighting pass
     {
-        ID3D12GraphicsCommandList* deferredCommandList = currentFrameResource->deferredCommandList.Get();
+        ID3D12GraphicsCommandList* deferredCommandList = currentFrameResource->commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ].Get();
         PIXBeginEvent( deferredCommandList, 0, L"Worker deferred pass..." );
 
+        //transition the DSV over and transition the g-buffer textures over
         currentFrameResource->SwapBarriers();
-        currentFrameResource->commandLists[ LV_COMMAND_LIST_MID ]->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets[ currentFrameResourceIndex ].Get(),
-            D3D12_RESOURCE_STATE_PRESENT,
-            D3D12_RESOURCE_STATE_RENDER_TARGET
+        deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
+            depthStencilView.Get(),
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            D3D12_RESOURCE_STATE_GENERIC_READ
         ) );
-        const float clearColor2[] = { 0.392f, 0.584f, 0.929f, 1.0f };
-        currentFrameResource->commandLists[ LV_COMMAND_LIST_MID ]->ClearRenderTargetView(
-            rtvHandle,
-            clearColor2,
-            0,
-            nullptr
-        );
 
-        ThrowIfFailed( currentFrameResource->commandLists[ LV_COMMAND_LIST_MID ]->Close() );
-
-
+        //draw onto our FSQ
         SetLightPassPSO( deferredCommandList );
-
-
-        CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandleFirstPass( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(),
-            currentFrameResourceIndex * LV_NUM_CBV_SRV_PER_FRAME ,
-            cbvSrvDescriptorSize
-        );
-
-
-        currentFrameResource->BindDeferred( &rtvHandle, &dsvHandle, samplerHeap->GetGPUDescriptorHandleForHeapStart(), cbvHandleFirstPass );
+        currentFrameResource->BindDeferred( &rtvHandle, samplerHeap->GetGPUDescriptorHandleForHeapStart() );
         deferredCommandList->DrawInstanced( 4, 1, 0, 0 );
-        currentFrameResource->Finish();
-        //transition our depth stencil view
-        currentFrameResource->commandLists[ LV_COMMAND_LIST_POST ]->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
+
+        //Transition and clean-up
+        currentFrameResource->Cleanup();
+        deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
             depthStencilView.Get(),
             D3D12_RESOURCE_STATE_GENERIC_READ,
             D3D12_RESOURCE_STATE_DEPTH_WRITE
         ) );
-        currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets[currentFrameResourceIndex ].Get(),
+        deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargets[ currentFrameResourceIndex ].Get(),
             D3D12_RESOURCE_STATE_RENDER_TARGET,
             D3D12_RESOURCE_STATE_PRESENT
         ) );
-        ThrowIfFailed( currentFrameResource->commandLists[LV_COMMAND_LIST_POST]->Close() );
 
         PIXEndEvent( deferredCommandList );
         ThrowIfFailed( deferredCommandList->Close() );
@@ -195,7 +175,7 @@ void GraphicsCore::Render()
 
     commandQueue->ExecuteCommandLists(
         _countof( currentFrameResource->batchedCommandList ),
-        currentFrameResource->batchedCommandList 
+        currentFrameResource->batchedCommandList
     );
 
     PIXBeginEvent( commandQueue.Get(), 0, L"Presenting to screen" );
@@ -208,74 +188,7 @@ void GraphicsCore::Render()
     fenceValue++;
 }
 
-inline HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
-{
-    UINT dxgiFactoryFlags = 0;
-
-#if defined(_DEBUG)
-    //enable debug layer if needed (must do before device creation)
-    ComPtr<ID3D12Debug> debugController;
-    if ( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( &debugController ) ) ) )
-    {
-        debugController->EnableDebugLayer();
-        dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-    }
-#endif
-
-    //create the factory
-    ComPtr<IDXGIFactory4> factory;
-    ThrowIfFailed( CreateDXGIFactory2( dxgiFactoryFlags, IID_PPV_ARGS( &factory ) ) );
-
-    //try creating device with hardware first then use WARP
-    if ( FAILED( D3D12CreateDevice( nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS( &device ) ) ) )
-    {
-        //use a warp device
-        ComPtr<IDXGIAdapter> warpAdapter;
-        ThrowIfFailed( factory->EnumWarpAdapter( IID_PPV_ARGS( &warpAdapter ) ) );
-        ThrowIfFailed( D3D12CreateDevice(
-            warpAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS( &device )
-        ) );
-    }
-    NAME_D3D12_OBJECT( device );
-
-
-    //describe the main queue
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-
-    //create it
-    ThrowIfFailed( device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &commandQueue ) ) );
-    NAME_D3D12_OBJECT_WITH_NAME( commandQueue, "%s", "Main" );
-
-    //describe the swap chain
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { };
-    swapChainDesc.BufferCount = LV_FRAME_COUNT;
-    swapChainDesc.Width = windowWidth; // adjust width
-    swapChainDesc.Height = windowHeight; // adjust Height
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.SampleDesc.Count = 1;
-
-    //create and copy over swapchain
-    ComPtr<IDXGISwapChain1> tempSwapChain;
-    ThrowIfFailed( factory->CreateSwapChainForHwnd(
-        commandQueue.Get(),
-        hWindow,
-        &swapChainDesc,
-        nullptr,
-        nullptr,
-        &tempSwapChain
-    ) );
-    ThrowIfFailed( tempSwapChain.As( &swapChain ) );
-
-    return S_OK;
-}
-
-inline HRESULT GraphicsCore::InitRootSignature()
+HRESULT GraphicsCore::InitRootSignature()
 {
     D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = { };
     featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
@@ -318,14 +231,14 @@ inline HRESULT GraphicsCore::InitRootSignature()
     );
 
     //Sampler
-    descriptorRanges[2].Init(
+    descriptorRanges[ 2 ].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER,
         1,
         0
     );
-    rootParameters[2].InitAsDescriptorTable(
+    rootParameters[ 2 ].InitAsDescriptorTable(
         1,
-        &descriptorRanges[2],
+        &descriptorRanges[ 2 ],
         D3D12_SHADER_VISIBILITY_PIXEL
     );
 
@@ -367,7 +280,7 @@ inline HRESULT GraphicsCore::InitRootSignature()
     return S_OK;
 }
 
-inline HRESULT GraphicsCore::InitPSO()
+HRESULT GraphicsCore::InitPSO()
 {
     ComPtr<ID3DBlob> vs;
     ComPtr<ID3DBlob> ps;
@@ -446,7 +359,7 @@ inline HRESULT GraphicsCore::InitPSO()
     return S_OK;
 }
 
-inline HRESULT GraphicsCore::InitLightPassPSO()
+HRESULT GraphicsCore::InitLightPassPSO()
 {
     ComPtr<ID3DBlob> vs;
     ComPtr<ID3DBlob> ps;
@@ -454,19 +367,10 @@ inline HRESULT GraphicsCore::InitLightPassPSO()
     D3DReadFileToBlob( L"Assets/Shaders/vs_FSQ.cso", &vs );
     D3DReadFileToBlob( L"Assets/Shaders/ps_lighting.cso", &ps );
 
-
-    static D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        {
-            "NORMAL",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT,
-            0,
-            20,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
+    D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
     //describe the PSO
@@ -497,7 +401,7 @@ inline HRESULT GraphicsCore::InitLightPassPSO()
     return S_OK;
 }
 
-inline HRESULT GraphicsCore::InitRtvHeap()
+HRESULT GraphicsCore::InitRtvHeap()
 {
     // Create heap of render target descriptors
     // 1 - Albedo
@@ -507,7 +411,7 @@ inline HRESULT GraphicsCore::InitRtvHeap()
 
     //create actual heap
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_CBV_SRV_PER_FRAME;
+    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_CBVSRV_PER_FRAME;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     ThrowIfFailed( device->CreateDescriptorHeap(
@@ -533,12 +437,12 @@ inline HRESULT GraphicsCore::InitRtvHeap()
     {
         rtvHandle.Offset( LV_NUM_GBUFFER_RTV, rtvDescriptorSize );
 
-        ThrowIfFailed( swapChain->GetBuffer( i, IID_PPV_ARGS( &renderTargets[i] ) ) );
+        ThrowIfFailed( swapChain->GetBuffer( i, IID_PPV_ARGS( &renderTargets[ i ] ) ) );
         device->CreateRenderTargetView(
-            renderTargets[i].Get(),
+            renderTargets[ i ].Get(),
             &rtvDesc,
             rtvHandle );
-        NAME_D3D12_OBJECT_WITH_NAME( renderTargets[i], "%s (%d)", "Back Buffer", i );
+        NAME_D3D12_OBJECT_WITH_NAME( renderTargets[ i ], "%s (%d)", "Back Buffer", i );
 
         rtvHandle.Offset( rtvDescriptorSize );
     }
@@ -546,7 +450,7 @@ inline HRESULT GraphicsCore::InitRtvHeap()
     return S_OK;
 }
 
-inline HRESULT GraphicsCore::InitDepthStencil()
+HRESULT GraphicsCore::InitDepthStencil()
 {
     //describe and create descriptor for the DSV heap
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDescriptor = {};
@@ -600,28 +504,7 @@ inline HRESULT GraphicsCore::InitDepthStencil()
     return S_OK;
 }
 
-inline HRESULT GraphicsCore::InitViewportScissorRectangle()
-{
-    //construct a new viewport
-    viewport = CD3DX12_VIEWPORT(
-        0.0f,
-        0.0f,
-        static_cast<float>( windowWidth ),
-        static_cast<float>( windowHeight )
-    );
-
-    //construct a scissor rect
-    scissorRect = CD3DX12_RECT(
-        0,
-        0,
-        static_cast<LONG>( windowWidth ),
-        static_cast<LONG>( windowHeight )
-    );
-
-    return S_OK;
-}
-
-inline HRESULT GraphicsCore::InitInputShaderResources()
+HRESULT GraphicsCore::InitInputShaderResources()
 {
     //create command allocator
     ComPtr<ID3D12CommandAllocator> commandAllocator;
@@ -858,7 +741,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart() );
     cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
-    for (UINT i = 0; i < LV_NUM_NULL_SRV ; i++)
+    for ( UINT i = 0; i < LV_NUM_NULL_SRV; i++ )
     {
         // Describe and create 2 null SRVs. Null descriptors are needed in order 
         // to achieve the effect of an "unbound" resource.
@@ -878,16 +761,16 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     samplerHeapDesc.NumDescriptors = 1;
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap)));
-    NAME_D3D12_OBJECT(samplerHeap);
+    ThrowIfFailed( device->CreateDescriptorHeap( &samplerHeapDesc, IID_PPV_ARGS( &samplerHeap ) ) );
+    NAME_D3D12_OBJECT( samplerHeap );
 
     //Create samplers
     {
         // Get the sampler descriptor size for the current device.
-        const UINT samplerDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+        const UINT samplerDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
 
         // Get a handle to the start of the descriptor heap.
-        CD3DX12_CPU_DESCRIPTOR_HANDLE samplerHandle(samplerHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE samplerHandle( samplerHeap->GetCPUDescriptorHandleForHeapStart() );
 
         D3D12_SAMPLER_DESC clampSamplerDesc = {};
         clampSamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -899,7 +782,7 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
         clampSamplerDesc.MipLODBias = 0.0f;
         clampSamplerDesc.MaxAnisotropy = 1;
         clampSamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-        device->CreateSampler(&clampSamplerDesc, samplerHandle);
+        device->CreateSampler( &clampSamplerDesc, samplerHandle );
     }
 
     //close the command list and transfer static data
@@ -918,60 +801,6 @@ inline HRESULT GraphicsCore::InitInputShaderResources()
     WaitForSingleObject( fenceEvent, INFINITE );
 
     return S_OK;
-}
-
-inline HRESULT GraphicsCore::InitFrameResources()
-{
-    for ( int i = 0; i < LV_FRAME_COUNT; i++ )
-    {
-        frameResources[ i ] = new FrameResource(
-            device.Get(),
-            pso.Get(),
-            lightPso.Get(),
-            dsvHeap.Get(),
-            rtvHeap.Get(),
-            cbvSrvHeap.Get(),
-            swapChain.Get(),
-            &viewport,
-            i
-        );
-    }
-
-    currentFrameResourceIndex = 0;
-    currentFrameResource = frameResources[ currentFrameResourceIndex ];
-
-    return S_OK;
-}
-
-inline HRESULT GraphicsCore::InitSynchronizationObjects()
-{
-    ThrowIfFailed( device->CreateFence(
-        fenceValue,
-        D3D12_FENCE_FLAG_NONE,
-        IID_PPV_ARGS( &fence )
-    ) );
-    fenceValue++;
-
-    fenceEvent = CreateEvent( nullptr, FALSE, FALSE, nullptr );
-    if ( fenceEvent == nullptr )
-        ThrowIfFailed( HRESULT_FROM_WIN32( GetLastError() ) );
-
-
-
-    return S_OK;
-}
-
-inline void GraphicsCore::PrepareForGeometryPass()
-{
-
-}
-
-inline void GraphicsCore::MidFrame()
-{
-}
-
-inline void GraphicsCore::EndFrame()
-{
 }
 
 inline void GraphicsCore::SetGBufferPSO( ID3D12GraphicsCommandList * commandList )
