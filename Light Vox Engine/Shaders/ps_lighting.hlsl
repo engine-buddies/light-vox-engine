@@ -26,18 +26,18 @@ float4 dirLightDiffuse(DirectionalLight dirLight, float3 normal) {
 
 float4 main(PSInput input) : SV_TARGET
 {   
-    /*
+    
     //lighting calculations (deferred)
-    float3 albedo = gAlbedoTexture[input.position.xy].xyz;
-    float3 normal = normalize(gNormalTexture[input.position.xy].xyz);
+    float3 albedo = gAlbedoTexture.Sample( gSampler, input.uv ).xyz;
+    float3 normal = gNormalTexture.Sample( gSampler, input.uv ).xyz; 
 
     DirectionalLight dirLight;
     dirLight.diffuseColor = float4(0.8, 0.8, 0.8, 1.0);
-    dirLight.direction = float3(-0.5, -0.5, 0);
+    dirLight.direction = float3(0, -1, 0);
 
-    float4 lights = float4(0.1, 0.1, 0.1, 1.0)
-        + dirLightDiffuse(dirLight, normal) * float4(albedo, 1.0);
-        */
-    float4 diffuse = gPositionTexture.Sample(gSampler, input.uv);
-    return diffuse;
+    float4 lights = (float4(0.1, 0.1, 0.1, 1.0)
+        + dirLightDiffuse(dirLight, normal)) * float4(albedo, 1.0);
+        
+    float4 diffuse = gAlbedoTexture.Sample(gSampler, input.uv);
+    return lights;// +lights;
 }

@@ -133,7 +133,7 @@ HRESULT Engine::Run()
             DirectX::XMStoreFloat4x4(transforms + 0, transformMatrix);
 
             //DEBUG CODE for basic camera update
-            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 0.f, -2.f);
+            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3(0.f, 5.f, -10.f);
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
             DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
             camera->SetTransform(
