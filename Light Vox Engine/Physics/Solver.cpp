@@ -39,7 +39,7 @@ void Solver::Collide()
 
             if ( BoxIntersect( posA, posB, sizeA, sizeB ) )
             {
-                DEBUG_PRINT("Entity: %i hit Entity: %i \n", i, j);
+                DEBUG_PRINT("Entity: %zi hit Entity: %zi \n", i, j);
             }
 
         }

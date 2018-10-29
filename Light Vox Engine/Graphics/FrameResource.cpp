@@ -159,8 +159,8 @@ inline void FrameResource::InitGraphicsResources(
         textureDesc.SampleDesc.Quality = 0;
         textureDesc.MipLevels = textureMipLevels;
         textureDesc.DepthOrArraySize = 1;
-        textureDesc.Width = viewport->Width;
-        textureDesc.Height = viewport->Height;
+        textureDesc.Width = static_cast<UINT64>( viewport->Width );
+        textureDesc.Height = static_cast<UINT>( viewport->Height );
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
         textureDesc.Format = textureFormat;

@@ -146,7 +146,7 @@ HRESULT Engine::InitSystems()
     time->Init();
     entityManager->Init();
 
-    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
         entityManager->Create_Entity();
     }
@@ -158,23 +158,23 @@ HRESULT Engine::InitSystems()
     static float rotation = 0.001f;
     {
 
-        float x = -count;// / 2.0f;
-        float y = -count;// / 2.0f;
+        float x = static_cast <float>( -count );
+        float y = static_cast <float>( -count );
         float z = 0;
         for ( int i = 0; i < count; ++i )
         {
             for ( int j = 0; j < count; ++j )
             {
                 int index = i * count + j;
-                UINT entityID = entityManager->Get_Entity(index).index;
-                rigidBody->Pos(glm::vec3(x + rotation, y, z), entityID);
-                rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
+                UINT entityID = entityManager->Get_Entity( index ).index;
+                rigidBody->Pos( glm::vec3( x + rotation, y, z ), entityID );
+                rigidBody->RotateAxisAngle( glm::vec3( .0f, 1.0f, .0f ), rotation, entityID );
 
                 x += 2;
             }
 
             y += 2;
-            x = -count;// / 2.0f;
+            x = static_cast <float>( -count );
         }
     }
 
@@ -197,10 +197,10 @@ HRESULT Engine::Run()
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
             //DEBUG collision code 
-            float x = sinf(time->GetTotalFloatTime()) / 100.0f;
-            for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+            float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
+            for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
             {
-                componentManager->transform[i].pos.x += x;
+                componentManager->transform[ i ].pos.x += x;
             }
 
             //DEBUG CODE for basic camera update
@@ -216,9 +216,9 @@ HRESULT Engine::Run()
 
             physics->Update( time->GetTotalFloatTime() );
             //DEBUG:: Transfrom glm matrix4x4 to directxMat4x4
-            for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+            for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
             {
-                Mat4x4toXMFLOAT4x4(componentManager->transform[i].transformMatrix, transforms[i]);
+                Mat4x4toXMFLOAT4x4( componentManager->transform[ i ].transformMatrix, transforms[ i ] );
             }
 
             graphics->Update( transforms, camera );

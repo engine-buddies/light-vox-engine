@@ -76,7 +76,7 @@ void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* i
             int16_t i[ 12 ];
             int facesRead = sscanf_s(
                 chars,
-                "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
+                "f %hd/%hd/%hd %hd/%hd/%hd %hd/%hd/%hd %hd/%hd/%hd",
                 &i[ 0 ], &i[ 1 ], &i[ 2 ],
                 &i[ 3 ], &i[ 4 ], &i[ 5 ],
                 &i[ 6 ], &i[ 7 ], &i[ 8 ],
