@@ -1,37 +1,21 @@
 //these #defines are used to selectively compile from PipelineDefinitions.h
 #define _SHADER
-#define _PSHADER
+#define _PSHADER_GEOMETRY_PASS
 
 //contains all defitnitions for shader-to-shader and shader-to-CPU stuff
 #include "../Graphics/ShaderDefinitions.h"
 
-//[TEST]This is just here to make our demos look less ugly 
-struct DEBUG_DirectionalLight
+PSOutput PSMain( VStoPS input )
 {
-    float4 diffuseColor;
-    float3 direction;
-};
+    PSOutput output;
 
-/// <summary>
-/// [TEST] This is only here to make our demo look a little tastier
-/// </summary>
-float4 DEBUG_dirLightDiffuse(DEBUG_DirectionalLight dirLight, float3 normal) {
-    return dirLight.diffuseColor * saturate(dot(-normalize(dirLight.direction), normal));
-};
-
-float4 PSMain(PSInput input) : SV_TARGET
-{
     //re-normalize after rasterization
     input.normal = normalize(input.normal);
 
-    //[TEST] Create a 'test' light to help make sure normal data is correct 
-    DEBUG_DirectionalLight dirLight;
-    dirLight.diffuseColor = float4(0.8, 0.8, 0.8, 1.0);
-    dirLight.direction = float3(-0.5, -0.5, 0);
+    //TO DO: Texturing:
+    output.albedo = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    output.normal = float4(input.normal, 1.0f);
+    output.position = input.worldpos;
 
-    //[TEST] to make sure normal data is correct 
-    float4 lights = float4(0.1, 0.1, 0.1, 1.0)
-        + DEBUG_dirLightDiffuse(dirLight, input.normal);
-
-    return lights;
+    return output;
 }

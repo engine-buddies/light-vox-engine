@@ -1,6 +1,6 @@
 //these #defines are used to selectively compile from PipelineDefinitions.h
 #define _SHADER
-#define _VSHADER
+#define _VSHADER_GEOMETRY_PASS
 
 //contains all defitnitions for shader-to-shader and shader-to-CPU stuff
 #include "../Graphics/ShaderDefinitions.h"
@@ -8,12 +8,11 @@
 //basically a SRV of instanced data
 StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);
 
-PSInput VSMain(
+VStoPS VSMain(
     VSInput vInput,
     uint instanceID : SV_InstanceID)
 {
-    //Declare PSInput
-    PSInput result;
+    VStoPS result;
 
     //define position and world position
     float4 pos = float4(vInput.position, 1.0f);
@@ -29,6 +28,6 @@ PSInput VSMain(
 
     //supply uv and normal
     result.uv = vInput.uv;
-    result.normal = mul(vInput.normal, (float3x3)model);
+    result.normal = normalize( mul( vInput.normal, ( float3x3 )model ) );
     return result;
 }
