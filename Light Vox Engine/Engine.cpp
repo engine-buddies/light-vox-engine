@@ -206,12 +206,13 @@ HRESULT Engine::Run()
                 componentManager->transform[ i ].pos.x += x;
             }
 
-            //DEBUG CODE for basic camera update
+            //DEBUG CODE for debug wireframe renderer
             glm::mat4x4 transform = glm::translate( glm::vec3( 1, 1, 0 ) );
             glm::vec3 scale = glm::float3( 1, 1, 1 );
             glm::vec3 color = glm::float3( 1, 0, 0 );
             debugRenderer->AddCube( transform, scale, color );
 
+            //DEBUG CODE for basic camera update
             DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -5.f );
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3( 0.f, 0.f, 1.f );
             DirectX::XMFLOAT3 up = DirectX::XMFLOAT3( 0.f, 1.f, 0.f );

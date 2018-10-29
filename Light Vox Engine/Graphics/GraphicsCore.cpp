@@ -194,11 +194,6 @@ void GraphicsCore::Render()
         //transition the DSV over and transition the g-buffer textures over
         currentFrameResource->SwapBarriers();
 
-        deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            depthStencilView.Get(),
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            D3D12_RESOURCE_STATE_DEPTH_READ
-        ) );
 
         //draw onto our FSQ
         SetLightPassPSO( deferredCommandList );
@@ -207,11 +202,6 @@ void GraphicsCore::Render()
 
         //Transition and clean-up
         currentFrameResource->Cleanup();
-        deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            depthStencilView.Get(),
-            D3D12_RESOURCE_STATE_DEPTH_READ,
-            D3D12_RESOURCE_STATE_DEPTH_WRITE
-        ) );
 
 #ifdef _DEBUG
         SetDebugPSO( deferredCommandList );
@@ -931,7 +921,7 @@ inline void GraphicsCore::SetDebugPSO( ID3D12GraphicsCommandList * commandList )
     commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
     commandList->RSSetViewports( 1, &viewport );
     commandList->RSSetScissorRects( 1, &scissorRect );
-    commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_LINELIST );
+    commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_LINESTRIP );
     commandList->IASetVertexBuffers( 0, 1, &vertexBufferView );
     commandList->IASetIndexBuffer( &indexBufferView );
     commandList->OMSetStencilRef( 0 );
