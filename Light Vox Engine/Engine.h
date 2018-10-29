@@ -46,8 +46,8 @@ private:
     ECS::ComponentManager* componentManager;
 
     //Systems
-    GraphicsCore* graphics;
-    Camera* camera;
+    Graphics::GraphicsCore* graphics;
+    Graphics::Camera* camera;
     GameTime* time;
 
     //Physics 

@@ -1,5 +1,6 @@
 #include "GraphicsCore.h"
-#include "FrameResource.h"
+
+using namespace Graphics;
 
 HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 {
@@ -102,28 +103,6 @@ HRESULT GraphicsCore::InitSynchronizationObjects()
     fenceEvent = CreateEvent( nullptr, FALSE, FALSE, nullptr );
     if ( fenceEvent == nullptr )
         ThrowIfFailed( HRESULT_FROM_WIN32( GetLastError() ) );
-
-    return S_OK;
-}
-
-HRESULT GraphicsCore::InitFrameResources()
-{
-    for ( int i = 0; i < LV_FRAME_COUNT; ++i )
-    {
-        frameResources[ i ] = new FrameResource(
-            device.Get(),
-            geometryPso.Get(),
-            lightPso.Get(),
-            dsvHeap.Get(),
-            rtvHeap.Get(),
-            cbvSrvHeap.Get(),
-            &viewport,
-            i
-        );
-    }
-
-    currentFrameResourceIndex = 0;
-    currentFrameResource = frameResources[ currentFrameResourceIndex ];
 
     return S_OK;
 }

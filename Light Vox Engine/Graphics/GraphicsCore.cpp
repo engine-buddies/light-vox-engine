@@ -6,6 +6,7 @@
 #include "ObjLoader.h"
 
 using namespace Microsoft::WRL;
+using namespace Graphics;
 
 GraphicsCore::GraphicsCore( HWND hWindow, UINT windowW, UINT windowH )
 {
@@ -48,6 +49,28 @@ HRESULT GraphicsCore::Init()
     ThrowIfFailed( InitSynchronizationObjects() );
     ThrowIfFailed( InitInputShaderResources() );
     ThrowIfFailed( InitFrameResources() );
+
+    return S_OK;
+}
+
+HRESULT GraphicsCore::InitFrameResources()
+{
+    for ( int i = 0; i < LV_FRAME_COUNT; ++i )
+    {
+        frameResources[ i ] = new FrameResource(
+            device.Get(),
+            geometryPso.Get(),
+            lightPso.Get(),
+            dsvHeap.Get(),
+            rtvHeap.Get(),
+            cbvSrvHeap.Get(),
+            &viewport,
+            i
+        );
+    }
+
+    currentFrameResourceIndex = 0;
+    currentFrameResource = frameResources[ currentFrameResourceIndex ];
 
     return S_OK;
 }

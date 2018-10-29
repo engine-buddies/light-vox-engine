@@ -45,7 +45,7 @@ Engine::Engine( HINSTANCE hInstance )
     windowTitle = "STRUGGLE BUS";
     hWindow = 0;
 
-    camera = new Camera();
+    camera = new Graphics::Camera();
 }
 
 Engine::~Engine()
@@ -125,7 +125,7 @@ HRESULT Engine::InitWindow()
 HRESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new GraphicsCore( hWindow, static_cast<UINT>( windowWidth ), static_cast<UINT>( windowHeight ) );
+    graphics = new Graphics::GraphicsCore( hWindow, static_cast<UINT>( windowWidth ), static_cast<UINT>( windowHeight ) );
     //Physics
     physics = new Physics::Solver();
     rigidBody = new Physics::Rigidbody();
