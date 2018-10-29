@@ -1,9 +1,9 @@
 #pragma once
 #include "../stdafx.h"		
 #include "ShaderDefinitions.h"
+#include "DebugRenderer.h"
 
 class Camera;
-
 
 /// <summary>
 /// Constant Buffer for info needed for lighting calculations
@@ -87,25 +87,25 @@ public:
         Camera* camera
     );
 
+#ifdef _DEBUG
+    void BindDebug( D3D12_CPU_DESCRIPTOR_HANDLE * rtvHandle );
+
+    void WriteDebugInstanceBuffers(
+        CubeInstanceData instanceData[],
+        size_t count
+    );
+#endif
+    
     //a batched command list for g-buffer stuff and scene stuff
     ID3D12CommandList* batchedCommandList[ LV_NUM_CONTEXTS * 1 + LV_COMMAND_LIST_COUNT ];
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> geometryCmdLists[ LV_NUM_CONTEXTS ];
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandLists[ LV_COMMAND_LIST_COUNT ];
-
-    //command list/allocator for 'per scene' stuff (split between cores)
-#ifdef _DEBUG
-    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> debugCmdLists[ LV_NUM_CONTEXTS ];
-#endif
 
     //used to synchronize instructions
     UINT64 fenceValue;
 private:
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> geometryCmdAllocators[ LV_NUM_CONTEXTS ];
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocators[ LV_COMMAND_LIST_COUNT ];
-
-#ifdef _DEBUG
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> debugCommandAllocator;
-#endif
 
     inline void InitCmdAllocatorsAndLists( ID3D12Device * device, UINT frameResourceIndex );
     inline void InitDescriptorHandles( ID3D12Device * device, ID3D12DescriptorHeap * dsvHeap,
@@ -138,4 +138,9 @@ private:
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvGbufferHandles[ LV_NUM_GBUFFER_RTV ];
     D3D12_CPU_DESCRIPTOR_HANDLE rtvbackBufferHandle;
+
+#ifdef _DEBUG
+    Microsoft::WRL::ComPtr<ID3D12Resource> instanceDebugUploadBuffer;
+    CubeInstanceData* debugInstanceBufferWO;
+#endif
 };

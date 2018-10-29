@@ -11,7 +11,7 @@ VStoPS main(
 	float3 normal : NORMAL)
 {
     VStoPS output;
-	output.position = float4(position, 1.f);
+	output.position = float4(position, 1.0f);
 	output.uv = uv;
 	return output;
 }

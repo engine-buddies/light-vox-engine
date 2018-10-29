@@ -16,6 +16,7 @@ GraphicsCore::GraphicsCore( HWND hWindow, UINT windowW, UINT windowH )
     fenceFrameIndex = 0;
     currentFrameResourceIndex = 0;
     currentFrameResource = nullptr;
+    debugRenderer = DebugRenderer::GetInstance();
 }
 
 GraphicsCore::~GraphicsCore()
@@ -41,6 +42,7 @@ HRESULT GraphicsCore::Init()
     ThrowIfFailed( InitDeviceCommandQueueSwapChain() );
     ThrowIfFailed( InitRootSignature() );
     ThrowIfFailed( InitGeometryPSO() );
+    ThrowIfFailed( InitDebugPSO() );
     ThrowIfFailed( InitLightPassPSO() );
     ThrowIfFailed( InitRtvHeap() );
     ThrowIfFailed( InitDepthStencil() );
@@ -76,6 +78,14 @@ void GraphicsCore::Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera )
     }
 
     currentFrameResource->WriteConstantBuffers( transforms, &viewport, camera );
+
+#ifdef _DEBUG
+    currentFrameResource->WriteDebugInstanceBuffers(
+        debugRenderer->GetCubeInstanceDataPtr(),
+        debugRenderer->GetCubeInstanceDataCount()
+    );
+    debugRenderer->ClearCubes();
+#endif
 
 }
 
@@ -158,10 +168,11 @@ void GraphicsCore::Render()
 
         //transition the DSV over and transition the g-buffer textures over
         currentFrameResource->SwapBarriers();
+
         deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
             depthStencilView.Get(),
             D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            D3D12_RESOURCE_STATE_GENERIC_READ
+            D3D12_RESOURCE_STATE_DEPTH_READ
         ) );
 
         //draw onto our FSQ
@@ -173,9 +184,16 @@ void GraphicsCore::Render()
         currentFrameResource->Cleanup();
         deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
             depthStencilView.Get(),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
+            D3D12_RESOURCE_STATE_DEPTH_READ,
             D3D12_RESOURCE_STATE_DEPTH_WRITE
         ) );
+
+#ifdef _DEBUG
+        SetDebugPSO( deferredCommandList );
+        currentFrameResource->BindDebug( &rtvHandle );
+        deferredCommandList->DrawIndexedInstanced( verticesCount, LV_DEBUG_MAX_CUBE_COUNT, 0, 0, 0 );
+#endif
+
         deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
             renderTargets[ currentFrameResourceIndex ].Get(),
             D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -350,6 +368,55 @@ HRESULT GraphicsCore::InitGeometryPSO()
     return S_OK;
 }
 
+HRESULT GraphicsCore::InitDebugPSO()
+{
+#ifdef _DEBUG
+    ComPtr<ID3DBlob> vs;
+    ComPtr<ID3DBlob> ps;
+
+    D3DReadFileToBlob( L"Assets/Shaders/vs_debug.cso", &vs );
+    D3DReadFileToBlob( L"Assets/Shaders/ps_debug.cso", &ps );
+
+    D3D12_INPUT_ELEMENT_DESC inputVertexDesc[ LV_NUM_VS_INPUT_COUNT ];
+    ShaderDefinitions::SetGeometryPassInputLayout( inputVertexDesc );
+
+    D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
+    inputLayoutDescription.pInputElementDescs = inputVertexDesc;
+    inputLayoutDescription.NumElements = _countof( inputVertexDesc );
+
+    //build out our depth stencil description
+    CD3DX12_DEPTH_STENCIL_DESC1 depthStencilDesc( D3D12_DEFAULT );
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+    depthStencilDesc.StencilEnable = FALSE;
+
+    //describe the PSO
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC debugPsoDesc{};
+    debugPsoDesc.InputLayout = inputLayoutDescription;
+    debugPsoDesc.pRootSignature = rootSignature.Get();
+    debugPsoDesc.VS = CD3DX12_SHADER_BYTECODE( vs.Get() );
+    debugPsoDesc.PS = CD3DX12_SHADER_BYTECODE( ps.Get() );
+    debugPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC( D3D12_DEFAULT );
+    debugPsoDesc.BlendState = CD3DX12_BLEND_DESC( D3D12_DEFAULT );
+    debugPsoDesc.DepthStencilState = depthStencilDesc;
+    debugPsoDesc.SampleMask = UINT_MAX;
+    debugPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+    debugPsoDesc.NumRenderTargets = 1;
+    debugPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    debugPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    debugPsoDesc.SampleDesc.Count = 1;
+
+    //create our PSO
+    ThrowIfFailed( device->CreateGraphicsPipelineState(
+        &debugPsoDesc,
+        IID_PPV_ARGS( &debugPso )
+    ) );
+    NAME_D3D12_OBJECT_WITH_NAME( debugPso, "%s", "Debug Wireframes" );
+#endif
+    return S_OK;
+}
+
 HRESULT GraphicsCore::InitLightPassPSO()
 {
     ComPtr<ID3DBlob> vs;
@@ -361,6 +428,16 @@ HRESULT GraphicsCore::InitLightPassPSO()
     D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[ LV_NUM_VS_INPUT_COUNT ];
     ShaderDefinitions::SetGeometryPassInputLayout( screenQuadVertexDesc );
 
+    //build out our depth stencil description
+    CD3DX12_DEPTH_STENCIL_DESC1 depthStencilDesc( D3D12_DEFAULT );
+#ifdef _DEBUG
+    depthStencilDesc.DepthEnable = false;
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+#else
+    depthStencilDesc.DepthEnable = false;
+#endif
+
     //describe the PSO
     D3D12_GRAPHICS_PIPELINE_STATE_DESC lightPsoDesc{};
     lightPsoDesc.VS = CD3DX12_SHADER_BYTECODE( vs.Get() );
@@ -368,8 +445,7 @@ HRESULT GraphicsCore::InitLightPassPSO()
     lightPsoDesc.InputLayout.pInputElementDescs = screenQuadVertexDesc;
     lightPsoDesc.InputLayout.NumElements = _countof( screenQuadVertexDesc );
     lightPsoDesc.pRootSignature = rootSignature.Get();
-    lightPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC( D3D12_DEFAULT );
-    lightPsoDesc.DepthStencilState.DepthEnable = false;
+    lightPsoDesc.DepthStencilState = depthStencilDesc; 
     lightPsoDesc.BlendState = CD3DX12_BLEND_DESC( D3D12_DEFAULT );
     lightPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC( D3D12_DEFAULT );
     lightPsoDesc.RasterizerState.DepthClipEnable = false;
@@ -378,6 +454,10 @@ HRESULT GraphicsCore::InitLightPassPSO()
     lightPsoDesc.NumRenderTargets = 1;
     lightPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
     lightPsoDesc.SampleDesc.Count = 1;
+
+#ifdef _DEBUG
+    lightPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+#endif
 
     //create our PSO
     ThrowIfFailed( device->CreateGraphicsPipelineState(
@@ -816,3 +896,19 @@ inline void GraphicsCore::SetLightPassPSO( ID3D12GraphicsCommandList * commandLi
     commandList->IASetVertexBuffers( 0, 1, &fsqVertexBufferView );
     commandList->OMSetStencilRef( 0 );
 }
+
+#ifdef _DEBUG
+inline void GraphicsCore::SetDebugPSO( ID3D12GraphicsCommandList * commandList )
+{
+    commandList->SetGraphicsRootSignature( rootSignature.Get() );
+    commandList->SetPipelineState( debugPso.Get() );
+    ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get() };
+    commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
+    commandList->RSSetViewports( 1, &viewport );
+    commandList->RSSetScissorRects( 1, &scissorRect );
+    commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_LINELIST );
+    commandList->IASetVertexBuffers( 0, 1, &vertexBufferView );
+    commandList->IASetIndexBuffer( &indexBufferView );
+    commandList->OMSetStencilRef( 0 );
+}
+#endif

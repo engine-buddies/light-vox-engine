@@ -7,6 +7,8 @@
 #include <sstream>	//for creating a console
 #endif
 
+// DEBUG CODE
+
 Engine* Engine::engineInstance = nullptr;
 
 
@@ -46,6 +48,7 @@ Engine::Engine( HINSTANCE hInstance )
     hWindow = 0;
 
     camera = new Camera();
+    debugRenderer = DebugRenderer::GetInstance();
 }
 
 Engine::~Engine()
@@ -60,7 +63,7 @@ Engine::~Engine()
     entityManager->ReleaseInstance();
     componentManager->ReleaseInstance();
     Jobs::JobManager::ReleaseInstance();
-
+    DebugRenderer::ReleaseInstance();
 }
 
 HRESULT Engine::InitWindow()
@@ -204,6 +207,10 @@ HRESULT Engine::Run()
             }
 
             //DEBUG CODE for basic camera update
+            glm::mat4x4 transform = glm::translate( glm::vec3( 1, 1, 0 ) );
+            glm::vec3 scale = glm::float3( 1, 1, 1 );
+            glm::vec3 color = glm::float3( 1, 0, 0 );
+            debugRenderer->AddCube( transform, scale, color );
 
             DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -5.f );
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3( 0.f, 0.f, 1.f );

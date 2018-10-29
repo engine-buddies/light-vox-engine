@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <vector>
 #include "Graphics/GraphicsCore.h"
+#include "Graphics/DebugRenderer.h"
 #include "GameTime.h"
 #include "ECS/EntityManager.h"
 #include "ECS/Entity.h"
@@ -49,6 +50,8 @@ private:
     GraphicsCore* graphics;
     Camera* camera;
     GameTime* time;
+
+    DebugRenderer* debugRenderer;
 
     //Physics 
     Physics::Solver* physics;

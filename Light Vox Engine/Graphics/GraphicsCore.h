@@ -1,5 +1,6 @@
 #pragma once
 #include "../stdafx.h"
+#include "DebugRenderer.h"
 
 class Camera;
 class FrameResource;
@@ -55,18 +56,23 @@ private:
     /// Initializes everything that is required by the IDXGIFactory
     /// (this function should rarely change)
     /// </summary>
-	HRESULT InitDeviceCommandQueueSwapChain();
+    HRESULT InitDeviceCommandQueueSwapChain();
 
     /// <summary>
     /// Initializes the root signature and the descriptor tables that
     /// goes into its parameters (this changes as we add more functionality)
     /// </summary>
-	HRESULT InitRootSignature();			
+    HRESULT InitRootSignature();
 
     /// <summary>
     /// Loads in our shaders and builds out a PSO
     /// </summary>
-	HRESULT InitGeometryPSO();	
+    HRESULT InitGeometryPSO();
+
+    /// <summary>
+    /// Loads in our shaders and builds out a PSO for the Second Pass
+    /// </summary>
+    HRESULT InitDebugPSO();
 
     /// <summary>
     /// Loads in our shaders and builds out a PSO for the Second Pass
@@ -77,18 +83,18 @@ private:
     /// Create the Render Target View Heap and initialize our render
     /// targets for the back buffers we'll need
     /// </summary>
-	HRESULT InitRtvHeap();						
+    HRESULT InitRtvHeap();
 
     /// <summary>
     /// Create the Depth Stencil View Heap and initialize our depth stencil 
     /// buffer and how it will clear out our values 
     /// </summary>
-	HRESULT InitDepthStencil();		
+    HRESULT InitDepthStencil();
 
     /// <summary>
     /// Creates the viewport and scissor rectangle
     /// </summary>
-	HRESULT InitViewportScissorRectangle();	
+    HRESULT InitViewportScissorRectangle();
 
     /// <summary>
     /// Creates the vertex buffer, the index buffer, shader resource view, and
@@ -99,12 +105,12 @@ private:
     /// <summary>
     /// Creates our frame resouces for all the rendering
     /// </summary>
-	HRESULT InitFrameResources();	
+    HRESULT InitFrameResources();
 
     /// <summary>
     /// Builds the fences we need to synchronize between CPU and GPU
     /// </summary>
-	HRESULT InitSynchronizationObjects();	
+    HRESULT InitSynchronizationObjects();
 
     /*RENDER HELPERS*/
 
@@ -112,39 +118,39 @@ private:
     /// Sets the pipeline with common stuff for rendering to the first pass
     /// </summary>
     /// <param name="commandList">The main rendering command list</param>
-	inline void SetGBufferPSO(ID3D12GraphicsCommandList* commandList);
+    inline void SetGBufferPSO( ID3D12GraphicsCommandList* commandList );
 
     /// <summary>
     /// Sets the pipeline with second pass stuff
     /// </summary>
     /// <param name="commandList">The main rendering command list</param>
-    inline void SetLightPassPSO(ID3D12GraphicsCommandList* commandList);
+    inline void SetLightPassPSO( ID3D12GraphicsCommandList* commandList );
 
-	HWND hWindow;		//handle to window
-	UINT windowWidth;	//width of window
-	UINT windowHeight;  //height of window
+    HWND hWindow;		//handle to window
+    UINT windowWidth;	//width of window
+    UINT windowHeight;  //height of window
 
-	CD3DX12_VIEWPORT viewport;  //viewport 
-	CD3DX12_RECT scissorRect;   //scissor rectangle
+    CD3DX12_VIEWPORT viewport;  //viewport 
+    CD3DX12_RECT scissorRect;   //scissor rectangle
 
-	//Main pipeline stuff that shouldn't change up much
-	Microsoft::WRL::ComPtr<ID3D12Device> device;
-	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain;
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilView;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
+    //Main pipeline stuff that shouldn't change up much
+    Microsoft::WRL::ComPtr<ID3D12Device> device;
+    Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain;
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
+    Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilView;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
 
-	//Shader program and rendering pipeline specific stuff
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> cbvSrvHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> samplerHeap;
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> geometryPso;
+    //Shader program and rendering pipeline specific stuff
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> cbvSrvHeap;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> samplerHeap;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> geometryPso;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> lightPso;
 
     //frame resources
     Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[ LV_FRAME_COUNT ];
-    FrameResource* frameResources[LV_FRAME_COUNT];
+    FrameResource* frameResources[ LV_FRAME_COUNT ];
     FrameResource* currentFrameResource;
     int currentFrameResourceIndex;
 
@@ -152,25 +158,39 @@ private:
     UINT rtvDescriptorSize;
     UINT cbvSrvDescriptorSize;
 
-	//vaiables for rendering one mesh
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	D3D12_INDEX_BUFFER_VIEW indexBufferView;	
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexBufferUpload;
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferUpload;
-	//Microsoft::WRL::ComPtr<ID3D12Resource> textures[1];           
-	//Microsoft::WRL::ComPtr<ID3D12Resource> texturesUploads[1];
+    //vaiables for rendering one mesh
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView;
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexBufferUpload;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferUpload;
+    //Microsoft::WRL::ComPtr<ID3D12Resource> textures[1];           
+    //Microsoft::WRL::ComPtr<ID3D12Resource> texturesUploads[1];
     UINT verticesCount;
 
-	//fence & synch related vars
-	UINT fenceFrameIndex;
-	HANDLE fenceEvent;
-	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
-	UINT64 fenceValue;
+    //fence & synch related vars
+    UINT fenceFrameIndex;
+    HANDLE fenceEvent;
+    Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+    UINT64 fenceValue;
 
     //Deferred Rendering members
     Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBuffer; //For Full Screen Quad
     Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBufferUpload;
     D3D12_VERTEX_BUFFER_VIEW fsqVertexBufferView;
+
+#ifdef _DEBUG
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> debugPso;
+
+    /// <summary>
+/// Sets the pipeline with second pass stuff
+/// </summary>
+/// <param name="commandList">The main rendering command list</param>
+    inline void SetDebugPSO( ID3D12GraphicsCommandList* commandList );
+
+#endif
+    DebugRenderer *debugRenderer;
+
+
 };
