@@ -198,7 +198,7 @@ void GraphicsCore::Render()
 
     currentFrameResource->fenceValue = fenceValue;
     ThrowIfFailed( commandQueue->Signal( fence.Get(), fenceValue ) );
-    fenceValue++;
+    ++fenceValue;
 }
 
 HRESULT GraphicsCore::InitRootSignature()
@@ -728,7 +728,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart() );
     cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
-    for ( UINT i = 0; i < LV_NUM_NULL_SRV; i++ )
+    for ( UINT i = 0; i < LV_NUM_NULL_SRV; ++i )
     {
         // Describe and create 2 null SRVs. Null descriptors are needed in order 
         // to achieve the effect of an "unbound" resource.
@@ -782,7 +782,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
 
     const UINT64 fenceToWaitFor = fenceValue;
     ThrowIfFailed( commandQueue->Signal( fence.Get(), fenceToWaitFor ) );
-    fenceValue++;
+    ++fenceValue;
 
     ThrowIfFailed( fence->SetEventOnCompletion( fenceToWaitFor, fenceEvent ) );
     WaitForSingleObject( fenceEvent, INFINITE );

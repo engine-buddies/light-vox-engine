@@ -97,7 +97,7 @@ HRESULT GraphicsCore::InitSynchronizationObjects()
         IID_PPV_ARGS( &fence )
     ) );
     NAME_D3D12_OBJECT( fence );
-    fenceValue++;
+    ++fenceValue;
 
     fenceEvent = CreateEvent( nullptr, FALSE, FALSE, nullptr );
     if ( fenceEvent == nullptr )
@@ -108,7 +108,7 @@ HRESULT GraphicsCore::InitSynchronizationObjects()
 
 HRESULT GraphicsCore::InitFrameResources()
 {
-    for ( int i = 0; i < LV_FRAME_COUNT; i++ )
+    for ( int i = 0; i < LV_FRAME_COUNT; ++i )
     {
         frameResources[ i ] = new FrameResource(
             device.Get(),

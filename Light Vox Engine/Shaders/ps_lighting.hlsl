@@ -55,7 +55,7 @@ float4 main( VStoPS input ) : SV_TARGET
     //diffuse
     float3 diffuse = float3( 0, 0, 0 );
     [unroll]
-    for ( int i = 0; i < 5; i++ )
+    for ( int i = 0; i < 5; ++i )
         diffuse += pointLightDiffuse( pointLights[i], normal, worldPos );
     color += diffuse * albedo;
 

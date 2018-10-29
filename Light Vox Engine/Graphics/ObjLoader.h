@@ -4,25 +4,13 @@
 #include "ShaderDefinitions.h"
 #include <vector>
 
+//TODO - remove this because it's only used just once (it doesn't have to be a struct)
 struct MeshData
 {
     std::vector<Vertex> vertices;
     std::vector<UINT> indices;
 };
-/*
-struct ObjectData
-{
-    ID3D12Resource* vertexBuffer = nullptr;
-    ID3D12Resource* indexBuffer = nullptr;
-    UINT indexCount = 0;
 
-    ~ObjectData()
-    {
-        delete vertexBuffer;
-        delete indexBuffer;
-    }
-};
-*/
 class ObjLoader
 {
 public:

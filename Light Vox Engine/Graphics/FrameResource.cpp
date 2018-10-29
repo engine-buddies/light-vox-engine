@@ -52,7 +52,7 @@ inline void FrameResource::InitCmdAllocatorsAndLists(
     }
 
     //go through other frmelist
-    for ( UINT i = 0; i < LV_COMMAND_LIST_COUNT; i++ )
+    for ( UINT i = 0; i < LV_COMMAND_LIST_COUNT; ++i )
     {
         ThrowIfFailed( device->CreateCommandAllocator( D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS( &commandAllocators[ i ] ) ) );
         NAME_D3D12_OBJECT_WITH_NAME( commandAllocators[ i ], "%s (Frame#%d)", "Base", i );
@@ -225,7 +225,7 @@ inline void FrameResource::InitGraphicsResources(
 
 
 
-        for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; i++ )
+        for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
         {
             //create RTV and SRV and stay consistent
             device->CreateRenderTargetView( rtvTextures[ i ].Get(), &rtvDesc, rtvHandle );
@@ -337,7 +337,7 @@ void FrameResource::ResetCommandListsAndAllocators()
         );
     }
 
-    for ( UINT i = 0; i < LV_COMMAND_LIST_COUNT; i++ )
+    for ( UINT i = 0; i < LV_COMMAND_LIST_COUNT; ++i )
     {
         ThrowIfFailed( commandAllocators[ i ]->Reset() );
     }
