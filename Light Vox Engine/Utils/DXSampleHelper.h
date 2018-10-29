@@ -146,7 +146,7 @@ inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ...
 #else
 inline void SetName( ID3D12Object*, LPCWSTR ) { }
 inline void SetNameIndexed( ID3D12Object*, LPCWSTR, UINT ) { }
-inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, LPCWSTR format, ... ) { }
+inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ... ) { }
 #endif
 
 // Naming helper for ComPtr<T>.

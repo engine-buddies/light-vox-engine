@@ -1,12 +1,6 @@
 #include "GraphicsCore.h"
 #include "FrameResource.h"
 
-GraphicsCore::~GraphicsCore()
-{
-    for ( size_t i = 0; i < LV_FRAME_COUNT; ++i )
-        delete frameResources[ i ];
-}
-
 HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 {
     UINT dxgiFactoryFlags = 0;

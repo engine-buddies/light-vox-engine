@@ -42,4 +42,10 @@ public:
         float screenWidth,
         float screenHeight
     );
+
+    /// <summary>
+    /// Gets camera position
+    /// </summary>
+    /// <returns>Float 3 representing camera position</returns>
+    DirectX::XMFLOAT3 GetPosition() const { return position; }
 };

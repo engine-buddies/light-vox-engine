@@ -147,7 +147,7 @@ inline void FrameResource::InitGraphicsResources(
         cbvSrvDescriptorSize
     );
 
-    DXGI_FORMAT textureFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+    DXGI_FORMAT textureFormat = DXGI_FORMAT_R32G32B32A32_FLOAT;
     UINT16 textureMipLevels = 1;
 
     {
@@ -366,6 +366,7 @@ void FrameResource::BindDeferred(
 )
 {
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_GBUFFER_SRV, gBufferSrvHandle );
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_CBV, sceneCbvHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_SAMPLER, samplerHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->OMSetRenderTargets( 1, rtvHandle, FALSE, &dsvHandle );
 }
@@ -415,6 +416,7 @@ void FrameResource::WriteConstantBuffers(
         viewport->Width,
         viewport->Height
     );
+    sceneConsts.cameraPosition = camera->GetPosition();
 
     //copy over
     memcpy( sceneConstantBufferWO, &sceneConsts, sizeof( SceneConstantBuffer ) );

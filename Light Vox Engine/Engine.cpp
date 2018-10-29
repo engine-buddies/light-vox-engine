@@ -158,8 +158,8 @@ HRESULT Engine::InitSystems()
     static float rotation = 0.001f;
     {
 
-        float x = -count / 2.0f;
-        float y = -count / 2.0f;
+        float x = -count;// / 2.0f;
+        float y = -count;// / 2.0f;
         float z = 0;
         for ( int i = 0; i < count; ++i )
         {
@@ -174,7 +174,7 @@ HRESULT Engine::InitSystems()
             }
 
             y += 2;
-            x = -count / 2.0f;
+            x = -count;// / 2.0f;
         }
     }
 
@@ -197,7 +197,7 @@ HRESULT Engine::Run()
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
             //DEBUG collision code 
-            float x = sinf(time->GetTotalFloatTime());
+            float x = sinf(time->GetTotalFloatTime()) / 100.0f;
             for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
             {
                 componentManager->transform[i].pos.x += x;
@@ -205,7 +205,7 @@ HRESULT Engine::Run()
 
             //DEBUG CODE for basic camera update
 
-            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -40.f );
+            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -5.f );
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3( 0.f, 0.f, 1.f );
             DirectX::XMFLOAT3 up = DirectX::XMFLOAT3( 0.f, 1.f, 0.f );
             camera->SetTransform(

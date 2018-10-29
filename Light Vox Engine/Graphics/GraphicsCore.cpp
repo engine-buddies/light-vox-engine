@@ -18,6 +18,19 @@ GraphicsCore::GraphicsCore( HWND hWindow, UINT windowW, UINT windowH )
     currentFrameResource = nullptr;
 }
 
+GraphicsCore::~GraphicsCore()
+{
+    //wait for the current event fencce to complete
+    const UINT64 fenceToWaitFor = fenceValue;
+    ThrowIfFailed( commandQueue->Signal( fence.Get(), fenceToWaitFor ) );
+    ThrowIfFailed( fence->SetEventOnCompletion( fenceToWaitFor, fenceEvent ) );
+    WaitForSingleObject( fenceEvent, INFINITE );
+
+    //deallocate all our frame resources
+    for ( size_t i = 0; i < LV_FRAME_COUNT; ++i )
+        delete frameResources[ i ];
+}
+
 void GraphicsCore::OnResize( UINT width, UINT height )
 {
     //TODO - recreate scssisor rectangle, viewport, and back buffers
@@ -296,7 +309,7 @@ HRESULT GraphicsCore::InitGeometryPSO()
 
     //build the input layout
     D3D12_INPUT_ELEMENT_DESC vertexInputDescription[ LV_NUM_VS_INPUT_COUNT ];
-    ShaderDefinitions::SetInputLayout( vertexInputDescription );
+    ShaderDefinitions::SetGeometryPassInputLayout( vertexInputDescription );
     
     D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
     inputLayoutDescription.pInputElementDescs = vertexInputDescription;
@@ -321,9 +334,9 @@ HRESULT GraphicsCore::InitGeometryPSO()
     geometryPsoDesc.SampleMask = UINT_MAX;
     geometryPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     geometryPsoDesc.NumRenderTargets = LV_NUM_GBUFFER_RTV;
-    geometryPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    geometryPsoDesc.RTVFormats[ 1 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    geometryPsoDesc.RTVFormats[ 2 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    geometryPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    geometryPsoDesc.RTVFormats[ 1 ] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    geometryPsoDesc.RTVFormats[ 2 ] = DXGI_FORMAT_R32G32B32A32_FLOAT;
     geometryPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     geometryPsoDesc.SampleDesc.Count = 1;
 
@@ -346,7 +359,7 @@ HRESULT GraphicsCore::InitLightPassPSO()
     D3DReadFileToBlob( L"Assets/Shaders/ps_lighting.cso", &ps );
 
     D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[ LV_NUM_VS_INPUT_COUNT ];
-    ShaderDefinitions::SetInputLayout( screenQuadVertexDesc );
+    ShaderDefinitions::SetGeometryPassInputLayout( screenQuadVertexDesc );
 
     //describe the PSO
     D3D12_GRAPHICS_PIPELINE_STATE_DESC lightPsoDesc{};

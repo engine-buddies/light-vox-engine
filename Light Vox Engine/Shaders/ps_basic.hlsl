@@ -1,18 +1,11 @@
 //these #defines are used to selectively compile from PipelineDefinitions.h
 #define _SHADER
-#define _PSHADER
+#define _PSHADER_GEOMETRY_PASS
 
 //contains all defitnitions for shader-to-shader and shader-to-CPU stuff
 #include "../Graphics/ShaderDefinitions.h"
 
-struct PSOutput
-{
-	float4 albedo   : SV_TARGET0;
-	float4 normal   : SV_TARGET1;
-    float4 position : SV_TARGET2;
-};
-
-PSOutput PSMain( PSInput input )
+PSOutput PSMain( VStoPS input )
 {
     PSOutput output;
 
