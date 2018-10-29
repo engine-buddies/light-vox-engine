@@ -2,6 +2,7 @@
 #include "Camera.h"
 
 using namespace DirectX;
+using namespace Graphics;
 
 #pragma region Init & Dealloc
 

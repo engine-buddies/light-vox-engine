@@ -47,11 +47,11 @@ private:
     ECS::ComponentManager* componentManager;
 
     //Systems
-    GraphicsCore* graphics;
-    Camera* camera;
+    Graphics::GraphicsCore* graphics;
+    Graphics::Camera* camera;
     GameTime* time;
 
-    DebugRenderer* debugRenderer;
+    Graphics::DebugRenderer* debugRenderer;
 
     //Physics 
     Physics::Solver* physics;

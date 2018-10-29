@@ -1,5 +1,7 @@
 #include "DebugRenderer.h"
 
+using namespace Graphics;
+
 DebugRenderer* DebugRenderer::instance = nullptr;
 
 DebugRenderer * DebugRenderer::GetInstance()

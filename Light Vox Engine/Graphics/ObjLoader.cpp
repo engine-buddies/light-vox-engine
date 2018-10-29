@@ -5,6 +5,7 @@
 #include <fstream>
 
 using namespace DirectX;
+using namespace Graphics;
 
 //thanks chris <3
 void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* indices, std::string filePath )

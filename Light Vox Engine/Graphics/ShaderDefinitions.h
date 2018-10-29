@@ -6,6 +6,9 @@
 */
 
 #ifndef _SHADER
+
+namespace Graphics
+{
 #define LV_NUM_GBUFFER_RTV 3
 #define LV_NUM_NULL_SRV LV_NUM_GBUFFER_RTV
 #define LV_NUM_RTV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1)
@@ -24,19 +27,17 @@
 
 #define LV_ROOT_SIGNATURE_COUNT 4
 
-//forward declare things we need to return
-struct D3D12_INPUT_ELEMENT_DESC;
-
-/// <summary>
-/// This is a helper class for initialization (it keeps our state machine 
-/// configuration all in one place
-/// </summary>
-class ShaderDefinitions
-{
-public:
-    static inline void SetGeometryPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
-    static inline void SetLightingPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
-};
+    /// <summary>
+    /// This is a helper class for initialization (it keeps our state machine 
+    /// configuration all in one place
+    /// </summary>
+    class ShaderDefinitions
+    {
+    public:
+        static inline void SetGeometryPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
+        static inline void SetLightingPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
+    };
+}
 #endif
 
 // ----------------- INSTANCE BUFFER -----------------
@@ -50,10 +51,13 @@ struct InstanceData
 /// <summary>
 /// Buffer of data needed for a per-instance basis
 /// </summary>
-struct InstanceBuffer
+namespace Graphics
 {
-    DirectX::XMFLOAT4X4 model;
-};
+    struct InstanceBuffer
+    {
+        DirectX::XMFLOAT4X4 model;
+    };
+}
 #endif
 
 // ----------------- CONSTANT BUFFER (PER-SCENE) -----------------
@@ -69,12 +73,15 @@ cbuffer SceneConstantBuffer : register( b0 )
 /// <summary>
 /// Buffer of data needed for a per-scene basis
 /// </summary>
-struct SceneConstantBuffer
+namespace Graphics
 {
-    DirectX::XMFLOAT4X4 view;
-    DirectX::XMFLOAT4X4 projection;
-    DirectX::XMFLOAT3 cameraPosition;
-};
+    struct SceneConstantBuffer
+    {
+        DirectX::XMFLOAT4X4 view;
+        DirectX::XMFLOAT4X4 projection;
+        DirectX::XMFLOAT3 cameraPosition;
+    };
+}
 #endif
 
 // ----------------- LIGHTING CONSTANTS -----------------
@@ -104,19 +111,21 @@ struct VSInput
 #ifndef _SHADER
 //number of input variables for the basic VS
 #define LV_NUM_VS_INPUT_COUNT 3
-
-struct Vertex
+namespace Graphics
 {
-    DirectX::XMFLOAT3 position;
-    DirectX::XMFLOAT3 normal;
-    DirectX::XMFLOAT2 uv;
-};
+    struct Vertex
+    {
+        DirectX::XMFLOAT3 position;
+        DirectX::XMFLOAT3 normal;
+        DirectX::XMFLOAT2 uv;
+    };
+}
 
 /// <summary>
 /// Defer input layout logic to PipelineDefinitions (so that's it's easier to 
 /// sync with how the shader is defined).
 /// </summary>
-inline void ShaderDefinitions::SetGeometryPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout )
+inline void Graphics::ShaderDefinitions::SetGeometryPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout )
 {
     //semantic name, index, format, input slot, data offset, input classification, instance rate
     inputLayout[ 0 ] = { "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
@@ -167,11 +176,11 @@ struct VSInput
 /// Defer input layout logic to PipelineDefinitions (so that's it's easier to 
 /// sync with how the shader is defined).
 /// </summary>
-inline void ShaderDefinitions::SetLightingPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout )
+inline void Graphics::ShaderDefinitions::SetLightingPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout )
 {
     //semantic name, index, format, input slot, data offset, input classification, instance rate
     inputLayout[ 0 ] = { "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-    inputLayout[ 2 ] = { "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+    inputLayout[ 1 ] = { "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 }
 #endif
 
