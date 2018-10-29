@@ -169,6 +169,15 @@ HRESULT Engine::InitSystems()
                 UINT entityID = entityManager->Get_Entity(index).index;
                 rigidBody->Pos(glm::vec3(x + rotation, y, z), entityID);
                 rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
+                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
+
+                //calc. moment of inertia 
+                float& mass = componentManager->bodyProperties[entityID].mass;
+                float inertia = ((mass * 0.4f) * 0.4f) / 6.0f;
+                glm::mat3& inertiaTensor = componentManager->bodyProperties[entityID].inertiaTensor;
+                inertiaTensor[0][0] = inertia;
+                inertiaTensor[1][1] = inertia;
+                inertiaTensor[2][2] = inertia;
 
                 x += 2;
             }
@@ -197,10 +206,20 @@ HRESULT Engine::Run()
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
             //DEBUG collision code 
-            float x = sinf(time->GetTotalFloatTime());
+            float x = sinf(time->GetTotalFloatTime()) / 10.0f;
             for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
             {
-                componentManager->transform[i].pos.x += x;
+                if (componentManager->transform[i].pos.x > 10.0f)
+                {
+                    componentManager->bodyProperties[i].velocity.x = -10.0f;
+                }
+                else if (componentManager->transform[i].pos.x < -10.0f)
+                {
+                    componentManager->bodyProperties[i].velocity.x = 10.0f;
+                }
+
+                //add torque
+                //componentManager->bodyProperties[i].torque += glm::vec3(10.0f, 0.0f, 0.0f);
             }
 
             //DEBUG CODE for basic camera update
@@ -213,7 +232,7 @@ HRESULT Engine::Run()
                 DirectX::XMLoadFloat3( &up )
             );
 
-            physics->Update( time->GetTotalFloatTime() );
+            physics->Update( time->GetDeltaFloatTime() );
             //DEBUG:: Transfrom glm matrix4x4 to directxMat4x4
             for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
             {

@@ -41,6 +41,10 @@ namespace Physics
         /// </summary>
         void AccumlateForces();
         /// <summary>
+        /// Calc. total torque
+        /// </summary>
+        void AccumlateTorque();
+        /// <summary>
         /// Calc model to world matrix
         /// </summary>
         void ModelToWorld();

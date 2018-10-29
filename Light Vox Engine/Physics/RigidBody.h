@@ -16,7 +16,7 @@ namespace Physics
        /// </summary>
        /// <param name="pos"></param>
        /// <param name="e"></param>
-       void Pos(glm::vec3 pos, UINT index);
+       void Pos(glm::vec3& pos, UINT index);
        /// <summary>
        /// Set quaternion roation for entity
        /// </summary>
@@ -24,7 +24,7 @@ namespace Physics
        /// <param name="angle"></param>
        /// <param name="e"></param>
         void RotateAxisAngle(
-            glm::vec3 rotationAxis,
+            glm::vec3& rotationAxis,
             float angle,
             UINT index);
         /// <summary>
@@ -32,37 +32,43 @@ namespace Physics
         /// </summary>
         /// <param name="vel"></param>
         /// <param name="index"></param>
-        void Velocity(glm::vec3 vel, UINT index);
+        void Velocity(glm::vec3& vel, UINT index);
         /// <summary>
         /// Set acceleration
         /// </summary>
         /// <param name="accel"></param>
         /// <param name="index"></param>
-        void Acceleration(glm::vec3 accel, UINT index);
+        void Acceleration(glm::vec3& accel, UINT index);
         /// <summary>
         /// Set force
         /// </summary>
         /// <param name="force"></param>
         /// <param name="index"></param>
-        void Force(glm::vec3 force, UINT index);
+        void Force(glm::vec3& force, UINT index);
         /// <summary>
-        /// Set mass
-        /// </summary>
-        /// <param name="mass"></param>
-        /// <param name="index"></param>
+       /// Set mass
+       /// </summary>
+       /// <param name="mass"></param>
+       /// <param name="index"></param>
         void Mass(float mass, UINT index);
         /// <summary>
         /// Set Scale
         /// </summary>
         /// <param name="scale"></param>
         /// <param name="index"></param>
-        void Scale(glm::vec3 scale, UINT index);
+        void Scale(glm::vec3& scale, UINT index);
         /// <summary>
         /// Set box collider size 
         /// </summary>
         /// <param name="size"></param>
         /// <param name="index"></param>
-        void BoxColliderSize(glm::vec3 size, UINT index);
+        void BoxColliderSize(glm::vec3& size, UINT index);
+        /// <summary>
+        /// Set 3x3 inertia tensor 
+        /// </summary>
+        /// <param name="intertiaTensor"></param>
+        /// <param name="index"></param>
+        void InertiaTensor(glm::mat3& inertiaTensor, UINT index);
 
     private:
         ECS::ComponentManager* componentManager;

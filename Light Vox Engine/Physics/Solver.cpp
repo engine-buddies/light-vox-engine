@@ -16,6 +16,7 @@ void Solver::Update( float dt )
 {
     //Collide();
     AccumlateForces();
+    AccumlateTorque();
     Integrate( dt );
     ModelToWorld();
     //SatisfyConstraints();
@@ -75,13 +76,31 @@ void Solver::Integrate( float dt )
     //semi implicit euler 
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
+        //movement
         glm::vec3& acceleration = componentManager->bodyProperties[ i ].acceleration;
         glm::vec3& velocity = componentManager->bodyProperties[ i ].velocity;
         glm::vec3& position = componentManager->transform[ i ].pos;
+        glm::vec3& force = componentManager->bodyProperties[i].force;
+        //rotation
+        glm::vec3& angularAccel = componentManager->bodyProperties[i].angularAcceleration;
+        glm::vec3& angularVel = componentManager->bodyProperties[i].angularVelocity;
+        glm::vec3& rot = componentManager->transform[i].rot;
+        glm::quat& orientation = componentManager->transform[i].orientation;
+        glm::vec3& torque = componentManager->bodyProperties[i].torque;
 
+        //euler integration for movement and rotation 
         velocity += acceleration * dt;
+        angularVel += angularAccel * dt;
+
+        rot += angularVel * dt;
         position += velocity * dt;
-        acceleration = { .0f, .0f, .0f };
+
+        glm::quat q = glm::quat(0, rot.x * .5f, rot.y * .5f, rot.z * .5f);
+        orientation += q;
+
+        //clear torque and forces
+        force = { .0f, .0f, .0f };
+        torque = { .0f, .0f, .0f };
     }
 }
 
@@ -91,10 +110,23 @@ void Solver::AccumlateForces()
     {
         glm::vec3& acceleration = componentManager->bodyProperties[ i ].acceleration;
         glm::vec3& force = componentManager->bodyProperties[ i ].force;
-        float& mass = componentManager->bodyProperties[ i ].mass;
-        acceleration += force / mass;
+        float& invMass = componentManager->bodyProperties[ i ].invMass;
+        acceleration = force * invMass;
     }
 }
+
+void Physics::Solver::AccumlateTorque()
+{
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    {
+        glm::vec3& angularAccel = componentManager->bodyProperties[i].angularAcceleration;
+        glm::vec3& torque = componentManager->bodyProperties[i].torque;
+        glm::mat3& inertiaTensor = componentManager->bodyProperties[i].inertiaTensor;
+        angularAccel = inertiaTensor * torque;
+    }
+}
+
+
 
 void Solver::ModelToWorld()
 {
@@ -102,13 +134,14 @@ void Solver::ModelToWorld()
     {
         glm::mat4& transformMatrix = componentManager->transform[ i ].transformMatrix;
         glm::vec3& pos = componentManager->transform[ i ].pos;
-        glm::vec3& rotationAxis = componentManager->transform[ i ].rot;
-        float& rotationAngle = componentManager->transform[ i ].angle;
+        glm::quat& rot = componentManager->transform[i].orientation;
+        glm::normalize(rot);
+        glm::mat4 q = glm::toMat4(rot);
         glm::vec3& scale = componentManager->transform[ i ].scale;
-
+        
         transformMatrix =
             glm::translate( pos ) *
-            glm::rotate( rotationAngle, rotationAxis ) *
+            glm::toMat4(rot) *
             glm::scale( scale );
     }
 }
