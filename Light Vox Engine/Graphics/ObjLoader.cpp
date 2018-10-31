@@ -1,11 +1,11 @@
 #include "ObjLoader.h"
 
 #include <string>
-#include <vector>
 #include <iostream>
 #include <fstream>
 
 using namespace DirectX;
+using namespace Graphics;
 
 //thanks chris <3
 void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* indices, std::string filePath )
@@ -77,7 +77,7 @@ void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* i
             int16_t i[ 12 ];
             int facesRead = sscanf_s(
                 chars,
-                "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
+                "f %hd/%hd/%hd %hd/%hd/%hd %hd/%hd/%hd %hd/%hd/%hd",
                 &i[ 0 ], &i[ 1 ], &i[ 2 ],
                 &i[ 3 ], &i[ 4 ], &i[ 5 ],
                 &i[ 6 ], &i[ 7 ], &i[ 8 ],
@@ -167,4 +167,38 @@ void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* i
 
     // Close the file and create the actual buffers
     obj.close();
+}
+
+void ObjLoader::GenerateFullScreenQuad( MeshData & meshData )
+{
+    meshData.vertices.resize( 4 );
+    meshData.indices.resize( 6 );
+
+    meshData.vertices[ 0 ] = { };
+    meshData.vertices[ 0 ].position = { -1.0f, 1.0f, 0.0f };
+    meshData.vertices[ 0 ].uv       = {  0.0f, 0.0f };
+    meshData.vertices[ 0 ].normal   = {  0.0f, 0.0f, -1.0f };
+
+    meshData.vertices[ 1 ] = { };
+    meshData.vertices[ 1 ].position = { 1.0f, 1.0f, 0.0f };
+    meshData.vertices[ 1 ].uv = { 1.0f, 0.0f };
+    meshData.vertices[ 1 ].normal = { 0.0f, 0.0f, -1.0f };
+
+    meshData.vertices[ 2 ] = { };
+    meshData.vertices[ 2 ].position = { -1.0f, -1.0f, 0.0f };
+    meshData.vertices[ 2 ].uv = { 0.0f, 1.0f };
+    meshData.vertices[ 2 ].normal = { 0.0f, 0.0f, -1.0f };
+
+    meshData.vertices[ 3 ] = { };
+    meshData.vertices[ 3 ].position = { 1.0f, -1.0f, 0.0f };
+    meshData.vertices[ 3 ].uv = { 1.0f, 1.0f };
+    meshData.vertices[ 3 ].normal = { 0.0f, 0.0f, -1.0f };
+
+    meshData.indices[ 0 ] = 0;
+    meshData.indices[ 1 ] = 1;
+    meshData.indices[ 2 ] = 2;
+
+    meshData.indices[ 3 ] = 0;
+    meshData.indices[ 4 ] = 2;
+    meshData.indices[ 5 ] = 3;
 }

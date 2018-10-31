@@ -7,6 +7,8 @@
 #include <sstream>	//for creating a console
 #endif
 
+// DEBUG CODE
+
 Engine* Engine::engineInstance = nullptr;
 
 
@@ -45,7 +47,8 @@ Engine::Engine( HINSTANCE hInstance )
     windowTitle = "STRUGGLE BUS";
     hWindow = 0;
 
-    camera = new Camera();
+    debugRenderer = Graphics::DebugRenderer::GetInstance();
+    camera = new Graphics::Camera();
 }
 
 Engine::~Engine()
@@ -60,7 +63,7 @@ Engine::~Engine()
     entityManager->ReleaseInstance();
     componentManager->ReleaseInstance();
     Jobs::JobManager::ReleaseInstance();
-
+    Graphics::DebugRenderer::ReleaseInstance();
 }
 
 HRESULT Engine::InitWindow()
@@ -125,7 +128,7 @@ HRESULT Engine::InitWindow()
 HRESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new GraphicsCore( hWindow, static_cast<UINT>( windowWidth ), static_cast<UINT>( windowHeight ) );
+    graphics = new Graphics::GraphicsCore( hWindow, static_cast<UINT>( windowWidth ), static_cast<UINT>( windowHeight ) );
     //Physics
     physics = new Physics::Solver();
     rigidBody = new Physics::Rigidbody();
@@ -146,7 +149,7 @@ HRESULT Engine::InitSystems()
     time->Init();
     entityManager->Init();
 
-    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
         entityManager->Create_Entity();
     }
@@ -158,23 +161,23 @@ HRESULT Engine::InitSystems()
     static float rotation = 0.001f;
     {
 
-        float x = -count / 2.0f;
-        float y = -count / 2.0f;
+        float x = static_cast <float>( -count );
+        float y = static_cast <float>( -count );
         float z = 0;
         for ( int i = 0; i < count; ++i )
         {
             for ( int j = 0; j < count; ++j )
             {
                 int index = i * count + j;
-                UINT entityID = entityManager->Get_Entity(index).index;
-                rigidBody->Pos(glm::vec3(x + rotation, y, z), entityID);
-                rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
+                UINT entityID = entityManager->Get_Entity( index ).index;
+                rigidBody->Pos( glm::vec3( x + rotation, y, z ), entityID );
+                rigidBody->RotateAxisAngle( glm::vec3( .0f, 1.0f, .0f ), rotation, entityID );
 
                 x += 2;
             }
 
             y += 2;
-            x = -count / 2.0f;
+            x = static_cast <float>( -count );
         }
     }
 
@@ -197,14 +200,20 @@ HRESULT Engine::Run()
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
             //DEBUG collision code 
-            float x = sinf(time->GetTotalFloatTime());
-            for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+            float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
+            for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
             {
-                componentManager->transform[i].pos.x += x;
+                componentManager->transform[ i ].pos.x += x;
             }
 
+            //DEBUG CODE for debug wireframe renderer
+            glm::mat4x4 transform = glm::translate( glm::vec3( 1, 1, 0 ) );
+            glm::vec3 scale = glm::float3( 1, 1, 1 );
+            glm::vec3 color = glm::float3( 1, 0, 0 );
+            debugRenderer->AddCube( transform, scale, color );
+
             //DEBUG CODE for basic camera update
-            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -40.f );
+            DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -5.f );
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3( 0.f, 0.f, 1.f );
             DirectX::XMFLOAT3 up = DirectX::XMFLOAT3( 0.f, 1.f, 0.f );
             camera->SetTransform(
@@ -215,9 +224,9 @@ HRESULT Engine::Run()
 
             physics->Update( time->GetTotalFloatTime() );
             //DEBUG:: Transfrom glm matrix4x4 to directxMat4x4
-            for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+            for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
             {
-                Mat4x4toXMFLOAT4x4(componentManager->transform[i].transformMatrix, transforms[i]);
+                Mat4x4toXMFLOAT4x4( componentManager->transform[ i ].transformMatrix, transforms[ i ] );
             }
 
             graphics->Update( transforms, camera );
