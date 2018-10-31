@@ -31,10 +31,7 @@ public:
     //responding to events
     LRESULT HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam );
     void OnResize( UINT width, UINT height );
-    void OnMouseDown( WPARAM buttonState, int x, int y );
-    void OnMouseUp( WPARAM buttonState, int x, int y );
-    void OnMouseMove( WPARAM buttonState, int x, int y );
-
+    
 private:
     static Engine* engineInstance;
     HINSTANCE hInstance;
@@ -58,7 +55,12 @@ private:
     Physics::Solver* physics;
     Physics::Rigidbody* rigidBody;
 
+    Input::InputManager* InputMan;
+
     HRESULT InitWindow();
+
+
+    void UsingInputFunc( float axis );
 
 #if defined(_DEBUG)
     /*Debug function to create a console window*/

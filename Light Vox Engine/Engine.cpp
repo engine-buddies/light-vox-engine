@@ -181,6 +181,12 @@ HRESULT Engine::InitSystems()
         }
     }
 
+    Input::InputManager::BindAxis( 
+        "TestAxis",
+        this, 
+        &Engine::UsingInputFunc
+    );
+
     return S_OK;
 }
 
@@ -249,24 +255,23 @@ LRESULT Engine::ProcessMessage( HWND hWindow, UINT message, WPARAM wParam, LPARA
     return Engine::engineInstance->HandleEvents( hWindow, message, wParam, lParam );
 }
 
-
 LRESULT Engine::HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam )
 {
     switch ( message )
     {
         //handle mouse down/up
         case WM_MOUSEMOVE:
-            OnMouseMove( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            //OnMouseMove( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
-            OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            //OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
-            OnMouseUp( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            //OnMouseUp( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
 
             //handle resizing
@@ -302,19 +307,13 @@ void Engine::OnResize( UINT width, UINT height )
     windowHeight = static_cast<float>( height );
 }
 
-void Engine::OnMouseDown( WPARAM buttonState, int x, int y )
-{
-}
-
-void Engine::OnMouseUp( WPARAM buttonState, int x, int y )
-{
-}
-
-void Engine::OnMouseMove( WPARAM buttonState, int x, int y )
-{
-}
-
 /* HELPERS */
+
+void Engine::UsingInputFunc( float axis )
+{
+    DEBUG_PRINT( "Inside of the function that uses it: %f\n", axis );
+
+}
 
 #if defined(_DEBUG)
 void Engine::CreateConsoleWindow( int bufferLines, int bufferColumns, int windowLines, int windowColumns )

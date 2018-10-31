@@ -1,5 +1,13 @@
 #pragma once
 
+#if defined(_WIN32) || defined(_WIN64)
+
+#include <Windows.h>
+
+#endif // Windows
+
+#include <functional>
+
 
 
 namespace Input
@@ -22,7 +30,6 @@ namespace Input
 
     typedef std::function<void( float )> axisCallbackFunction_t;
 
-
     /// <summary>
     /// Input Manager that will be in charge of handling input events and 
     /// action mappings
@@ -30,26 +37,30 @@ namespace Input
     /// <author>Ben Hoffman</author>
     class InputManager
     {
-
+    public:
         //BindAxis("MoveForward", this, &ASampleCharacter::MoveForward);
         // Where MoveForward is a function like this :
             // ASampleCharacter::MoveForward(float inputValue)
 
         template<class UserClass>
-        void BindAxis(
+        static void BindAxis(
             const char* aAxisName,
             UserClass* aObject,
-            axisCallbackFunction_t aCallbalFunc
+            void ( UserClass::*func_ptr )( float )
         )
         {
-            DEBUG_PRINT( "Add axis name %s to the boi", axisName );
+            DEBUG_PRINT( "Add axis name %s to the boi", aAxisName );
+            // Wowza
+            std::invoke( func_ptr, aObject, 1.f );
         }
 
-        //void AddInputEvent( InputAction aAction );
+        void OnMouseDown( WPARAM buttonState, int x, int y );
+        void OnMouseUp( WPARAM buttonState, int x, int y );
+        void OnMouseMove( WPARAM buttonState, int x, int y );
 
-        //void RemoveInputEvent(InputAction aAction);
+    private:
 
-        //float AxisValue( InputAxis aAxis );
+
 
 
     };  // class InputManager
