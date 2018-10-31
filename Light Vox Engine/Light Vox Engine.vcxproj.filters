@@ -68,6 +68,9 @@
     <ClCompile Include="Graphics\GraphicsBase.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DebugRenderer.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -136,6 +139,9 @@
     <ClInclude Include="Physics\RigidBody.h">
       <Filter>Source Files\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\DebugRenderer.h">
+      <Filter>Source Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
@@ -148,6 +154,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\vs_FSQ.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\vs_debug.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ps_debug.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

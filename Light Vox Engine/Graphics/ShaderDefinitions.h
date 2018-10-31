@@ -61,7 +61,7 @@ namespace Graphics
 #endif
 
 // ----------------- CONSTANT BUFFER (PER-SCENE) -----------------
-#if defined _VSHADER_GEOMETRY_PASS || defined _PSHADER_LIGHTING_PASS
+#if defined _VSHADER_GEOMETRY_PASS || defined _PSHADER_LIGHTING_PASS || defined _VSHADER_DEBUG
 cbuffer SceneConstantBuffer : register( b0 )
 {
     float4x4 cView;
@@ -190,6 +190,16 @@ struct VStoPS
 {
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
+};
+#endif
+
+
+// ----------------- VS TO PS (DEBUG) -----------------
+#if defined _VSHADER_DEBUG || defined _PSHADER_DEBUG
+struct VStoPS
+{
+    float4 position : SV_POSITION;
+    float3 color : COLOR;
 };
 #endif
 

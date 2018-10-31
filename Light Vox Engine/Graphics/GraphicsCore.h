@@ -1,5 +1,6 @@
 #pragma once
 #include "../stdafx.h"
+#include "DebugRenderer.h"
 #include "Camera.h"
 
 namespace Graphics
@@ -174,5 +175,18 @@ namespace Graphics
         Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBuffer; //For Full Screen Quad
         Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBufferUpload;
         D3D12_VERTEX_BUFFER_VIEW fsqVertexBufferView;
+
+#ifdef _DEBUG
+        Microsoft::WRL::ComPtr<ID3D12PipelineState> debugPso;
+
+        /// <summary>
+    /// Sets the pipeline with second pass stuff
+    /// </summary>
+    /// <param name="commandList">The main rendering command list</param>
+        inline void SetDebugPSO( ID3D12GraphicsCommandList* commandList );
+
+        HRESULT InitDebugPSO();
+#endif
+        DebugRenderer *debugRenderer;
     };
 }

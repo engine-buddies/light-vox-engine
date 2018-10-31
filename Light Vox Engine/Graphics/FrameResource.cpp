@@ -268,6 +268,25 @@ inline void FrameResource::InitCBV(
         reinterpret_cast<void**>( &instanceBufferWO )
     ) );
 
+#ifdef _DEBUG
+    //create the upload buffer for instance data
+    ThrowIfFailed( device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer( sizeof( CubeInstanceData ) * LV_DEBUG_MAX_CUBE_COUNT ),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS( &instanceDebugUploadBuffer )
+    ) );;
+
+    // map it to a WO struct buffer thing
+    ThrowIfFailed( instanceDebugUploadBuffer->Map( 0,
+        &zeroReadRange,
+        reinterpret_cast<void**>( &debugInstanceBufferWO )
+    ) );
+
+#endif
+
 
     // Create the constant buffers.
     const UINT constantBufferSize = ( sizeof( SceneConstantBuffer )
@@ -361,6 +380,18 @@ void FrameResource::BindGBuffer()
     geometryCmdLists[ 0 ]->OMSetRenderTargets( LV_NUM_GBUFFER_RTV, rtvGbufferHandles, FALSE, &dsvHandle );
 }
 
+#ifdef _DEBUG
+
+void FrameResource::BindDebug( D3D12_CPU_DESCRIPTOR_HANDLE * rtvHandle )
+{
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootShaderResourceView( LV_ROOT_SIGNATURE_INSTANCED_DATA, instanceDebugUploadBuffer->GetGPUVirtualAddress() );
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_GBUFFER_SRV, nullHandle );
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_CBV, sceneCbvHandle );
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->OMSetRenderTargets( 1, rtvHandle, FALSE, &dsvHandle );
+}
+
+#endif
+
 void FrameResource::BindDeferred(
     D3D12_CPU_DESCRIPTOR_HANDLE * rtvHandle,
     D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
@@ -424,4 +455,14 @@ void FrameResource::WriteConstantBuffers(
     memcpy( instanceBufferWO, transforms, sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
     //memcpy(lightConstantBufferWO, &lightConsts, sizeof(LightConstantBuffer));
 }
+
+#ifdef _DEBUG
+void FrameResource::WriteDebugInstanceBuffers( 
+    CubeInstanceData instanceData[],
+    size_t count
+)
+{
+    memcpy( debugInstanceBufferWO, instanceData, sizeof( CubeInstanceData ) * count );
+}
+#endif
 #pragma endregion
