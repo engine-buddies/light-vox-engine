@@ -102,13 +102,13 @@ void Solver::Integrate( float dt )
         // w  = (quaternion) [0 wx wy wz]
         glm::quat q = glm::quat(
             0, 
-            rot.x * dt * .5f, 
-            rot.y * dt * .5f, 
-            rot.z * dt * .5f);
+            rot.x * dt, 
+            rot.y * dt, 
+            rot.z * dt);
 
         q = q * orientation;
 
-        orientation += q;
+        orientation += (q * .5f);
 
         //clear torque and forces
         force = { .0f, .0f, .0f };
@@ -147,8 +147,8 @@ void Solver::ModelToWorld()
         glm::mat4& transformMatrix = componentManager->transform[ i ].transformMatrix;
         glm::vec3& pos = componentManager->transform[ i ].pos;
         glm::quat& orientation = componentManager->transform[i].orientation;
-        glm::normalize(orientation);
-        glm::mat4 q = glm::toMat4(orientation);
+		orientation = glm::normalize(orientation);
+        //glm::mat4 q = glm::toMat4(orientation);
         glm::vec3& scale = componentManager->transform[ i ].scale;
         
         transformMatrix =
