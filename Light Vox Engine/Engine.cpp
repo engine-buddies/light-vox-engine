@@ -219,7 +219,7 @@ HRESULT Engine::Run()
                 }
 
                 //add torque
-                //componentManager->bodyProperties[i].torque += glm::vec3(10.0f, 0.0f, 0.0f);
+                componentManager->bodyProperties[i].torque += glm::vec3(10.0f, 0.0f, 0.0f);
             }
 
             //DEBUG CODE for basic camera update

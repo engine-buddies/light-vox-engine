@@ -90,12 +90,24 @@ void Solver::Integrate( float dt )
 
         //euler integration for movement and rotation 
         velocity += acceleration * dt;
-        angularVel += angularAccel * dt;
+        rot += angularAccel * dt;
 
-        rot += angularVel * dt;
+        //rot += angularVel * dt;
         position += velocity * dt;
 
-        glm::quat q = glm::quat(0, rot.x * .5f, rot.y * .5f, rot.z * .5f);
+        // Angular vel. formula for quaternions 
+        // 0' = 0 + (dt / 2) * w * 0
+        // 0  = old rotation
+        // 0' = new rotation
+        // w  = (quaternion) [0 wx wy wz]
+        glm::quat q = glm::quat(
+            0, 
+            rot.x * dt * .5f, 
+            rot.y * dt * .5f, 
+            rot.z * dt * .5f);
+
+        q = q * orientation;
+
         orientation += q;
 
         //clear torque and forces
@@ -121,8 +133,8 @@ void Physics::Solver::AccumlateTorque()
     {
         glm::vec3& angularAccel = componentManager->bodyProperties[i].angularAcceleration;
         glm::vec3& torque = componentManager->bodyProperties[i].torque;
-        glm::mat3& inertiaTensor = componentManager->bodyProperties[i].inertiaTensor;
-        angularAccel = inertiaTensor * torque;
+        glm::mat3& invInertiaTensor = componentManager->bodyProperties[i].inertiaTensor;
+        angularAccel = invInertiaTensor * torque;
     }
 }
 
@@ -134,14 +146,14 @@ void Solver::ModelToWorld()
     {
         glm::mat4& transformMatrix = componentManager->transform[ i ].transformMatrix;
         glm::vec3& pos = componentManager->transform[ i ].pos;
-        glm::quat& rot = componentManager->transform[i].orientation;
-        glm::normalize(rot);
-        glm::mat4 q = glm::toMat4(rot);
+        glm::quat& orientation = componentManager->transform[i].orientation;
+        glm::normalize(orientation);
+        glm::mat4 q = glm::toMat4(orientation);
         glm::vec3& scale = componentManager->transform[ i ].scale;
         
         transformMatrix =
             glm::translate( pos ) *
-            glm::toMat4(rot) *
+            glm::toMat4(orientation) *
             glm::scale( scale );
     }
 }
