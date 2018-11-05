@@ -48,13 +48,10 @@ namespace Physics
         /// Calc model to world matrix
         /// </summary>
         void ModelToWorld();
-
-        //helper function to check box to box intersect
-        inline bool BoxIntersect(glm::vec3 posA,
-            glm::vec3 posB,
-            glm::vec3 sizeA,
-            glm::vec3 sizeB
-        );
+        /// <summary>
+        /// 
+        /// </summary>
+        void SetColliderData();
 
 
         glm::vec3 gravity;

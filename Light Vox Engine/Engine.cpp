@@ -178,7 +178,8 @@ HRESULT Engine::InitSystems()
                 inertiaTensor[0][0] = inertia;
                 inertiaTensor[1][1] = inertia;
                 inertiaTensor[2][2] = inertia;
-
+                //componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
+                //componentManager->transform[entityID].rot = glm::vec3(0.0f, 0.0f, 10.0f);
                 x += 2;
             }
 
@@ -219,7 +220,7 @@ HRESULT Engine::Run()
                 }
 
                 //add torque
-                componentManager->bodyProperties[i].torque += glm::vec3(100.0f, 100.0f, 100.0f);
+                //componentManager->bodyProperties[i].angularAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
             }
 
             //DEBUG CODE for basic camera update
