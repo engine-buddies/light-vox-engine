@@ -1,19 +1,28 @@
 #pragma once
-#include <DirectXMath.h>
+
+#include "../stdafx.h"
+#include "ShaderDefinitions.h"
 #include <vector>
 
-//TODO - move this out (I tried putting it in ShaderDefinitions.h but it broke stuff)
-struct Vertex
+namespace Graphics
 {
-    DirectX::XMFLOAT3 position;
-    DirectX::XMFLOAT3 normal;
-    DirectX::XMFLOAT2 uv;
-};
 
-class ObjLoader
-{
-public:
-    static void LoadObj( std::vector<Vertex>* vertices,
-        std::vector<uint16_t>* indices,
-        std::string filePath );
-};
+    //TODO - remove this because it's only used just once (it doesn't have to be a struct)
+    struct MeshData
+    {
+        std::vector<Vertex> vertices;
+        std::vector<UINT> indices;
+    };
+
+    class ObjLoader
+    {
+    public:
+        static void LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* indices, std::string filePath );
+
+        /// <summary>
+        /// Generates a Full Screen Quad 
+        /// used for deferred directional light calculations 
+        /// </summary>
+        void GenerateFullScreenQuad( MeshData& meshData );
+    };
+}
