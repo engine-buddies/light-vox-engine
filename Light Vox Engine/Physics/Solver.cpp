@@ -6,15 +6,19 @@ Solver::Solver()
 {
     gravity = { .0f, .0f, .0f };
     componentManager = ECS::ComponentManager::GetInstance();
+    rigidBody = new Rigidbody();
+    ModelToWorld();
+    SetColliderData();
 }
 
 Solver::~Solver()
 {
+    delete rigidBody;
 }
 
 void Solver::Update( float dt )
 {
-    //Collide();
+    Collide();
     AccumlateForces();
     AccumlateTorque();
     Integrate( dt );
@@ -32,6 +36,7 @@ void Solver::Collide()
             if ( i == j )
                 continue;
 
+            if(rigidBody->CollideBoxBox(i, j)) printf("hit");
            /* glm::vec3& posA = componentManager->transform[ i ].pos;
             glm::vec3& posB = componentManager->transform[ j ].pos;
 

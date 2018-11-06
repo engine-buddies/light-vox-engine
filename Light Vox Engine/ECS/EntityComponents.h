@@ -29,7 +29,7 @@ namespace EntityComponents
         glm::mat4 offset = glm::mat4(1.0f);
         glm::mat4 transformMatrix;
         glm::vec3 contactPoint;
-        glm::vec3 size = { .0f, .0f, .0f };
+        glm::vec3 size = { .50f, .50f, .50f };
         uint32_t contactsLeft;
         uint16_t* tags;
         float penetration;

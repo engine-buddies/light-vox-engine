@@ -4,7 +4,7 @@
 #pragma once
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
-
+#include "RigidBody.h"
 
 namespace Physics
 {
@@ -56,5 +56,6 @@ namespace Physics
 
         glm::vec3 gravity;
         ECS::ComponentManager* componentManager;
+        Physics::Rigidbody* rigidBody;
     };
 };

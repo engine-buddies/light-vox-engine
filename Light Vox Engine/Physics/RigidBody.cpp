@@ -27,10 +27,21 @@ namespace {
     }
 
     inline bool BoxIntersectHalfSpace(
-        const EntityComponents::BoxCollider& box, 
+        const EntityComponents::BoxCollider& box,
         const EntityComponents::PlaneCollider& plane)
     {
 
+    }
+
+    /// <summary>
+    /// Gets a vector representing one axis in the matrix 
+    /// </summary>
+    /// <param name="i"></param>
+    /// <param name="mat"></param>
+    /// <returns></returns>
+    inline glm::vec3 GetAxisVector(int i, const glm::mat4& mat)
+    {
+        return glm::vec3(mat[i][0], mat[i][1], mat[i][2]);
     }
 
     inline float transfromToAxis(
@@ -45,7 +56,7 @@ namespace {
             size.x * glm::abs(glm::dot(axis, GetAxisVector(0, transform))) +
             size.y * glm::abs(glm::dot(axis, GetAxisVector(1, transform))) +
             size.z * glm::abs(glm::dot(axis, GetAxisVector(2, transform)));
-            
+
     }
 
     inline float penetrationOnAxis(
@@ -53,7 +64,7 @@ namespace {
         const EntityComponents::BoxCollider& two,
         const glm::vec3& axis,
         const glm::vec3& toCenter
-        )
+    )
     {
         //project the half-size of one onto axis
         float oneProject = transfromToAxis(one, axis);
@@ -93,17 +104,6 @@ namespace {
 
         return true;
     }
-
-    /// <summary>
-    /// Gets a vector representing one axis in the matrix 
-    /// </summary>
-    /// <param name="i"></param>
-    /// <param name="mat"></param>
-    /// <returns></returns>
-    inline glm::vec3 GetAxisVector(int i, const glm::mat4& mat) 
-    {
-        return glm::vec3(mat[i], mat[i + 4], mat[i + 8]);
-    }
 }
 
 Physics::Rigidbody::Rigidbody()
@@ -132,12 +132,12 @@ void Physics::Rigidbody::Velocity(glm::vec3& vel, const UINT& index)
 
 void Physics::Rigidbody::Acceleration(glm::vec3& accel, const UINT& index)
 {
-    componentManager->bodyProperties[index].acceleration= accel;
+    componentManager->bodyProperties[index].acceleration = accel;
 }
 
 void Physics::Rigidbody::Force(glm::vec3& force, const UINT& index)
 {
-    componentManager->bodyProperties[index].force = force ;
+    componentManager->bodyProperties[index].force = force;
 }
 
 void Physics::Rigidbody::Mass(float mass, const UINT& index)
@@ -181,8 +181,8 @@ void Physics::Rigidbody::SetAwake(const bool awake, const UINT& index)
 }
 
 void Physics::Rigidbody::AddForceAtPoint(
-    const glm::vec3 & force, 
-    const glm::vec3 & point, 
+    const glm::vec3 & force,
+    const glm::vec3 & point,
     const UINT& index)
 {
     glm::mat4& transformMatrix = componentManager->transform[index].transformMatrix;
@@ -217,10 +217,9 @@ bool Physics::Rigidbody::IntersectBoxBox(const UINT& entityA, const UINT& entity
     {
         DEBUG_PRINT("Entity: %i hit Entity: %i \n", entityA, entityB);
     }
-
-#endif
-
+#else
     return BoxIntersectBox(posA, posB, sizeA, sizeB);
+#endif
 }
 
 
@@ -236,12 +235,12 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
 
     EntityComponents::BoxCollider& one = componentManager->boxCollider[entityA];
     EntityComponents::BoxCollider& two = componentManager->boxCollider[entityB];
- 
+
     //Find the vector b/w two centers
     glm::vec3 toCenter = posA - posB;
 
     //start by assuming there is no contact 
-    float pen = std::numeric_limits<float>::max(); 
+    float pen = std::numeric_limits<float>::max();
     uint32_t best = 0xffffff;
 
     //Now check each axes, returning if it gives us 
