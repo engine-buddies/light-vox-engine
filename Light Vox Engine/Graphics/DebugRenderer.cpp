@@ -19,7 +19,7 @@ void DebugRenderer::ReleaseInstance()
     instance = nullptr;
 }
 
-void DebugRenderer::AddCube( glm::mat4x4 transform, glm::vec3 scale, glm::vec3 color )
+void DebugRenderer::AddCube( glm::mat4x4 transform, glm::vec3 scale, glm::float3 color )
 {
 #ifdef _DEBUG
     cubeInstanceData[ currCubeInstanceIndex ] = { };
@@ -29,16 +29,16 @@ void DebugRenderer::AddCube( glm::mat4x4 transform, glm::vec3 scale, glm::vec3 c
 #endif
 }
 
-
-
 void DebugRenderer::ClearCubes()
 {
     currCubeInstanceIndex = 0;
+    memset( cubeInstanceData, 0, sizeof( CubeInstanceData ) * LV_DEBUG_MAX_CUBE_COUNT );
 }
 
 DebugRenderer::DebugRenderer()
 {
     currCubeInstanceIndex = 0;
+    memset( cubeInstanceData, 0, sizeof( CubeInstanceData ) * LV_DEBUG_MAX_CUBE_COUNT );
 }
 
 DebugRenderer::~DebugRenderer()

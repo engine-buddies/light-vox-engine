@@ -210,6 +210,10 @@ HRESULT Engine::Run()
             glm::mat4x4 transform = glm::translate( glm::vec3( 1, 1, 0 ) );
             glm::vec3 scale = glm::float3( 1, 1, 1 );
             glm::vec3 color = glm::float3( 1, 0, 0 );
+
+            debugRenderer->AddCube( transform, scale, color );
+            transform = glm::identity<glm::mat4x4>();
+            color = glm::float3( 0, 0, 1 );
             debugRenderer->AddCube( transform, scale, color );
 
             //DEBUG CODE for basic camera update
@@ -232,6 +236,7 @@ HRESULT Engine::Run()
             graphics->Update( transforms, camera );
             graphics->Render();
             time->UpdateTimer();
+            debugRenderer->ClearCubes();
         }
     }
     return (HRESULT) msg.wParam;
