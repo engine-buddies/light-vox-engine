@@ -1,11 +1,14 @@
 #pragma once
 
 #include <functional>
+#include <future>
+#include <memory>
 
 namespace Jobs
 {
 
     typedef std::function<void( void*, int )> job_t;
+    
 
     /// <summary>
     /// Priority of a CPU job. Will determine how the job 
@@ -33,7 +36,14 @@ namespace Jobs
 
         int index = 0;
 
+        //std::unique_ptr<ITask> TaskPtr;
+
         JobPriority priority = JobPriority::NORMAL;
     };
+
+
+    // https://stackoverflow.com/questions/12988320/store-function-pointers-to-any-member-function
+
+
 
 };      // namespace jobs

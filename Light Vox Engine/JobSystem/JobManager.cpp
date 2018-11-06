@@ -36,9 +36,7 @@ JobManager::JobManager()
     {
         workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
     }
-
-    // AddJob( std::bind( &Jobs::JobManager::TestBoiMember, this, static_cast<void*>("Wait a minute"), 99 ) );
-
+    
 }
 
 JobManager::~JobManager()
@@ -74,8 +72,8 @@ void JobManager::WorkerThread()
         {
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
-   
-            CurJob.job_func( CurJob.args, CurJob.index );            
+
+            CurJob.job_func( CurJob.args, CurJob.index );
 
             // Notify other threads that a job has been taken and we should probably
             // check to make sure that there isn;t more
@@ -86,6 +84,12 @@ void JobManager::WorkerThread()
 
 ////////////////////////////////////////
 // Accessors
+
+void Jobs::JobManager::AddTask( void( *func_ptr )( void *, int ), void * args, int Index )
+{
+
+
+}
 
 inline const size_t JobManager::GetThreadCount() const
 {

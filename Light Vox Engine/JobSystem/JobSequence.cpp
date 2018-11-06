@@ -5,7 +5,7 @@ using namespace Jobs;
 JobSequence::JobSequence( UINT aMaxJobsAllowed, UINT aMaxBarriers, UINT aMaxWaits )
     : maxJobs( aMaxJobsAllowed ), maxBarriers( aMaxBarriers ), maxWaits( aMaxWaits )
 {
-
+    
 }
 
 
@@ -13,6 +13,7 @@ JobSequence::~JobSequence()
 {
     // TODO: Any cleanup would go here, IE waiting for a sequence to complete
     // before ending
+    // Wait for any remaining jobs to be complete 
 }
 
 UINT JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
@@ -37,12 +38,19 @@ void JobSequence::GetNextJob_Unsafe( CpuJob& aOutJob )
 
     aOutJob = std::move( sequenceJobs.front() );
 
+
     sequenceJobs.pop_front();
+
+    
+
 }
 
 void JobSequence::Barrier()
 {
-    // TODO : add a barrier Sync to this sequence
+    // Set a flag in the most recent CPU job
+    // that the thread should wait for it to be done before 
+    // notifying
+    
 }
 
 void JobSequence::Wait()

@@ -4,6 +4,8 @@
 #include <condition_variable>   // std::condition_variable
 #include <vector>               // std::vector
 #include <atomic>               // std::atomic
+#include <future>
+#include <memory>
 
 #include "JobSequence.h"        // A job 
 #include "CpuJob.h"             // typedefs for jobs
@@ -39,7 +41,7 @@ namespace Jobs
         /// <param name="function"></param>
         void AddJob( F&& function, void* jobArgs = nullptr, int aIndex = 0 )
         {
-            CpuJob tempJob { };
+            CpuJob tempJob{ };
 
             tempJob.job_func = std::forward<F>( function );
 
@@ -51,6 +53,9 @@ namespace Jobs
 
             jobAvailableCondition.notify_one();
         }
+
+        void AddTask( void( *func_ptr )( void*, int ), void* args, int Index );
+
 
         // We don't want anything making copies of this class so delete these operators
         JobManager( JobManager const& ) = delete;
@@ -76,6 +81,12 @@ namespace Jobs
         /// </summary>
         void WorkerThread();
 
+        void TestMemberBoi( void* args, int index, std::promise<void> aPromise )
+        {
+            printf( "This is the test member : %s\n", ( char* ) args );
+            aPromise.set_value();
+        }
+
         /// <summary>
         /// A mutex determining if the queue is ready
         /// </summary>
@@ -99,6 +110,53 @@ namespace Jobs
         /// Atomic bool determining if we are done used for closing all threads
         /// </summary>
         std::atomic<bool> isDone;
+
+
+
+        /// <summary>
+        /// Base functor for jobs to use
+        /// </summary>
+        struct IJob
+        {
+            virtual ~IJob() {}
+            virtual bool invoke( void* args, int aIndex ) = 0;
+        };
+
+        // Use this for non-member functions
+        struct JobFunc : IJob
+        {
+            JobFunc( void( *aJob )( void*, int ) ) : func_ptr( aJob ) {}
+
+            virtual bool invoke( void* args, int aIndex ) override
+            {
+                func_ptr( args, aIndex );
+                return true;
+            }
+
+            void( *func_ptr )( void*, int );
+        };
+
+        // Use this for member functions
+        template <typename T>
+        struct JobMemberFunc : IJob
+        {
+            JobMemberFunc( std::weak_ptr<T> aParent, void ( T::*f )( ) )
+                : parentObj( aParent ), func_ptr( f )
+            {
+            }
+
+            virtual bool invoke( void* args, int aIndex ) override
+            {
+                std::shared_ptr<T> p = parentObj.lock();
+                if ( !parentObj ) { return false; }
+
+                parentObj->*func_ptr( args , aIndex);
+                return true;
+            }
+
+            std::weak_ptr<T> parentObj;
+            void ( T::*func_ptr )( void*, int );
+        };
 
     };
 
