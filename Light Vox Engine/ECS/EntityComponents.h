@@ -26,9 +26,13 @@ namespace EntityComponents
     
     struct BoxCollider
     {
+        glm::vec3 vertices[8]; 
         glm::mat4 offset = glm::mat4(1.0f);
         glm::mat4 transformMatrix;
         glm::vec3 contactPoint;
+        glm::vec3 maxVertex;
+        glm::vec3 minVertex;
+        //half size (the extent of the box along each axis)
         glm::vec3 size = { .50f, .50f, .50f };
         uint32_t contactsLeft;
         uint16_t* tags;

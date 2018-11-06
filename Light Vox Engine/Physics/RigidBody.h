@@ -98,6 +98,11 @@ namespace Physics
         /// <param name="entityB"></param>
         /// <returns></returns>
         int CollideBoxBox(const UINT& entityA, const UINT& entityB);
+        /// <summary>
+        /// Calcs. the vertices of the bounding box 
+        /// </summary>
+        /// <param name="index"></param>
+        void CalcHalfSize(const UINT& index);
        
     private:
         ECS::ComponentManager* componentManager;

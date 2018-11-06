@@ -4,6 +4,7 @@
 #pragma once
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
+#include "../Graphics/DebugRenderer.h"
 #include "RigidBody.h"
 
 namespace Physics
@@ -24,6 +25,10 @@ namespace Physics
         /// </summary>
         /// <param name="dt"></param>
         void Update(float dt);
+        /// <summary>
+        /// Calc model to world matrix
+        /// </summary>
+        void ModelToWorld();
 
     private:
 
@@ -45,11 +50,8 @@ namespace Physics
         /// </summary>
         void AccumlateTorque();
         /// <summary>
-        /// Calc model to world matrix
-        /// </summary>
-        void ModelToWorld();
-        /// <summary>
-        /// 
+        /// Calcs the transformation matrix based on the given offset
+        /// and transform the bounding box vertices from local to world space
         /// </summary>
         void SetColliderData();
 

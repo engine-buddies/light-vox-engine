@@ -10,4 +10,4 @@
 #define LV_RTV_CLEAR_BG_COLOR { 0.392f, 0.584f, 0.929f, 1.0f }
 
 //maximum instance count
-#define LV_MAX_INSTANCE_COUNT 1000
+#define LV_MAX_INSTANCE_COUNT 4

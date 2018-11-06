@@ -170,9 +170,9 @@ HRESULT Engine::InitSystems()
             {
                 int index = i * count + j;
                 UINT entityID = entityManager->Get_Entity(index).index;
-                rigidBody->Pos(glm::vec3(x + rotation, y, z), entityID);
+                rigidBody->Pos(glm::vec3(x + 1.0f, y, z), entityID);
                 rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
-                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
+                //rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
 
                 //calc. moment of inertia 
                 float& mass = componentManager->bodyProperties[entityID].mass;
@@ -190,6 +190,7 @@ HRESULT Engine::InitSystems()
             x = -count / 2.0f;
         }
     }
+    physics->ModelToWorld();
 
     return S_OK;
 }
@@ -208,23 +209,27 @@ HRESULT Engine::Run()
         else
         {
             //DEBUG CODE for basic transform update;
-            static DirectX::XMFLOAT4X4 transforms[ LV_MAX_INSTANCE_COUNT ];
+            static DirectX::XMFLOAT4X4 transforms[LV_MAX_INSTANCE_COUNT];
             //DEBUG collision code 
             float x = sinf(time->GetTotalFloatTime()) / 10.0f;
             for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
             {
-                if (componentManager->transform[i].pos.x > 10.0f)
-                    componentManager->bodyProperties[i].velocity.x = -10.0f;
-                }
-                else if (componentManager->transform[i].pos.x < -10.0f)
-                {
-                    componentManager->bodyProperties[i].velocity.x = 10.0f;
-                }
+                //if (componentManager->transform[i].pos.x > 10.0f)
+                    //componentManager->bodyProperties[i].velocity.x = -10.0f;
+
+                //else if (componentManager->transform[i].pos.x < -10.0f)
+                    //componentManager->bodyProperties[i].velocity.x = 10.0f;
 
                 //add torque
                 //componentManager->bodyProperties[i].angularAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
-            glm::vec3 color = glm::float3( 1, 0, 0 );
-            debugRenderer->AddCube( transform, scale, color );
+
+                glm::vec3 color = glm::vec3(1, 0, 0);
+                debugRenderer->AddCube(
+                    componentManager->transform[i].transformMatrix, 
+                    componentManager->boxCollider[i].size, 
+                    color);
+            }
+
 
             //DEBUG CODE for basic camera update
             DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -5.f );
@@ -240,7 +245,7 @@ HRESULT Engine::Run()
             //DEBUG:: Transfrom glm matrix4x4 to directxMat4x4
             for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
             {
-                Mat4x4toXMFLOAT4x4( componentManager->transform[ i ].transformMatrix, transforms[ i ] );
+                //Mat4x4toXMFLOAT4x4( componentManager->transform[ i ].transformMatrix, transforms[ i ] );
             }
 
             graphics->Update( transforms, camera );
