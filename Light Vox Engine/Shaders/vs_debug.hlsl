@@ -9,6 +9,7 @@ struct InstanceData
 {
     float4x4 model;
     float3 color;
+    float pad;
 };
 
 StructuredBuffer<InstanceData> gInstanceData : register( t0, space1 );
