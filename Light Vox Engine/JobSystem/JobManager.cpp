@@ -37,9 +37,10 @@ JobManager::JobManager()
         workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
     }
 
-    // AddJob( std::bind( &Jobs::JobManager::TestBoiMember, this, static_cast<void*>("Wait a minute"), 99 ) );
+    //AddJob( &TestFunc, "Test Arguments", 1 );
 
-}
+    //AddJob( this, &Jobs::JobManager::TestMemberFunc, "Member function arguments", 1 );
+ }
 
 JobManager::~JobManager()
 {
@@ -55,6 +56,19 @@ JobManager::~JobManager()
     }
 
     printf( "\tJob Manager dtor!\n" );
+}
+
+void JobManager::AddJob( void( *func_ptr )( void *, int ), void * args, int Index )
+{
+    CpuJob aJob;
+    aJob.args = args;
+    aJob.index = Index;
+
+    IJob* jobPtr = new JobFunc( func_ptr );
+    aJob.TaskPtr = jobPtr;
+
+    readyQueue.emplace_back( aJob );
+    jobAvailableCondition.notify_one();
 }
 
 void JobManager::WorkerThread()
@@ -74,8 +88,12 @@ void JobManager::WorkerThread()
         {
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
-   
-            CurJob.job_func( CurJob.args, CurJob.index );            
+
+            if ( CurJob.TaskPtr )
+            {
+                CurJob.TaskPtr->invoke( CurJob.args, CurJob.index );
+                delete CurJob.TaskPtr;
+            }
 
             // Notify other threads that a job has been taken and we should probably
             // check to make sure that there isn;t more
