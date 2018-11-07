@@ -4,6 +4,8 @@
 #include <condition_variable>   // std::condition_variable
 #include <vector>               // std::vector
 #include <atomic>               // std::atomic
+#include <future>
+#include <memory>
 
 #include "JobSequence.h"        // A job 
 #include "CpuJob.h"             // typedefs for jobs
@@ -19,6 +21,7 @@ namespace Jobs
     /// <author>Ben Hoffman</author>
     class JobManager
     {
+
     public:
 
         /// <summary>
@@ -32,25 +35,37 @@ namespace Jobs
         /// </summary>
         static void ReleaseInstance();
 
-        template <typename F>
         /// <summary>
-        /// Add a job to the job queue
+        /// Add a non-member function to the job queue
         /// </summary>
-        /// <param name="function"></param>
-        void AddJob( F&& function, void* jobArgs = nullptr, int aIndex = 0 )
+        /// <param name="func_ptr">Function to add to the job queue</param>
+        /// <param name="args">Arguments for the job function</param>
+        /// <param name="Index">Index of this job</param>
+        void AddJob( void( *func_ptr )( void*, int ), void* args, int Index );
+
+        /// <summary>
+        /// Add a member function to the job queue
+        /// </summary>
+        /// <param name="aParent">That calling object</param>
+        /// <param name="func_ptr">Functoin to jobified</param>
+        /// <param name="args">Arguments to pass to that function</param>
+        /// <param name="Index">Index of this job</param>
+        template <class T>
+        void AddJob( T* aParent, 
+            void( T::*func_ptr )( void*, int ),
+            void* args,
+            int Index )
         {
-            CpuJob tempJob { };
+            CpuJob aJob = {};
+            aJob.args = args;
+            aJob.index = Index;
 
-            tempJob.job_func = std::forward<F>( function );
-
-            tempJob.args = jobArgs;
-            tempJob.index = aIndex;
-            tempJob.priority = Jobs::JobPriority::NORMAL;
-
-            readyQueue.emplace_back( tempJob );
-
+            IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
+            aJob.TaskPtr = jobPtr;
+            
+            readyQueue.emplace_back( aJob );
             jobAvailableCondition.notify_one();
-        }
+        }        
 
         // We don't want anything making copies of this class so delete these operators
         JobManager( JobManager const& ) = delete;
@@ -80,6 +95,8 @@ namespace Jobs
         /// A mutex determining if the queue is ready
         /// </summary>
         std::mutex readyQueueMutex;
+
+        
 
         // Ready queue for the jobs
         ConcurrentQueue<CpuJob> readyQueue;
