@@ -34,7 +34,7 @@ void Solver::Collide()
             if (i == j)
                 continue;
 
-            rigidBody->IntersectBoxBox(i, j);
+            rigidBody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
             //if (rigidBody->CollideBoxBox(i, j)) printf("hit");
             /* glm::vec3& posA = componentManager->transform[ i ].pos;
              glm::vec3& posB = componentManager->transform[ j ].pos;

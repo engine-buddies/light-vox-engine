@@ -7,8 +7,8 @@ namespace Graphics
 
     struct CubeInstanceData
     {
-        glm::float4x4 transform;
-        glm::float3 color;
+        glm::mat4x4 transform;
+        glm::vec3 color;
         float pad;
     };
 
@@ -26,7 +26,7 @@ namespace Graphics
         static DebugRenderer* GetInstance();
         static void ReleaseInstance();
 
-        void AddCube( glm::mat4x4 transform, glm::vec3 scale, glm::float3 color );
+        void AddCube( glm::mat4x4 transform, glm::vec3 scale, glm::vec3 color );
         void ClearCubes();
 
         CubeInstanceData* GetCubeInstanceDataPtr() { return cubeInstanceData; }

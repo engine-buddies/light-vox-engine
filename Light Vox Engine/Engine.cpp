@@ -172,7 +172,7 @@ HRESULT Engine::InitSystems()
                 UINT entityID = entityManager->Get_Entity(index).index;
                 rigidBody->Pos(glm::vec3(x + 1.0f, y, z), entityID);
                 rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
-                //rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
+                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
 
                 //calc. moment of inertia 
                 float& mass = componentManager->bodyProperties[entityID].mass;
@@ -211,29 +211,36 @@ HRESULT Engine::Run()
             //DEBUG CODE for basic transform update;
             static DirectX::XMFLOAT4X4 transforms[LV_MAX_INSTANCE_COUNT];
             //DEBUG collision code 
-            float x = sinf(time->GetTotalFloatTime()) / 10.0f;
+            float x = sinf(time->GetTotalFloatTime()) / 100.0f;
             for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
             {
-                //if (componentManager->transform[i].pos.x > 10.0f)
-                    //componentManager->bodyProperties[i].velocity.x = -10.0f;
+                //componentManager->transform[i].pos.x += x;
+                if (componentManager->transform[i].pos.x > 5.0f)
+                    componentManager->bodyProperties[i].velocity.x = -10.0f;
 
-                //else if (componentManager->transform[i].pos.x < -10.0f)
-                    //componentManager->bodyProperties[i].velocity.x = 10.0f;
+                else if (componentManager->transform[i].pos.x < -5.0f)
+                    componentManager->bodyProperties[i].velocity.x = 10.0f;
 
                 //add torque
-                //componentManager->bodyProperties[i].angularAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
+                componentManager->transform[i].rot = glm::vec3(1.f, 0.0f, 1.0f);
 
                 glm::vec3 color = glm::vec3(1, 0, 0);
                 debugRenderer->AddCube(
                     componentManager->transform[i].transformMatrix, 
-                    componentManager->boxCollider[i].size, 
+                    componentManager->boxCollider[i].size * 2.0f, 
                     color);
             }
 
 
-            debugRenderer->AddCube( transform, scale, color );
-            transform = glm::identity<glm::mat4x4>();
-            color = glm::float3( 0, 0, 1 );
+            //DEBUG CODE for debug wireframe renderer
+           /* glm::mat4x4 transform = glm::translate(glm::vec3(1, 1, 0));
+            glm::vec3 scale = glm::vec3(1, 1, 1);
+            glm::vec3 color = glm::vec3(1, 0, 0);
+
+            debugRenderer->AddCube(transform, scale, color);
+            transform = glm::translate(glm::vec3(3.0f, 1, 0));
+            color = glm::vec3(0, 0, 1);
+            debugRenderer->AddCube(transform, scale, color);*/
 
             //DEBUG CODE for basic camera update
             DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -5.f );

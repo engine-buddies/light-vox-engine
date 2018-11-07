@@ -2,21 +2,21 @@
 
 namespace {
 
+    /// <summary>
+    /// Helper method to check for the intersection of two bounding boxes given
+    /// the min and max global values
+    /// </summary>
+    /// <param name="maxA"></param>
+    /// <param name="minA"></param>
+    /// <param name="maxB"></param>
+    /// <param name="minB"></param>
+    /// <returns></returns>
     inline bool BoxIntersectBox(glm::vec3& maxA, glm::vec3& minA, glm::vec3& maxB, glm::vec3& minB)
     {
-       /* if (minA.x <= maxB.x && maxA.x >= minB.x)
-            printf("test");
-
-        if (minA.y <= maxB.y && maxA.y >= minB.y)
-            printf("test");
-
-        if (minA.z <= maxB.z && maxA.z >= minB.z)
-            printf("test");*/
-
         //check for intersection
-        return (minA.x <= maxB.x && maxA.x >= minB.x) &&
-               (minA.y <= maxB.y && maxA.y >= minB.y) &&
-               (minA.z <= maxB.z && maxA.z >= minB.z);
+        return (minA.x < maxB.x && maxA.x > minB.x) &&
+            (minA.y < maxB.y && maxA.y > minB.y) &&
+            (minA.z < maxB.z && maxA.z > minB.z);
     }
 
     inline bool BoxIntersectHalfSpace(
@@ -26,17 +26,16 @@ namespace {
 
     }
 
-    /// <summary>
-    /// Gets a vector representing one axis in the matrix 
-    /// </summary>
-    /// <param name="i"></param>
-    /// <param name="mat"></param>
-    /// <returns></returns>
+
+    //gets a basis vector from the transformation matrix
     inline glm::vec3 GetAxisVector(int i, const glm::mat4& mat)
     {
-        return glm::vec3(mat[i][0], mat[i][1], mat[i][2]);
+        return glm::vec3(mat[0][i], mat[1][i], mat[2][i]);
     }
 
+
+    //helper method used for SAT
+    //gets the scalar projection of bounding box size onto an axis
     inline float transfromToAxis(
         const EntityComponents::BoxCollider& box,
         const glm::vec3& axis
@@ -52,6 +51,8 @@ namespace {
 
     }
 
+    //helper method used for SAT
+    //finds the penetration depth on a axis 
     inline float penetrationOnAxis(
         const EntityComponents::BoxCollider& one,
         const EntityComponents::BoxCollider& two,
@@ -70,6 +71,8 @@ namespace {
         return oneProject + twoProject - distance;
     }
 
+    //helper method used for SAT
+    //determines if there an overlap on an axis
     inline bool tryAxis(
         const EntityComponents::BoxCollider& one,
         const EntityComponents::BoxCollider& two,
@@ -79,7 +82,7 @@ namespace {
         float& smallestPenetration,
         UINT& smallestCase)
     {
-        if (glm::length2(axis) < 0.0001)
+        if (glm::length2(axis) < FLT_EPSILON)
             return true;
 
         axis = glm::normalize(axis);
@@ -96,6 +99,41 @@ namespace {
         }
 
         return true;
+    }
+
+    inline void FillPointFaceBoxBox(
+        const EntityComponents::BoxCollider& one,
+        const EntityComponents::BoxCollider& two,
+        const glm::vec3& toCenter,
+        EntityComponents::Contacts* contactData,
+        unsigned best,
+        float penetration
+    )
+    {
+        //determine which direction the axis of collision is facing
+        glm::vec3 normal = GetAxisVector(best, one.transformMatrix);
+        if (glm::dot(normal, toCenter) > 0)
+        {
+            normal = normal * -1.0f;
+        }
+
+        //work out which vertex of box two we're colliding with
+        glm::vec3 vertex = two.size;
+        if (glm::dot(GetAxisVector(0, two.transformMatrix), normal) < 0)
+            vertex.x = -vertex.x;
+
+        if (glm::dot(GetAxisVector(1, two.transformMatrix), normal) < 0)
+            vertex.y = -vertex.y;
+
+        if (glm::dot(GetAxisVector(2, two.transformMatrix), normal) < 0)
+            vertex.z = -vertex.z;
+
+        //create the contact data 
+        contactData->contactNormal[0] = normal;
+    }
+
+    inline glm::vec3 FindContactPoint()
+    {
     }
 }
 
@@ -218,7 +256,7 @@ bool Physics::Rigidbody::IntersectBoxBox(const UINT& entityA, const UINT& entity
 }
 
 
-// This preprocessor definition is only used as a convenience
+// preprocessor definition is only used as a convenience
 // in the boxAndBox contact generation method.
 #define CHECK_OVERLAP(axis, index) \
     if (!tryAxis(one, two, (axis), toCenter, (index), pen, best)) return 0;
@@ -283,58 +321,43 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
     else
     {
         //// We've got an edge-edge contact. Find out which axes
-        //best -= 6;
-        //unsigned oneAxisIndex = best / 3;
-        //unsigned twoAxisIndex = best % 3;
-        //Vector3 oneAxis = one.getAxis(oneAxisIndex);
-        //Vector3 twoAxis = two.getAxis(twoAxisIndex);
-        //Vector3 axis = oneAxis % twoAxis;
-        //axis.normalise();
+        best -= 6;
+        unsigned oneAxisIndex = best / 3;
+        unsigned twoAxisIndex = best % 3;
+        glm::vec3 oneAxis = GetAxisVector(oneAxisIndex, one.transformMatrix);
+        glm::vec3 twoAxis = GetAxisVector(twoAxisIndex, two.transformMatrix);
+        glm::vec3 axis = glm::cross(oneAxis, twoAxis);
 
-        //// The axis should point from box one to box two.
-        //if (axis * toCentre > 0) axis = axis * -1.0f;
+        //if the axis point from box one to box two 
+        if (glm::dot(axis, toCenter) > 0)
+            axis = axis * -1.0f;
 
-        //// We have the axes, but not the edges: each axis has 4 edges parallel
-        //// to it, we need to find which of the 4 for each object. We do
-        //// that by finding the point in the centre of the edge. We know
-        //// its component in the direction of the box's collision axis is zero
-        //// (its a mid-point) and we determine which of the extremes in each
-        //// of the other axes is closest.
-        //Vector3 ptOnOneEdge = one.halfSize;
-        //Vector3 ptOnTwoEdge = two.halfSize;
-        //for (unsigned i = 0; i < 3; i++)
-        //{
-        //    if (i == oneAxisIndex) ptOnOneEdge[i] = 0;
-        //    else if (one.getAxis(i) * axis > 0) ptOnOneEdge[i] = -ptOnOneEdge[i];
+        //determine which extermes in each of the axes is closest 
+        glm::vec3 ptOnOneEdge = one.size;
+        glm::vec3 ptOnTwoEdge = two.size;
 
-        //    if (i == twoAxisIndex) ptOnTwoEdge[i] = 0;
-        //    else if (two.getAxis(i) * axis < 0) ptOnTwoEdge[i] = -ptOnTwoEdge[i];
-        //}
+        for (unsigned int i = 0; i < 3; ++i)
+        {
+            if (i == oneAxisIndex)
+                ptOnOneEdge[i] = 0.0f;
+            else if (glm::dot(GetAxisVector(i, one.transformMatrix), axis) > 0)
+                ptOnOneEdge[i] = -ptOnOneEdge[i];
 
-        //// Move them into world coordinates (they are already oriented
-        //// correctly, since they have been derived from the axes).
-        //ptOnOneEdge = one.transform * ptOnOneEdge;
-        //ptOnTwoEdge = two.transform * ptOnTwoEdge;
+            if (i == twoAxisIndex)
+                ptOnTwoEdge[i] = 0.0f;
+            else if (glm::dot(GetAxisVector(i, two.transformMatrix), axis) > 0)
+                ptOnTwoEdge[i] = -ptOnTwoEdge[i];
+        }
 
-        //// So we have a point and a direction for the colliding edges.
-        //// We need to find out point of closest approach of the two
-        //// line-segments.
-        //Vector3 vertex = contactPoint(
-        //    ptOnOneEdge, oneAxis, one.halfSize[oneAxisIndex],
-        //    ptOnTwoEdge, twoAxis, two.halfSize[twoAxisIndex],
-        //    bestSingleAxis > 2
-        //);
+        //move them into world coords.
+        ptOnOneEdge = one.transformMatrix * glm::vec4(ptOnOneEdge, 1.0f);
+        ptOnTwoEdge = two.transformMatrix * glm::vec4(ptOnTwoEdge, 1.0f);
 
-        //// We can fill the contact.
-        //Contact* contact = data->contacts;
+        //find point closest to the two line-segments 
 
-        //contact->penetration = pen;
-        //contact->contactNormal = axis;
-        //contact->contactPoint = vertex;
-        //contact->setBodyData(one.body, two.body,
-        //    data->friction, data->restitution);
-        //data->addContacts(1);
-        //return 1;
+        
+
+        return 1;
     }
 
 

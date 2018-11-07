@@ -34,9 +34,26 @@ namespace EntityComponents
         glm::vec3 minVertex;
         //half size (the extent of the box along each axis)
         glm::vec3 size = { .50f, .50f, .50f };
-        uint32_t contactsLeft;
+        //holds collision tolerance 
+        float tolerance;
+        float friction;
+        float restitution;
+        uint16_t tag;
+    };
+
+    struct Contacts
+    {
+        glm::vec3* contactPoint;
+        glm::vec3* contactNormal;
+        float* penetration;
+        float* friction;
+        float* restitution;
+        //number of contacts found so far
+        uint32_t contactsFound = 0;
+        //holds maximum number of contacts 
+        uint32_t contactsLeft = 256;
+        //Entity ID of colliding bodies
         uint16_t* tags;
-        float penetration;
     };
 
     struct PlaneCollider
@@ -44,7 +61,7 @@ namespace EntityComponents
         //plane normal
         glm::vec3 direction;
         float offset;
-        uint16_t* tags;
+        uint16_t tag;
     };
 
     struct BodyProperties
