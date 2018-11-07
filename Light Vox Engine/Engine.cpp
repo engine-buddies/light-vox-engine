@@ -245,7 +245,7 @@ HRESULT Engine::Run()
             //DEBUG:: Transfrom glm matrix4x4 to directxMat4x4
             for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
             {
-                //Mat4x4toXMFLOAT4x4( componentManager->transform[ i ].transformMatrix, transforms[ i ] );
+                Mat4x4toXMFLOAT4x4( componentManager->transform[ i ].transformMatrix, transforms[ i ] );
             }
 
             graphics->Update( transforms, camera );
