@@ -2,6 +2,13 @@
 
 using namespace Jobs;
 
+
+void TestFunc( void* aArgs, int index )
+{
+    printf( "Test function%s\n", ( char* ) aArgs );
+
+}
+
 // Singleton requirement
 JobManager* JobManager::instance = nullptr;
 
@@ -36,6 +43,10 @@ JobManager::JobManager()
     {
         workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
     }
+
+    AddTask( &TestFunc, "Test Arguments", 1 );
+
+    AddTask( this, &Jobs::JobManager::TestMemberFunc, "Member function arguments", 1 );
     
 }
 
@@ -73,7 +84,11 @@ void JobManager::WorkerThread()
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
 
-            CurJob.job_func( CurJob.args, CurJob.index );
+            if ( CurJob.TaskPtr )
+            {
+                CurJob.TaskPtr->invoke( CurJob.args, CurJob.index );
+                delete CurJob.TaskPtr;
+            }
 
             // Notify other threads that a job has been taken and we should probably
             // check to make sure that there isn;t more
@@ -85,10 +100,17 @@ void JobManager::WorkerThread()
 ////////////////////////////////////////
 // Accessors
 
-void Jobs::JobManager::AddTask( void( *func_ptr )( void *, int ), void * args, int Index )
+void JobManager::AddTask( void( *func_ptr )( void *, int ), void * args, int Index )
 {
+    CpuJob aJob;
+    aJob.args = args;
+    aJob.index = Index;
+    
+    IJob* jobPtr = new JobFunc( func_ptr );        
+    aJob.TaskPtr = jobPtr;
 
-
+    readyQueue.emplace_back( aJob );
+    jobAvailableCondition.notify_one();
 }
 
 inline const size_t JobManager::GetThreadCount() const

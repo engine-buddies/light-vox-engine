@@ -21,6 +21,7 @@ namespace Jobs
     /// <author>Ben Hoffman</author>
     class JobManager
     {
+
     public:
 
         /// <summary>
@@ -34,27 +35,29 @@ namespace Jobs
         /// </summary>
         static void ReleaseInstance();
 
-        template <typename F>
-        /// <summary>
-        /// Add a job to the job queue
-        /// </summary>
-        /// <param name="function"></param>
-        void AddJob( F&& function, void* jobArgs = nullptr, int aIndex = 0 )
+        void AddTask( void( *func_ptr )( void*, int ), void* args, int Index );
+
+        template <class T>
+        void AddTask( T* aParent, 
+            void( T::*func_ptr )( void*, int ),
+            void* args,
+            int Index )
         {
-            CpuJob tempJob{ };
+            CpuJob aJob = {};
+            aJob.args = args;
+            aJob.index = Index;
 
-            tempJob.job_func = std::forward<F>( function );
-
-            tempJob.args = jobArgs;
-            tempJob.index = aIndex;
-            tempJob.priority = Jobs::JobPriority::NORMAL;
-
-            readyQueue.emplace_back( tempJob );
-
+            IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
+            aJob.TaskPtr = jobPtr;
+            
+            readyQueue.emplace_back( aJob );
             jobAvailableCondition.notify_one();
         }
 
-        void AddTask( void( *func_ptr )( void*, int ), void* args, int Index );
+        void TestMemberFunc( void* aArgs, int index )
+        {
+            printf( "Hey this is a MEMBER %s\n", ( char* ) aArgs );
+        }
 
 
         // We don't want anything making copies of this class so delete these operators
@@ -81,16 +84,12 @@ namespace Jobs
         /// </summary>
         void WorkerThread();
 
-        void TestMemberBoi( void* args, int index, std::promise<void> aPromise )
-        {
-            printf( "This is the test member : %s\n", ( char* ) args );
-            aPromise.set_value();
-        }
-
         /// <summary>
         /// A mutex determining if the queue is ready
         /// </summary>
         std::mutex readyQueueMutex;
+
+        
 
         // Ready queue for the jobs
         ConcurrentQueue<CpuJob> readyQueue;
@@ -110,53 +109,6 @@ namespace Jobs
         /// Atomic bool determining if we are done used for closing all threads
         /// </summary>
         std::atomic<bool> isDone;
-
-
-
-        /// <summary>
-        /// Base functor for jobs to use
-        /// </summary>
-        struct IJob
-        {
-            virtual ~IJob() {}
-            virtual bool invoke( void* args, int aIndex ) = 0;
-        };
-
-        // Use this for non-member functions
-        struct JobFunc : IJob
-        {
-            JobFunc( void( *aJob )( void*, int ) ) : func_ptr( aJob ) {}
-
-            virtual bool invoke( void* args, int aIndex ) override
-            {
-                func_ptr( args, aIndex );
-                return true;
-            }
-
-            void( *func_ptr )( void*, int );
-        };
-
-        // Use this for member functions
-        template <typename T>
-        struct JobMemberFunc : IJob
-        {
-            JobMemberFunc( std::weak_ptr<T> aParent, void ( T::*f )( ) )
-                : parentObj( aParent ), func_ptr( f )
-            {
-            }
-
-            virtual bool invoke( void* args, int aIndex ) override
-            {
-                std::shared_ptr<T> p = parentObj.lock();
-                if ( !parentObj ) { return false; }
-
-                parentObj->*func_ptr( args , aIndex);
-                return true;
-            }
-
-            std::weak_ptr<T> parentObj;
-            void ( T::*func_ptr )( void*, int );
-        };
 
     };
 

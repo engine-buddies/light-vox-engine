@@ -23,12 +23,12 @@ UINT JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
     if ( sequenceJobs.size() + 1 >= maxJobs ) return 1;
     if ( aJob == nullptr ) return 2;
 
-    CpuJob TheJob { };
+    /*CpuJob TheJob { };
     // Cast to a correct type for now
     //TheJob.func_ptr = static_cast<CpuJobFuncPtr> ( aJob );
     TheJob.args = aArgs;
 
-    sequenceJobs.emplace_front( TheJob );
+    sequenceJobs.emplace_front( TheJob );*/
 
     return 0;
 }
@@ -36,10 +36,10 @@ UINT JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
 void JobSequence::GetNextJob_Unsafe( CpuJob& aOutJob )
 {
 
-    aOutJob = std::move( sequenceJobs.front() );
+  /*  aOutJob = std::move( sequenceJobs.front() );
 
 
-    sequenceJobs.pop_front();
+    sequenceJobs.pop_front();*/
 
     
 

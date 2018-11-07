@@ -25,7 +25,7 @@ public:
     {
         std::unique_lock<std::mutex>( My_Mutex );
         // Add the data safely
-        TheDequeue.emplace_front( aData );
+        TheDequeue.emplace_front( std::move( aData ) );
         // Notify any threads that may be waiting on a condition for new data
         DataAvailableCondition.notify_one();
     }
@@ -39,7 +39,7 @@ public:
     {
         std::unique_lock<std::mutex>( My_Mutex );
         // Add the data safely
-        TheDequeue.emplace_back( aData );
+        TheDequeue.emplace_back( std::move( aData ) );
         // Notify any threads that may be waiting on a condition for new data
         DataAvailableCondition.notify_one();
     }
@@ -58,7 +58,7 @@ public:
         {
             DataAvailableCondition.wait( waitLock );
         }
-        aItem = front();
+        aItem = std::move( front() );
         TheDequeue.pop_front();
     }
 
