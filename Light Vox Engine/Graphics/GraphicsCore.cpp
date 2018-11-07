@@ -109,7 +109,6 @@ void GraphicsCore::Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera )
         debugRenderer->GetCubeInstanceDataPtr(),
         debugRenderer->GetCubeInstanceDataCount()
     );
-    debugRenderer->ClearCubes();
 #endif
 
 }
@@ -206,7 +205,7 @@ void GraphicsCore::Render()
 #ifdef _DEBUG
         SetDebugPSO( deferredCommandList );
         currentFrameResource->BindDebug( &rtvHandle );
-        deferredCommandList->DrawIndexedInstanced( verticesCount, LV_DEBUG_MAX_CUBE_COUNT, 0, 0, 0 );
+        deferredCommandList->DrawIndexedInstanced( verticesCount, debugRenderer->GetCubeInstanceDataCount(), 0, 0, 0 );
 #endif
 
         deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(

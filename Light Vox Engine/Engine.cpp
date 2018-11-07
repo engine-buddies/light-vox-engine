@@ -231,6 +231,10 @@ HRESULT Engine::Run()
             }
 
 
+            debugRenderer->AddCube( transform, scale, color );
+            transform = glm::identity<glm::mat4x4>();
+            color = glm::float3( 0, 0, 1 );
+
             //DEBUG CODE for basic camera update
             DirectX::XMFLOAT3 pos = DirectX::XMFLOAT3( 0.f, 0.f, -5.f );
             DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3( 0.f, 0.f, 1.f );
@@ -251,6 +255,7 @@ HRESULT Engine::Run()
             graphics->Update( transforms, camera );
             graphics->Render();
             time->UpdateTimer();
+            debugRenderer->ClearCubes();
         }
     }
     return (HRESULT) msg.wParam;
