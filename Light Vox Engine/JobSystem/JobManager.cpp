@@ -2,13 +2,6 @@
 
 using namespace Jobs;
 
-
-void TestFunc( void* aArgs, int index )
-{
-    printf( "Test function%s\n", ( char* ) aArgs );
-
-}
-
 // Singleton requirement
 JobManager* JobManager::instance = nullptr;
 
@@ -44,11 +37,10 @@ JobManager::JobManager()
         workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
     }
 
-    AddTask( &TestFunc, "Test Arguments", 1 );
+    //AddJob( &TestFunc, "Test Arguments", 1 );
 
-    AddTask( this, &Jobs::JobManager::TestMemberFunc, "Member function arguments", 1 );
-    
-}
+    //AddJob( this, &Jobs::JobManager::TestMemberFunc, "Member function arguments", 1 );
+ }
 
 JobManager::~JobManager()
 {
@@ -64,6 +56,19 @@ JobManager::~JobManager()
     }
 
     printf( "\tJob Manager dtor!\n" );
+}
+
+void JobManager::AddJob( void( *func_ptr )( void *, int ), void * args, int Index )
+{
+    CpuJob aJob;
+    aJob.args = args;
+    aJob.index = Index;
+
+    IJob* jobPtr = new JobFunc( func_ptr );
+    aJob.TaskPtr = jobPtr;
+
+    readyQueue.emplace_back( aJob );
+    jobAvailableCondition.notify_one();
 }
 
 void JobManager::WorkerThread()
@@ -99,19 +104,6 @@ void JobManager::WorkerThread()
 
 ////////////////////////////////////////
 // Accessors
-
-void JobManager::AddTask( void( *func_ptr )( void *, int ), void * args, int Index )
-{
-    CpuJob aJob;
-    aJob.args = args;
-    aJob.index = Index;
-    
-    IJob* jobPtr = new JobFunc( func_ptr );        
-    aJob.TaskPtr = jobPtr;
-
-    readyQueue.emplace_back( aJob );
-    jobAvailableCondition.notify_one();
-}
 
 inline const size_t JobManager::GetThreadCount() const
 {

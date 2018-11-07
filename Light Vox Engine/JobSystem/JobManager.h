@@ -35,10 +35,23 @@ namespace Jobs
         /// </summary>
         static void ReleaseInstance();
 
-        void AddTask( void( *func_ptr )( void*, int ), void* args, int Index );
+        /// <summary>
+        /// Add a non-member function to the job queue
+        /// </summary>
+        /// <param name="func_ptr">Function to add to the job queue</param>
+        /// <param name="args">Arguments for the job function</param>
+        /// <param name="Index">Index of this job</param>
+        void AddJob( void( *func_ptr )( void*, int ), void* args, int Index );
 
+        /// <summary>
+        /// Add a member function to the job queue
+        /// </summary>
+        /// <param name="aParent">That calling object</param>
+        /// <param name="func_ptr">Functoin to jobified</param>
+        /// <param name="args">Arguments to pass to that function</param>
+        /// <param name="Index">Index of this job</param>
         template <class T>
-        void AddTask( T* aParent, 
+        void AddJob( T* aParent, 
             void( T::*func_ptr )( void*, int ),
             void* args,
             int Index )
@@ -52,13 +65,7 @@ namespace Jobs
             
             readyQueue.emplace_back( aJob );
             jobAvailableCondition.notify_one();
-        }
-
-        void TestMemberFunc( void* aArgs, int index )
-        {
-            printf( "Hey this is a MEMBER %s\n", ( char* ) aArgs );
-        }
-
+        }        
 
         // We don't want anything making copies of this class so delete these operators
         JobManager( JobManager const& ) = delete;
