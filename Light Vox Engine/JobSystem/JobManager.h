@@ -67,6 +67,32 @@ namespace Jobs
             jobAvailableCondition.notify_one();
         }        
 
+        template <class T>
+        void AddTrackedJob( T* aParent,
+            void( T::*func_ptr )( void*, int, std::promise<void> ),
+            void* args,
+            int Index )
+        {
+            CpuJob aJob = {};
+            aJob.args = args;
+            aJob.index = Index;
+
+            /*IJob* jobPtr = new TrackedJob<T>( aParent, func_ptr );
+            aJob.TaskPtr = jobPtr;*/
+
+            readyQueue.emplace_back( aJob );
+            jobAvailableCondition.notify_one();
+        }
+
+
+        void TestTrackedFunc( void* aArgs, int index, std::promise<void> aPromise )
+        {
+            printf( "Inside the test tracked func %s\n\n", ( char* ) aArgs );
+            std::this_thread::sleep_for( std::chrono::seconds::duration( 1 ) );
+            printf( "Done inside the tracked function\n\n" );
+            aPromise.set_value();
+        }
+
         // We don't want anything making copies of this class so delete these operators
         JobManager( JobManager const& ) = delete;
         void operator=( JobManager const& ) = delete;

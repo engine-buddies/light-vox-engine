@@ -1,30 +1,10 @@
 #pragma once
 
-#include <functional>
 #include <future>
-#include <memory>
 
 namespace Jobs
 {
-
-    //typedef std::function<void( void*, int )> job_t;
-
-
-    /// <summary>
-    /// Priority of a CPU job. Will determine how the job 
-    /// is sorted into the job queue
-    /// </summary>
-    /// <author>Ben Hoffman</endif>
-    enum JobPriority
-    {
-        CRITICAL,
-        HIGH,
-        NORMAL,
-        LOW
-    };
-
-
-
+    // This is an explanation of how this logic works if you are curious 
     // https://stackoverflow.com/questions/12988320/store-function-pointers-to-any-member-function
 
     /// <summary>
@@ -36,7 +16,9 @@ namespace Jobs
         virtual bool invoke( void* args, int aIndex ) = 0;
     };
 
-    // Use this for non-member functions
+    /// <summary>
+    /// A job function that is not a member of a class
+    /// </summary>
     struct JobFunc : IJob
     {
         JobFunc( void( *aFunc_ptr )( void*, int ) )
@@ -45,16 +27,25 @@ namespace Jobs
 
         }
 
+        /// <summary>
+        /// invoke this job with the given arguments
+        /// </summary>
+        /// <param name="args">Arguments to pass to this job function</param>
+        /// <param name="aIndex">Index of this jobect</param>
+        /// <returns>True if job was successful</returns>
         virtual bool invoke( void* args, int aIndex ) override
         {
             func_ptr( args, aIndex );
             return true;
         }
 
+        /** The function pointer for this job to invoke */
         void( *func_ptr )( void*, int );
     };
 
-    // Use this for member functions
+    /// <summary>
+    /// A job member function that is a member of a class
+    /// </summary>
     template <class T>
     struct JobMemberFunc : IJob
     {
@@ -72,10 +63,33 @@ namespace Jobs
             return true;
         }
 
+        /** the object to invoke the function pointer on */
         T* parentObj;
+        /** The function pointer to call when we invoke this function */
         void ( T::*func_ptr )( void*, int );
-
     };
+
+   /* template <class T>
+    struct TrackedJob : IJob
+    {
+        TrackedJob( T* aParent, void ( T::*f )( void*, int, std::promise<void> ) )
+        {
+            parentObj = aParent;
+            func_ptr = f;
+        }
+
+        virtual bool invoke( void* args, int aIndex, std::promise<void> aBarrier ) override
+        {
+            if ( !parentObj ) { aBarrier.set_value(); return false; }
+
+            ( parentObj->*func_ptr )( args, aIndex );
+            aBarrier.set_value();
+            return true;
+        }
+
+        T* parentObj;
+        void ( T::*func_ptr )( void*, int, std::promise<void> );
+    };*/
 
 
     /// <summary>
