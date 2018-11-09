@@ -1,5 +1,8 @@
 #pragma once
+
 #include "../stdafx.h"
+#include <unordered_map>
+#include <vector>
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -7,8 +10,6 @@
 
 #endif // Windows
 
-#include <unordered_map>
-#include <vector>
 
 namespace Input
 {
@@ -55,11 +56,9 @@ namespace Input
             listeners[ type ].push_back( newListener );
         }
 
-
         bool IsActionDown( int vKey );
 
-
-// Windows specific input callbacks
+        // Windows specific input callbacks
 #if defined(_WIN32) || defined(_WIN64)
 
         void OnMouseDown( WPARAM buttonState, int x, int y );
@@ -77,8 +76,7 @@ namespace Input
         /** The instance of the input manager */
         static InputManager* instance;
 
-        void SignalInput( InputType type );        
-        
+        void SignalInput( InputType type );
 
         ///////////////////////////////////////////////////////
         // Listener definitions 
@@ -86,7 +84,7 @@ namespace Input
         struct IListener
         {
             virtual ~IListener() {}
-            virtual bool invoke() = 0;
+            virtual void operator () () = 0;
         };
 
         struct ListenerFunc : IListener
@@ -96,10 +94,9 @@ namespace Input
             {
             }
 
-            virtual bool invoke() override
+            virtual void operator () () override
             {
-                func_ptr();
-                return true;
+                return ( func_ptr() );
             }
 
             /** The function pointer for this input action to invoke */
@@ -112,15 +109,13 @@ namespace Input
             ListenerMember( T* aParent, void ( T::*f )( ) )
                 : parentObj( aParent ), func_ptr( f )
             {
-
             }
 
-            virtual bool invoke( ) override
+            virtual void operator () () override
             {
                 assert( parentObj != nullptr );
 
-                ( parentObj->*func_ptr )( );
-                return true;
+                return ( ( parentObj->*func_ptr )( ) );
             }
 
             /** the object to invoke the function pointer on */

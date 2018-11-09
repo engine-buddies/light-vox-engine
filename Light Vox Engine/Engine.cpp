@@ -263,7 +263,7 @@ LRESULT Engine::HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM 
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
-            //OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            inputManager->OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
