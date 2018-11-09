@@ -40,27 +40,29 @@ private:
     float windowWidth;
     float windowHeight;
 
+    // Input
+    Input::InputManager* inputManager = nullptr;
+
     //ECS
-    ECS::EntityManager* entityManager;
-    ECS::ComponentManager* componentManager;
+    ECS::EntityManager* entityManager = nullptr;
+    ECS::ComponentManager* componentManager = nullptr;
 
     //Systems
-    Graphics::GraphicsCore* graphics;
-    Graphics::Camera* camera;
-    GameTime* time;
+    Graphics::GraphicsCore* graphics = nullptr;
+    Graphics::Camera* camera = nullptr;
+    GameTime* time = nullptr;
+    Jobs::JobManager* jobManager = nullptr;
 
-    Graphics::DebugRenderer* debugRenderer;
+    Graphics::DebugRenderer* debugRenderer = nullptr;
 
     //Physics 
-    Physics::Solver* physics;
-    Physics::Rigidbody* rigidBody;
-
-    Input::InputManager* InputMan;
+    Physics::Solver* physics = nullptr;
+    Physics::Rigidbody* rigidBody = nullptr;
 
     HRESULT InitWindow();
 
 
-    void UsingInputFunc( float axis );
+    void UsingInputFunc();
 
 #if defined(_DEBUG)
     /*Debug function to create a console window*/
