@@ -144,7 +144,7 @@ HRESULT Engine::InitSystems()
     inputManager = Input::InputManager::GetInstance();
 
     // Bind an axis to the input man
-    inputManager->BindAxis( Input::InputType::Use, this, &Engine::UsingInputFunc );
+    inputManager->BindAxis( Input::InputType::Fire, this, &Engine::UsingInputFunc );
 
     ThrowIfFailed( graphics->Init() );
     time->Init();

@@ -53,10 +53,10 @@ namespace Input
         {
             IListener* newListener = new ListenerMember<T>( parentObj, inputListenerFunc );
 
-            listeners[ type ].push_back( newListener );
+            actionListeners[ type ].push_back( newListener );
         }
 
-        bool IsActionDown( int vKey );
+        bool IsKeyDown( int vKey );
 
         // Windows specific input callbacks
 #if defined(_WIN32) || defined(_WIN64)
@@ -126,7 +126,7 @@ namespace Input
         };
 
         /** A map of active listeners */
-        std::unordered_map<InputType, std::vector<IListener*>> listeners;
+        std::unordered_map<InputType, std::vector<IListener*>> actionListeners;
 
     };  // class InputManager
 

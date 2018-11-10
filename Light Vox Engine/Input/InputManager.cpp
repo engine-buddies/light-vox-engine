@@ -33,8 +33,8 @@ InputManager::InputManager()
 InputManager::~InputManager()
 {
     // Destroy any input listeners
-    auto itr = listeners.begin();
-    for ( ; itr != listeners.end(); ++itr )
+    auto itr = actionListeners.begin();
+    for ( ; itr != actionListeners.end(); ++itr )
     {
         auto in_itr = itr->second.begin();
         for ( ; in_itr != itr->second.end(); ++in_itr )
@@ -50,8 +50,8 @@ InputManager::~InputManager()
 
 void Input::InputManager::SignalInput( InputType type )
 {
-    auto const map_itr = listeners.find( type );
-    if ( map_itr == listeners.end() ) { return; }
+    auto const map_itr = actionListeners.find( type );
+    if ( map_itr == actionListeners.end() ) { return; }
 
     std::vector<IListener*>::iterator vec_itr = map_itr->second.begin();
 
@@ -64,13 +64,13 @@ void Input::InputManager::BindAxis( InputType type, input_action_func inputListe
 {
     IListener* newListener = new ListenerFunc( inputListenerFunc );
 
-    listeners[ type ].push_back( newListener );
+    actionListeners[ type ].push_back( newListener );
 }
 
 void InputManager::OnMouseDown( WPARAM buttonState, int x, int y )
 {
     // Test out the signalling of the system
-    SignalInput( InputType::Use );
+    SignalInput( InputType::Fire );
 }
 
 void InputManager::OnMouseUp( WPARAM buttonState, int x, int y )
@@ -83,9 +83,7 @@ void InputManager::OnMouseMove( WPARAM buttonState, int x, int y )
 
 }
 
-bool Input::InputManager::IsActionDown( int vKey )
+bool Input::InputManager::IsKeyDown( int vKey )
 {
-
-
     return GetAsyncKeyState( vKey ) & 0x80000;
 }
