@@ -25,7 +25,8 @@ void Input::InputManager::ReleaseInstance()
 // Private constructor
 InputManager::InputManager()
 {
-     // Register and OS callbacks here
+    // Register and OS callbacks here
+
 }
 
 // Private d'tor
@@ -51,22 +52,12 @@ void Input::InputManager::SignalInput( InputType type )
 {
     auto const map_itr = listeners.find( type );
     if ( map_itr == listeners.end() ) { return; }
-    
+
     std::vector<IListener*>::iterator vec_itr = map_itr->second.begin();
 
     // Why doesnt this heckin work
-    /*for ( ; vec_itr != map_itr->second.end(); ++vec_itr )
-    {
-        *( vec_itr )->Invoke();        
-    }*/
-
-    // Call the functors that are listening
-    for ( size_t i = 0; i < map_itr->second.size(); ++i )
-        (*map_itr->second[ i ])();
-    
-
-    //auto itr_l = map_itr->second->cbegin();
-    
+    for ( ; vec_itr != map_itr->second.end(); ++vec_itr )    
+        ( *( *vec_itr ) ) ( );
 }
 
 void Input::InputManager::BindAxis( InputType type, input_action_func inputListenerFunc )
