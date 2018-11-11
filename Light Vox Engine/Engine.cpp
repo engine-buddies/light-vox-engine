@@ -64,6 +64,7 @@ Engine::~Engine()
     componentManager->ReleaseInstance();
     Jobs::JobManager::ReleaseInstance();
     Graphics::DebugRenderer::ReleaseInstance();
+    Input::InputManager::ReleaseInstance();
 }
 
 HRESULT Engine::InitWindow()
@@ -139,11 +140,11 @@ HRESULT Engine::InitSystems()
     entityManager = ECS::EntityManager::GetInstance();
     componentManager = ECS::ComponentManager::GetInstance();
 
-    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
-    // Add any jobs you need here, like this: 
-    //man->AddJobA( &FunctionName, void* args );
+    jobManager = Jobs::JobManager::GetInstance();
+    inputManager = Input::InputManager::GetInstance();
 
-    man = nullptr;
+    // Bind an axis to the input man
+    inputManager->BindAxis( Input::InputType::Fire, this, &Engine::UsingInputFunc );
 
     ThrowIfFailed( graphics->Init() );
     time->Init();
@@ -181,11 +182,7 @@ HRESULT Engine::InitSystems()
         }
     }
 
-    Input::InputManager::BindAxis( 
-        "TestAxis",
-        this, 
-        &Engine::UsingInputFunc
-    );
+    
 
     return S_OK;
 }
@@ -271,7 +268,7 @@ LRESULT Engine::HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM 
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
-            //OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            inputManager->OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
@@ -314,9 +311,9 @@ void Engine::OnResize( UINT width, UINT height )
 
 /* HELPERS */
 
-void Engine::UsingInputFunc( float axis )
+void Engine::UsingInputFunc( )
 {
-    DEBUG_PRINT( "Inside of the function that uses it: %f\n", axis );
+    DEBUG_PRINT( "Inside of the function that uses it \n" );
 
 }
 
