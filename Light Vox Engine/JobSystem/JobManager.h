@@ -77,11 +77,16 @@ namespace Jobs
             aJob.args = args;
             aJob.index = Index;
 
-            /*IJob* jobPtr = new TrackedJob<T>( aParent, func_ptr );
-            aJob.TaskPtr = jobPtr;*/
+            IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );            
+            aJob.TaskPtr = jobPtr;
+
+            //std::future<void> status = wrapper->GetFuture();
 
             readyQueue.emplace_back( aJob );
             jobAvailableCondition.notify_one();
+            
+            //return status;
+
         }
 
 

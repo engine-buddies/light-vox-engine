@@ -40,6 +40,7 @@ JobManager::JobManager()
     //AddJob( &TestFunc, "Test Arguments", 1 );
 
     //AddJob( this, &Jobs::JobManager::TestMemberFunc, "Member function arguments", 1 );
+    
     AddTrackedJob( this, &Jobs::JobManager::TestTrackedFunc, "Test Args", 1 );
  }
 

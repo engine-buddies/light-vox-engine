@@ -69,28 +69,6 @@ namespace Jobs
         void ( T::*func_ptr )( void*, int );
     };
 
-   /* template <class T>
-    struct TrackedJob : IJob
-    {
-        TrackedJob( T* aParent, void ( T::*f )( void*, int, std::promise<void> ) )
-        {
-            parentObj = aParent;
-            func_ptr = f;
-        }
-
-        virtual bool invoke( void* args, int aIndex, std::promise<void> aBarrier ) override
-        {
-            if ( !parentObj ) { aBarrier.set_value(); return false; }
-
-            ( parentObj->*func_ptr )( args, aIndex );
-            aBarrier.set_value();
-            return true;
-        }
-
-        T* parentObj;
-        void ( T::*func_ptr )( void*, int, std::promise<void> );
-    };*/
-
 
     /// <summary>
     /// A job that will be run in parallel with others on the CPU
