@@ -51,7 +51,7 @@ namespace Jobs
         /// <param name="args">Arguments to pass to that function</param>
         /// <param name="Index">Index of this job</param>
         template <class T>
-        void AddJob( T* aParent, 
+        void AddJob( T* aParent,
             void( T::*func_ptr )( void*, int ),
             void* args,
             int Index )
@@ -62,14 +62,14 @@ namespace Jobs
 
             IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
             aJob.TaskPtr = jobPtr;
-            
+
             readyQueue.emplace_back( aJob );
             jobAvailableCondition.notify_one();
-        }        
+        }
 
-        template <class T>
+        /*template <class T>
         void AddTrackedJob( T* aParent,
-            void( T::*func_ptr )( void*, int, std::promise<void> ),
+            void( T::*func_ptr )( void*, int ),
             void* args,
             int Index )
         {
@@ -77,25 +77,26 @@ namespace Jobs
             aJob.args = args;
             aJob.index = Index;
 
-            IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );            
+            IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
             aJob.TaskPtr = jobPtr;
-
-            //std::future<void> status = wrapper->GetFuture();
 
             readyQueue.emplace_back( aJob );
             jobAvailableCondition.notify_one();
-            
+
             //return status;
 
         }
+        */
 
-
-        void TestTrackedFunc( void* aArgs, int index, std::promise<void> aPromise )
+        void TestTrackedFunc( void* aArgs, int index /*, std::promise<void> aPromise*/ )
         {
-            printf( "Inside the test tracked func %s\n\n", ( char* ) aArgs );
+            std::promise<void> *aPromise = ( std::promise<void>* )( aArgs );
+
+            printf( "Inside the test tracked func \n\n" );
             std::this_thread::sleep_for( std::chrono::seconds::duration( 1 ) );
             printf( "Done inside the tracked function\n\n" );
-            aPromise.set_value();
+            
+            aPromise->set_value();
         }
 
         // We don't want anything making copies of this class so delete these operators
@@ -127,7 +128,7 @@ namespace Jobs
         /// </summary>
         std::mutex readyQueueMutex;
 
-        
+
 
         // Ready queue for the jobs
         ConcurrentQueue<CpuJob> readyQueue;

@@ -39,9 +39,14 @@ JobManager::JobManager()
 
     //AddJob( &TestFunc, "Test Arguments", 1 );
 
-    //AddJob( this, &Jobs::JobManager::TestMemberFunc, "Member function arguments", 1 );
+    std::promise<void> thePromise;
+    std::future<void> aFuture = thePromise.get_future();
+
+    AddJob( this, &Jobs::JobManager::TestTrackedFunc, ( &thePromise ), 1 );
     
-    AddTrackedJob( this, &Jobs::JobManager::TestTrackedFunc, "Test Args", 1 );
+    aFuture.wait();
+    printf( "WE WAITED FOR THE HECKIN FUTURE!!!!!\n\n" );
+
  }
 
 JobManager::~JobManager()
