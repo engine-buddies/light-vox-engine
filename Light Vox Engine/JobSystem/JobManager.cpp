@@ -45,8 +45,8 @@ JobManager::JobManager()
     AddJob( this, &Jobs::JobManager::TestTrackedFunc, ( &thePromise ), 1 );
     
     aFuture.wait();
-    printf( "WE WAITED FOR THE HECKIN FUTURE!!!!!\n\n" );
 
+    printf( "Successfully waited for that function to complete!\n\n" );
  }
 
 JobManager::~JobManager()

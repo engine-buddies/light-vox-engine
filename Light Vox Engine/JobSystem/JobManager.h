@@ -67,28 +67,7 @@ namespace Jobs
             jobAvailableCondition.notify_one();
         }
 
-        /*template <class T>
-        void AddTrackedJob( T* aParent,
-            void( T::*func_ptr )( void*, int ),
-            void* args,
-            int Index )
-        {
-            CpuJob aJob = {};
-            aJob.args = args;
-            aJob.index = Index;
-
-            IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
-            aJob.TaskPtr = jobPtr;
-
-            readyQueue.emplace_back( aJob );
-            jobAvailableCondition.notify_one();
-
-            //return status;
-
-        }
-        */
-
-        void TestTrackedFunc( void* aArgs, int index /*, std::promise<void> aPromise*/ )
+        void TestTrackedFunc( void* aArgs, int index )
         {
             std::promise<void> *aPromise = ( std::promise<void>* )( aArgs );
 
