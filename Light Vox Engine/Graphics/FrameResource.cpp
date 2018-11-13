@@ -13,7 +13,7 @@ FrameResource::FrameResource(
     ID3D12DescriptorHeap * rtvHeap,
     ID3D12DescriptorHeap * cbvSrvHeap,
     D3D12_VIEWPORT * viewport,
-    UINT frameResourceIndex )
+    uint32_t frameResourceIndex )
 {
     fenceValue = 0;
     this->geometryBufferPso = geometryBufferPso;
@@ -33,7 +33,7 @@ FrameResource::FrameResource(
 
 inline void FrameResource::InitCmdAllocatorsAndLists(
     ID3D12Device * device,
-    UINT frameResourceIndex )
+    uint32_t frameResourceIndex )
 {
     //  then create command list, name it, and close it
     for ( size_t i = 0; i < LV_NUM_CONTEXTS; ++i )
@@ -52,7 +52,7 @@ inline void FrameResource::InitCmdAllocatorsAndLists(
     }
 
     //go through other frmelist
-    for ( UINT i = 0; i < LV_COMMAND_LIST_COUNT; ++i )
+    for ( uint32_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i )
     {
         ThrowIfFailed( device->CreateCommandAllocator( D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS( &commandAllocators[ i ] ) ) );
         NAME_D3D12_OBJECT_WITH_NAME( commandAllocators[ i ], "%s (Frame#%d)", "Base", i );
@@ -90,10 +90,10 @@ inline void FrameResource::InitDescriptorHandles(
     ID3D12DescriptorHeap * dsvHeap,
     ID3D12DescriptorHeap * rtvHeap,
     ID3D12DescriptorHeap * cbvSrvHeap,
-    UINT frameResourceIndex )
+    uint32_t frameResourceIndex )
 {
-    const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-    const UINT rtvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
+    const uint32_t cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+    const uint32_t rtvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
     //Get Handle to Null SRVs
     CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle( cbvSrvHeap->GetGPUDescriptorHandleForHeapStart() );
@@ -113,7 +113,7 @@ inline void FrameResource::InitDescriptorHandles(
         frameResourceIndex * LV_NUM_CBVSRV_PER_FRAME,
         rtvDescriptorSize
     );
-    for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
+    for ( uint32_t i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
     {
         rtvGbufferHandles[ i ] = rtvHandle;
         rtvHandle.Offset( rtvDescriptorSize );
@@ -128,10 +128,10 @@ inline void FrameResource::InitGraphicsResources(
     ID3D12DescriptorHeap * rtvHeap,
     ID3D12DescriptorHeap * cbvSrvHeap,
     D3D12_VIEWPORT * viewport,
-    UINT frameResourceIndex )
+    uint32_t frameResourceIndex )
 {
-    const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-    const UINT rtvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
+    const uint32_t cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+    const uint32_t rtvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
     // Create RTVs:
     //1 for each frame * 1 for each gbuffer resource
@@ -148,7 +148,7 @@ inline void FrameResource::InitGraphicsResources(
     );
 
     DXGI_FORMAT textureFormat = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    UINT16 textureMipLevels = 1;
+    uint16_t textureMipLevels = 1;
 
     {
         //Texture Description for G Buffer
@@ -159,8 +159,8 @@ inline void FrameResource::InitGraphicsResources(
         textureDesc.SampleDesc.Quality = 0;
         textureDesc.MipLevels = textureMipLevels;
         textureDesc.DepthOrArraySize = 1;
-        textureDesc.Width = static_cast<UINT64>( viewport->Width );
-        textureDesc.Height = static_cast<UINT>( viewport->Height );
+        textureDesc.Width = static_cast<uint64_t>( viewport->Width );
+        textureDesc.Height = static_cast<uint32_t>( viewport->Height );
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
         textureDesc.Format = textureFormat;
@@ -185,7 +185,7 @@ inline void FrameResource::InitGraphicsResources(
 
         //Create texture resources for the RTV/SRV
         CD3DX12_HEAP_PROPERTIES heapProperty( D3D12_HEAP_TYPE_DEFAULT );
-        for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
+        for ( uint32_t i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
         {
             D3D12_CLEAR_VALUE clearVal = clearValueBlack;
             if ( i == 0 )
@@ -225,7 +225,7 @@ inline void FrameResource::InitGraphicsResources(
 
 
 
-        for ( UINT i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
+        for ( uint32_t i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
         {
             //create RTV and SRV and stay consistent
             device->CreateRenderTargetView( rtvTextures[ i ].Get(), &rtvDesc, rtvHandle );
@@ -240,9 +240,9 @@ inline void FrameResource::InitGraphicsResources(
 inline void FrameResource::InitCBV(
     ID3D12Device * device,
     ID3D12DescriptorHeap * cbvSrvHeap,
-    UINT frameResourceIndex )
+    uint32_t frameResourceIndex )
 {
-    const UINT cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+    const uint32_t cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
     CD3DX12_RANGE zeroReadRange( 0, 0 );
 
     //Get CPU handle to the start of the frame's SRVs (g-buffers)
@@ -288,7 +288,7 @@ inline void FrameResource::InitCBV(
 
 
     // Create the constant buffers.
-    const UINT constantBufferSize = ( sizeof( SceneConstantBuffer )
+    const uint32_t constantBufferSize = ( sizeof( SceneConstantBuffer )
         + ( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ) )
         & ~( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ); // must be a multiple 256 bytes
     ThrowIfFailed( device->CreateCommittedResource(
@@ -356,7 +356,7 @@ void FrameResource::ResetCommandListsAndAllocators()
         );
     }
 
-    for ( UINT i = 0; i < LV_COMMAND_LIST_COUNT; ++i )
+    for ( uint32_t i = 0; i < LV_COMMAND_LIST_COUNT; ++i )
     {
         ThrowIfFailed( commandAllocators[ i ]->Reset() );
     }

@@ -2,15 +2,16 @@
 #include "stdafx.h"
 #include "Graphics/Camera.h"
 
+#if defined(_WIN32) || defined(_WIN64)
 #include <WindowsX.h>
-#if defined(_DEBUG)
-#include <sstream>	//for creating a console
 #endif
 
 // DEBUG CODE
+//#if defined(_DEBUG)   //we'll uncomment when we have imgui working
+#include <sstream>	//for creating a console
+//#endif
 
 Engine* Engine::engineInstance = nullptr;
-
 
 /* LIFE CYCLE */
 
@@ -45,12 +46,11 @@ Engine::~Engine()
 
 HRESULT Engine::InitWindow()
 {
-    LV_PRINT_DEBUG( "Initializing a window..." );
-#if defined(_DEBUG)
+#if defined(_WIN32) || defined(_WIN64)
     CreateConsoleWindow( 500, 120, 32, 120 );
-#endif
 
     //initialize a window
+    DEBUG_PRINT( "Initializing a window..." );
     WNDCLASSEX windowClass = { };
     windowClass.style = CS_HREDRAW | CS_VREDRAW;
     windowClass.lpfnWndProc = Engine::ProcessMessage;
@@ -99,17 +99,19 @@ HRESULT Engine::InitWindow()
         return HRESULT_FROM_WIN32( GetLastError() );
 
     ShowWindow( hWindow, SW_SHOW );
-    return S_OK;
+#else
+    assert( "Unimplemented window creation" )
+#endif
+
+        return S_OK;
 }
 
-HRESULT Engine::InitSystems()
+LV_RESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new Graphics::GraphicsCore( hWindow, static_cast<UINT>( windowWidth ), static_cast<UINT>( windowHeight ) );
-    //Physics
+    graphics = new Graphics::GraphicsCore( hWindow, static_cast<uint32_t>( windowWidth ), static_cast<uint32_t>( windowHeight ) );
     physics = new Physics::Solver();
     rigidBody = new Physics::Rigidbody();
-    //Time
     time = GameTime::GetInstance();
 
     // Calling get instance will create the entity manager
@@ -131,7 +133,6 @@ HRESULT Engine::InitSystems()
         entityManager->Create_Entity();
     }
 
-
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
     static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
     static float rotation = 0.001f;
@@ -145,7 +146,7 @@ HRESULT Engine::InitSystems()
             for ( int j = 0; j < count; ++j )
             {
                 int index = i * count + j;
-                UINT entityID = entityManager->Get_Entity( index ).index;
+                uint32_t entityID = entityManager->Get_Entity( index ).index;
                 rigidBody->Pos( glm::vec3( x + rotation, y, z ), entityID );
                 rigidBody->RotateAxisAngle( glm::vec3( .0f, 1.0f, .0f ), rotation, entityID );
 
@@ -160,10 +161,10 @@ HRESULT Engine::InitSystems()
     return S_OK;
 }
 
-HRESULT Engine::Run()
+LV_RESULT Engine::Run()
 {
+#if defined(_WIN32) || defined(_WIN64)
     MSG msg = { };
-
     while ( msg.message != WM_QUIT )
     {
         if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
@@ -173,42 +174,14 @@ HRESULT Engine::Run()
         }
         else
         {
-            //DEBUG collision code 
-            float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
-            for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
-            {
-                componentManager->transform[ i ].pos.x += x;
-            }
-
-            //DEBUG CODE for debug wireframe renderer
-            glm::mat4x4 transform = glm::translate( glm::mat4(1.0f), glm::vec3( 1.f, 1.f, 0.f ) );
-            glm::vec3 scale = glm::float3( 1.f, 1.f, 1.f );
-            glm::vec3 color = glm::float3( 1.f, 0.f, 0.f );
-
-            debugRenderer->AddCube( transform, scale, color );
-            transform = glm::identity<glm::mat4x4>();
-            color = glm::float3( 0.f, 0.f, 1.f );
-            debugRenderer->AddCube( transform, scale, color );
-
-            //DEBUG CODE for basic camera update
-            glm::vec3 pos = glm::vec3( 0.f, 0.f, -5.f );
-            glm::vec3 forward = glm::vec3( 0.f, 0.f, 1.f );
-            glm::vec3 up = glm::vec3( 0.f, 1.f, 0.f );
-            camera->SetTransform( pos, forward, up );
-
-            physics->Update( time->GetTotalFloatTime() );
-            //memcpy( transforms, componentManager->transform, LV_MAX_INSTANCE_COUNT * sizeof( glm::mat4x4 ) );
-            //for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
-            //{
-            //    transforms[ i ] = glm::transpose( transforms[ i ] );
-            //}
-
-            graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix), camera );
-            graphics->Render();
-            time->UpdateTimer();
-            debugRenderer->ClearCubes();
+            Update();
         }
     }
+#else
+
+#endif
+
+
     return (HRESULT) msg.wParam;
 }
 
@@ -219,12 +192,14 @@ void Engine::Quit()
 
 /* EVENT PROCESSING */
 
-LRESULT Engine::ProcessMessage( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam )
+#if defined(_WIN32) || defined(_WIN64)
+
+LRESULT Engine::ProcessMessage( LV_HANDLE hWindow, uint32_t message, WPARAM wParam, LPARAM lParam )
 {
     return Engine::engineInstance->HandleEvents( hWindow, message, wParam, lParam );
 }
 
-LRESULT Engine::HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT Engine::HandleEvents( LV_HANDLE hWindow, uint32_t message, WPARAM wParam, LPARAM lParam )
 {
     switch ( message )
     {
@@ -270,22 +245,64 @@ LRESULT Engine::HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM 
     return DefWindowProc( hWindow, message, wParam, lParam );
 }
 
-void Engine::OnResize( UINT width, UINT height )
+void Engine::OnResize( uint32_t width, uint32_t height )
 {
     windowWidth = static_cast<float>( width );
     windowHeight = static_cast<float>( height );
 }
 
+#endif //windows
+
 /* HELPERS */
 
-void Engine::UsingInputFunc( )
+void Engine::UsingInputFunc()
 {
     DEBUG_PRINT( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
+    printf( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
 }
 
-#if defined(_DEBUG)
+inline void Engine::Update()
+{
+
+    //DEBUG collision code 
+    float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
+    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
+    {
+        componentManager->transform[ i ].pos.x += x;
+    }
+
+    //DEBUG CODE for debug wireframe renderer
+    glm::mat4x4 transform = glm::translate( glm::mat4( 1.0f ), glm::vec3( 1.f, 1.f, 0.f ) );
+    glm::vec3 scale = glm::float3( 1.f, 1.f, 1.f );
+    glm::vec3 color = glm::float3( 1.f, 0.f, 0.f );
+
+    debugRenderer->AddCube( transform, scale, color );
+    transform = glm::identity<glm::mat4x4>();
+    color = glm::float3( 0.f, 0.f, 1.f );
+    debugRenderer->AddCube( transform, scale, color );
+
+    //DEBUG CODE for basic camera update
+    glm::vec3 pos = glm::vec3( 0.f, 0.f, -5.f );
+    glm::vec3 forward = glm::vec3( 0.f, 0.f, 1.f );
+    glm::vec3 up = glm::vec3( 0.f, 1.f, 0.f );
+    camera->SetTransform( pos, forward, up );
+
+    physics->Update( time->GetTotalFloatTime() );
+    //memcpy( transforms, componentManager->transform, LV_MAX_INSTANCE_COUNT * sizeof( glm::mat4x4 ) );
+    //for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
+    //{
+    //    transforms[ i ] = glm::transpose( transforms[ i ] );
+    //}
+
+    graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
+    graphics->Render();
+    time->UpdateTimer();
+    debugRenderer->ClearCubes();
+}
+
 void Engine::CreateConsoleWindow( int bufferLines, int bufferColumns, int windowLines, int windowColumns )
 {
+    //#if defined(_DEBUG)  //we'll uncomment when we have imgui working
     // Our temp console info struct
     CONSOLE_SCREEN_BUFFER_INFO coninfo = { };
 
@@ -312,6 +329,6 @@ void Engine::CreateConsoleWindow( int bufferLines, int bufferColumns, int window
     HWND consoleHandle = GetConsoleWindow();
     HMENU hmenu = GetSystemMenu( consoleHandle, FALSE );
     EnableMenuItem( hmenu, SC_CLOSE, MF_GRAYED );
+    //#endif
 }
-#endif
 

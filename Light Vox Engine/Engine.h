@@ -18,24 +18,40 @@ It's basically our entire engine (handles life cycle and windows related stuff)
 class Engine
 {
 public:
+#if defined(_WIN32) || defined(_WIN64)
     Engine( HINSTANCE hInstance );
+#else
+    Engine();
+#endif
+
     ~Engine();
 
-    HRESULT InitSystems();
-    HRESULT Run();
+    LV_RESULT InitSystems();
+    LV_RESULT Run();
     void Quit();
 
+    //note: would prefer to not do our #defines this way, but not sure if every implementation will share same/abstractible interfaces
+#if defined(_WIN32) || defined(_WIN64)
+
     //OS-level message handling
-    static LRESULT CALLBACK ProcessMessage( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam );
+    static LRESULT CALLBACK ProcessMessage( LV_HANDLE hWindow, uint32_t message, WPARAM wParam, LPARAM lParam );
+
+    LRESULT HandleEvents( LV_HANDLE hWindow, uint32_t message, WPARAM wParam, LPARAM lParam );
 
     //responding to events
-    LRESULT HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam );
-    void OnResize( UINT width, UINT height );
+    void OnResize( uint32_t width, uint32_t height );
+
+#endif
+
     
 private:
+#if defined(_WIN32) || defined(_WIN64)
+    HINSTANCE hInstance;    //instance for windows type stuff
+#else
+    //hInstance for other class?
+#endif
     static Engine* engineInstance;
-    HINSTANCE hInstance;
-    HWND hWindow;
+    LV_HANDLE hWindow;
     char* windowTitle;
     float windowWidth;
     float windowHeight;
@@ -59,14 +75,11 @@ private:
     Physics::Solver* physics = nullptr;
     Physics::Rigidbody* rigidBody = nullptr;
 
-    HRESULT InitWindow();
-
+    LV_RESULT InitWindow();
 
     void UsingInputFunc();
+    inline void Update();
 
-#if defined(_DEBUG)
     /*Debug function to create a console window*/
     void CreateConsoleWindow( int bufferLines, int bufferColumns, int windowLines, int windowColumns );
-#endif
-
 };

@@ -1,10 +1,24 @@
 #pragma once
 
 #ifdef _DEBUG
-#include <iostream>
-#define LV_PRINT_DEBUG(x) std::cout << x << std::endl;
+
+#define DEBUG_PRINT(a, ...) printf("%s: %d(): " a "\n", __FILE__, __LINE__, __VA_ARGS__);
+
 #else
-#define LV_PRINT_DEBUG(x) 
-#endif 
+
+#define DEBUG_PRINT(a, ...)
+
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+typedef HRESULT LV_RESULT;
+#else
+typedef long LV_RESULT;
+#endif
 
 
+#if defined(_WIN32) || defined(_WIN64)
+typedef HWND LV_HANDLE;
+#else
+typedef void* LV_HANDLE;
+#endif
