@@ -57,5 +57,19 @@ namespace Physics
         ECS::ComponentManager* componentManager;
         Jobs::JobManager* jobManager = nullptr;
 
+
+        struct PhysicsArguments
+        {
+            float DeltaTime;
+
+            int StartElem;
+            int EndElm;
+
+            std::promise<void>* jobPromise;
+        };
+
+        PhysicsArguments* a_argument = nullptr;
+        PhysicsArguments* b_argument = nullptr;
+
     };
 };

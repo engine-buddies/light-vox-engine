@@ -39,14 +39,14 @@ JobManager::JobManager()
 
     //AddJob( &TestFunc, "Test Arguments", 1 );
 
-    std::promise<void> thePromise;
+    /*std::promise<void> thePromise;
     std::future<void> aFuture = thePromise.get_future();
 
     AddJob( this, &Jobs::JobManager::TestTrackedFunc, ( &thePromise ), 1 );
     
     aFuture.wait();
 
-    printf( "Successfully waited for that function to complete!\n\n" );
+    printf( "Successfully waited for that function to complete!\n\n" );*/
  }
 
 JobManager::~JobManager()
