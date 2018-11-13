@@ -146,7 +146,7 @@ LV_RESULT Engine::InitSystems()
             for ( int j = 0; j < count; ++j )
             {
                 int index = i * count + j;
-                uint32_t entityID = entityManager->Get_Entity( index ).index;
+                size_t entityID = entityManager->Get_Entity( index ).index;
                 rigidBody->Pos( glm::vec3( x + rotation, y, z ), entityID );
                 rigidBody->RotateAxisAngle( glm::vec3( .0f, 1.0f, .0f ), rotation, entityID );
 
