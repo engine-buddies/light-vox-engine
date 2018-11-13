@@ -6,18 +6,28 @@ Solver::Solver()
 {
     gravity = { .0f, .0f, .0f };
     componentManager = ECS::ComponentManager::GetInstance();
+    jobManager = Jobs::JobManager::GetInstance();
 }
 
 Solver::~Solver()
 {
+    jobManager = nullptr;
 }
 
 void Solver::Update( float dt )
 {
     //Collide();
-    AccumlateForces();
-    Integrate( dt );
-    ModelToWorld();
+    static float deltaTime = 0.016f;
+
+    jobManager->AddJob( this, &Physics::Solver::AccumlateForces, &deltaTime, 0 );
+
+    //AccumlateForces( nullptr, 0 );
+
+    //Integrate( &deltaTime, 0 );
+
+    //ModelToWorld( nullptr, 0 );
+
+
     //SatisfyConstraints();
 }
 
@@ -39,7 +49,7 @@ void Solver::Collide()
 
             if ( BoxIntersect( posA, posB, sizeA, sizeB ) )
             {
-                DEBUG_PRINT("Entity: %zi hit Entity: %zi \n", i, j);
+                DEBUG_PRINT( "Entity: %zi hit Entity: %zi \n", i, j );
             }
 
         }
@@ -70,8 +80,10 @@ inline bool Solver::BoxIntersect( glm::vec3 posA, glm::vec3 posB, glm::vec3 size
         ( aMinZ <= bMaxZ && aMaxZ >= bMinZ );
 }
 
-void Solver::Integrate( float dt )
+void Solver::Integrate( void* args, int index )
 {
+    float dt = *( float* ) ( args );
+    
     //semi implicit euler 
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
@@ -83,9 +95,11 @@ void Solver::Integrate( float dt )
         position += velocity * dt;
         acceleration = { .0f, .0f, .0f };
     }
+    jobManager->AddJob( this, &Physics::Solver::ModelToWorld, nullptr, 0 );
+
 }
 
-void Solver::AccumlateForces()
+void Solver::AccumlateForces( void* args, int index )
 {
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
@@ -94,9 +108,11 @@ void Solver::AccumlateForces()
         float& mass = componentManager->bodyProperties[ i ].mass;
         acceleration += force / mass;
     }
+    jobManager->AddJob( this, &Physics::Solver::Integrate, args, 0 );
+
 }
 
-void Solver::ModelToWorld()
+void Solver::ModelToWorld( void* args, int index )
 {
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
