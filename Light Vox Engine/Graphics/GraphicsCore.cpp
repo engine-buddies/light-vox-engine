@@ -79,7 +79,7 @@ HRESULT GraphicsCore::InitFrameResources()
     return S_OK;
 }
 
-void GraphicsCore::Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera )
+void GraphicsCore::Update( glm::mat4x4_packed transforms[], Camera* camera )
 {
     PIXSetMarker( commandQueue.Get(), 0, L"Getting last completed fence" );
 

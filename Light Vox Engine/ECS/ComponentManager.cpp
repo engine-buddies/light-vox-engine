@@ -30,7 +30,7 @@ ComponentManager::ComponentManager()
 {
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
-        transform[ i ].transformMatrix = glm::mat4( 1.0 );
+        transformMatrix[ i ].transformMatrix = glm::mat4( 1.0 );
     }
 
 }

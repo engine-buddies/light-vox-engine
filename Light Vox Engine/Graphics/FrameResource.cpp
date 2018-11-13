@@ -1,7 +1,6 @@
 #include "FrameResource.h"
 #include "Camera.h"
 
-using namespace DirectX;
 using namespace Graphics;
 
 #pragma region Init & Dealloc
@@ -437,7 +436,7 @@ void FrameResource::Cleanup()
 #pragma region Update
 
 void FrameResource::WriteConstantBuffers(
-    DirectX::XMFLOAT4X4 transforms[],
+    glm::mat4x4_packed transforms[],
     D3D12_VIEWPORT * viewport,
     Camera * camera )
 {

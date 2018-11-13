@@ -100,16 +100,18 @@ void Solver::ModelToWorld()
 {
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
-        glm::mat4& transformMatrix = componentManager->transform[ i ].transformMatrix;
+        glm::mat4& transformMatrix = componentManager->transformMatrix[ i ].transformMatrix;
         glm::vec3& pos = componentManager->transform[ i ].pos;
         glm::vec3& rotationAxis = componentManager->transform[ i ].rot;
         float& rotationAngle = componentManager->transform[ i ].angle;
         glm::vec3& scale = componentManager->transform[ i ].scale;
 
         transformMatrix =
-            glm::translate( pos ) *
-            glm::rotate( rotationAngle, rotationAxis ) *
-            glm::scale( scale );
+            glm::transpose(
+                glm::translate( pos ) *
+                glm::rotate( rotationAngle, rotationAxis ) *
+                glm::scale( scale )
+            );
     }
 }
 

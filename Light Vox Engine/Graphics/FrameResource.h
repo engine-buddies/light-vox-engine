@@ -68,7 +68,7 @@ namespace Graphics
         /// <param name="viewport">The viewport</param>
         /// <param name="camera">The camera of the scene</param>
         void WriteConstantBuffers(
-            DirectX::XMFLOAT4X4 transforms[],
+            glm::mat4x4_packed transforms[],
             D3D12_VIEWPORT* viewport,
             Camera* camera
         );

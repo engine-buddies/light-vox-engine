@@ -8,9 +8,13 @@
 
 namespace EntityComponents
 {
-    struct Transform
+    struct TransformMatrix
     {
         glm::mat4 transformMatrix;
+    };
+
+    struct Transform
+    {
         glm::vec3 pos = { .0f, .0f, .0f };
         glm::vec3 rot = { .0f, .0f, .0f };
         glm::vec3 scale = { 1.0f, 1.0f, 1.0f };

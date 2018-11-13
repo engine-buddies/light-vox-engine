@@ -7,6 +7,7 @@ namespace ECS {
     {
     public:
         //SOA components
+        EntityComponents::TransformMatrix transformMatrix[ LV_MAX_INSTANCE_COUNT ];
         EntityComponents::Transform transform[LV_MAX_INSTANCE_COUNT];
         EntityComponents::BoxCollider boxCollider[LV_MAX_INSTANCE_COUNT];
         EntityComponents::BodyProperties bodyProperties[LV_MAX_INSTANCE_COUNT];

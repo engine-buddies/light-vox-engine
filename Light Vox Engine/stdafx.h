@@ -7,7 +7,6 @@
 #include "Utils/d3dx12.h"
 #include <dxgi1_4.h>
 #include <d3dcompiler.h>
-#include <DirectXMath.h>
 #include <stdlib.h>  
 //events
 #include <pix3.h>
@@ -25,6 +24,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+
+//typedef glm::m
+namespace glm
+{
+    typedef mat<4, 4, float, highp>		mat4x4_packed;
+    typedef vec<3, float, highp>		vec3_packed;
+    typedef vec<2, float, highp>		vec2_packed;
+}
 
 //Debug
 #if defined(_DEBUG)
