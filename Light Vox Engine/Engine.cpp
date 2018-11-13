@@ -40,6 +40,7 @@ Engine::~Engine()
     componentManager->ReleaseInstance();
     Jobs::JobManager::ReleaseInstance();
     Graphics::DebugRenderer::ReleaseInstance();
+    Input::InputManager::ReleaseInstance();
 }
 
 HRESULT Engine::InitWindow()
@@ -115,11 +116,11 @@ HRESULT Engine::InitSystems()
     entityManager = ECS::EntityManager::GetInstance();
     componentManager = ECS::ComponentManager::GetInstance();
 
-    Jobs::JobManager* man = Jobs::JobManager::GetInstance();
-    // Add any jobs you need here, like this: 
-    //man->AddJobA( &FunctionName, void* args );
+    jobManager = Jobs::JobManager::GetInstance();
+    inputManager = Input::InputManager::GetInstance();
 
-    man = nullptr;
+    // Bind an axis to the input man
+    inputManager->BindAxis( Input::InputType::Fire, this, &Engine::UsingInputFunc );
 
     ThrowIfFailed( graphics->Init() );
     time->Init();
@@ -132,7 +133,6 @@ HRESULT Engine::InitSystems()
 
 
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
-    static bool init = false;
     static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
     static float rotation = 0.001f;
     {
@@ -156,12 +156,6 @@ HRESULT Engine::InitSystems()
             x = static_cast <float>( -count );
         }
     }
-
-    Input::InputManager::BindAxis(
-        "TestAxis",
-        this,
-        &Engine::UsingInputFunc
-    );
 
     return S_OK;
 }
@@ -187,13 +181,13 @@ HRESULT Engine::Run()
             }
 
             //DEBUG CODE for debug wireframe renderer
-            glm::mat4x4 transform = glm::translate( glm::vec3( 1, 1, 0 ) );
-            glm::vec3 scale = glm::float3( 1, 1, 1 );
-            glm::vec3 color = glm::float3( 1, 0, 0 );
+            glm::mat4x4 transform = glm::translate( glm::mat4(1.0f), glm::vec3( 1.f, 1.f, 0.f ) );
+            glm::vec3 scale = glm::float3( 1.f, 1.f, 1.f );
+            glm::vec3 color = glm::float3( 1.f, 0.f, 0.f );
 
             debugRenderer->AddCube( transform, scale, color );
             transform = glm::identity<glm::mat4x4>();
-            color = glm::float3( 0, 0, 1 );
+            color = glm::float3( 0.f, 0.f, 1.f );
             debugRenderer->AddCube( transform, scale, color );
 
             //DEBUG CODE for basic camera update
@@ -241,7 +235,7 @@ LRESULT Engine::HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM 
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
-            //OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            inputManager->OnMouseDown( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
@@ -284,10 +278,9 @@ void Engine::OnResize( UINT width, UINT height )
 
 /* HELPERS */
 
-void Engine::UsingInputFunc( float axis )
+void Engine::UsingInputFunc( )
 {
-    DEBUG_PRINT( "Inside of the function that uses it: %f\n", axis );
-
+    DEBUG_PRINT( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
 }
 
 #if defined(_DEBUG)

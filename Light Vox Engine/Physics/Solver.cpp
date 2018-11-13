@@ -39,7 +39,7 @@ void Solver::Collide()
 
             if ( BoxIntersect( posA, posB, sizeA, sizeB ) )
             {
-                DEBUG_PRINT("Entity: %zi hit Entity: %zi \n", i, j);
+                DEBUG_PRINT( "Entity: %zi hit Entity: %zi \n", i, j );
             }
 
         }
@@ -102,16 +102,11 @@ void Solver::ModelToWorld()
     {
         glm::mat4& transformMatrix = componentManager->transformMatrix[ i ].transformMatrix;
         glm::vec3& pos = componentManager->transform[ i ].pos;
-        glm::vec3& rotationAxis = componentManager->transform[ i ].rot;
-        float& rotationAngle = componentManager->transform[ i ].angle;
-        glm::vec3& scale = componentManager->transform[ i ].scale;
+        glm::quat& rotation = componentManager->transform[ i ].rot;
 
-        transformMatrix =
-            glm::transpose(
-                glm::translate( pos ) *
-                glm::rotate( rotationAngle, rotationAxis ) *
-                glm::scale( scale )
-            );
+        transformMatrix = glm::translate( glm::mat4( 1.0f ), pos );
+        transformMatrix = transformMatrix *  ( glm::mat4_cast( rotation ) );
+        transformMatrix = glm::transpose( transformMatrix );
     }
 }
 
