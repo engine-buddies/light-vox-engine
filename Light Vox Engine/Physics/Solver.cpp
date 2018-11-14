@@ -6,19 +6,58 @@ Solver::Solver()
 {
     gravity = { .0f, .0f, .0f };
     componentManager = ECS::ComponentManager::GetInstance();
+    jobManager = Jobs::JobManager::GetInstance();
+
+    
+    a_argument = new PhysicsArguments();
+    a_argument->StartElem = 0;
+    a_argument->EndElm = ( LV_MAX_INSTANCE_COUNT  / 2 );
+
+    b_argument = new PhysicsArguments();
+    b_argument->StartElem = ( LV_MAX_INSTANCE_COUNT / 2 );
+    b_argument->EndElm = LV_MAX_INSTANCE_COUNT;
+
 }
 
 Solver::~Solver()
 {
+    jobManager = nullptr;
+
+    if ( a_argument != nullptr )
+    {
+        delete a_argument;
+        a_argument = nullptr;
+    }
+
+    if ( b_argument != nullptr )
+    {
+        delete b_argument;
+        b_argument = nullptr;
+    }
 }
 
 void Solver::Update( float dt )
 {
-    //Collide();
-    AccumlateForces();
-    Integrate( dt );
-    ModelToWorld();
-    //SatisfyConstraints();
+    a_argument->DeltaTime = dt;
+    b_argument->DeltaTime = dt;
+
+    std::promise<void> aPromise;
+    std::future<void> aFuture = aPromise.get_future();
+    a_argument->jobPromise = &aPromise;
+
+    std::promise<void> bPromise;
+    std::future<void> bFuture = bPromise.get_future();
+    b_argument->jobPromise = &bPromise;
+
+    jobManager->AddJob( this, &Physics::Solver::AccumlateForces, ( void* ) ( a_argument ), 0 );
+    jobManager->AddJob( this, &Physics::Solver::AccumlateForces, ( void* ) ( b_argument ), 0 );
+
+    aFuture.wait();
+    bFuture.wait();
+
+    //AccumlateForces( a_argument, 0 );
+    //Integrate( a_argument, 0 );
+    //ModelToWorld( a_argument, 0 );
 }
 
 void Solver::Collide()
@@ -39,7 +78,7 @@ void Solver::Collide()
 
             if ( BoxIntersect( posA, posB, sizeA, sizeB ) )
             {
-                DEBUG_PRINT("Entity: %zi hit Entity: %zi \n", i, j);
+                DEBUG_PRINT( "Entity: %zi hit Entity: %zi \n", i, j );
             }
 
         }
@@ -70,35 +109,47 @@ inline bool Solver::BoxIntersect( glm::vec3 posA, glm::vec3 posB, glm::vec3 size
         ( aMinZ <= bMaxZ && aMaxZ >= bMinZ );
 }
 
-void Solver::Integrate( float dt )
+void Solver::AccumlateForces( void* args, int index )
 {
-    //semi implicit euler 
-    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
-    {
-        glm::vec3& acceleration = componentManager->bodyProperties[ i ].acceleration;
-        glm::vec3& velocity = componentManager->bodyProperties[ i ].velocity;
-        glm::vec3& position = componentManager->transform[ i ].pos;
-
-        velocity += acceleration * dt;
-        position += velocity * dt;
-        acceleration = { .0f, .0f, .0f };
-    }
-}
-
-void Solver::AccumlateForces()
-{
-    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
+    PhysicsArguments* myArgs = static_cast< PhysicsArguments* >( args );
+    assert( myArgs != nullptr );
+    for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
     {
         glm::vec3& acceleration = componentManager->bodyProperties[ i ].acceleration;
         glm::vec3& force = componentManager->bodyProperties[ i ].force;
         float& mass = componentManager->bodyProperties[ i ].mass;
         acceleration += force / mass;
     }
+
+    jobManager->AddJob( this, &Physics::Solver::Integrate, args, 0 );
 }
 
-void Solver::ModelToWorld()
+void Solver::Integrate( void* args, int index )
 {
-    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
+    PhysicsArguments* myArgs = static_cast< PhysicsArguments* >( args );
+    assert( myArgs != nullptr );
+
+    //semi implicit euler 
+    for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
+    {
+        glm::vec3& acceleration = componentManager->bodyProperties[ i ].acceleration;
+        glm::vec3& velocity = componentManager->bodyProperties[ i ].velocity;
+        glm::vec3& position = componentManager->transform[ i ].pos;
+
+        velocity += acceleration * myArgs->DeltaTime;
+        position += velocity * myArgs->DeltaTime;
+        acceleration = { .0f, .0f, .0f };
+    }
+
+    jobManager->AddJob( this, &Physics::Solver::ModelToWorld, args, 0 );
+}
+
+void Solver::ModelToWorld( void* args, int index )
+{
+    PhysicsArguments* myArgs = static_cast< PhysicsArguments* >( args );
+    assert( myArgs != nullptr );
+
+    for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
     {
         glm::mat4& transformMatrix = componentManager->transform[ i ].transformMatrix;
         glm::vec3& pos = componentManager->transform[ i ].pos;
@@ -111,7 +162,8 @@ void Solver::ModelToWorld()
             glm::rotate( rotationAngle, rotationAxis ) *
             glm::scale( scale );
     }
+
+    assert( myArgs->jobPromise != nullptr );
+
+    myArgs->jobPromise->set_value();
 }
-
-
-

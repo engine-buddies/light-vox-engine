@@ -4,7 +4,7 @@
 #pragma once
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
-
+#include "../JobSystem/JobManager.h"
 
 namespace Physics
 {
@@ -23,7 +23,7 @@ namespace Physics
         /// integrating position, and calc. model to world matrix
         /// </summary>
         /// <param name="dt"></param>
-        void Update(float dt);
+        void Update( float dt );
 
     private:
 
@@ -35,18 +35,18 @@ namespace Physics
         /// Semi Implicit euler intergration for position
         /// </summary>
         /// <param name="dt"></param>
-        void Integrate(float dt);
+        void Integrate( void* args, int index );
         /// <summary>
         /// Calc. total force
         /// </summary>
-        void AccumlateForces();
+        void AccumlateForces( void* args, int index );
         /// <summary>
         /// Calc model to world matrix
         /// </summary>
-        void ModelToWorld();
+        void ModelToWorld( void* args, int index );
 
         //helper function to check box to box intersect
-        inline bool BoxIntersect(glm::vec3 posA,
+        inline bool BoxIntersect( glm::vec3 posA,
             glm::vec3 posB,
             glm::vec3 sizeA,
             glm::vec3 sizeB
@@ -55,5 +55,20 @@ namespace Physics
 
         glm::vec3 gravity;
         ECS::ComponentManager* componentManager;
+        Jobs::JobManager* jobManager = nullptr;
+
+
+        struct PhysicsArguments
+        {
+            float DeltaTime;
+
+            int StartElem;
+            int EndElm;
+
+            std::promise<void>* jobPromise;
+        };
+
+        PhysicsArguments* a_argument = nullptr;
+        PhysicsArguments* b_argument = nullptr;
     };
 };
