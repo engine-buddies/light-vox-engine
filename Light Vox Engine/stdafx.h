@@ -9,11 +9,13 @@
 #include <dxgi1_4.h>
 #include <d3dcompiler.h>
 #include <stdlib.h>  
-#include "Utils/DXSampleHelper.h"
 
 //events
 #include <pix3.h>
 #endif
+
+#include "Utils/LVutils.h"
+#include "Utils/DXSampleHelper.h"
 
 //Math 
 #define GLM_FORCE_SSE2 // or GLM_FORCE_SSE42 if your processor supports it
@@ -51,4 +53,3 @@ namespace glm
 //utils
 #include "Utils/Configs.h"
 #include <cstdint>
-#include "Utils/LVutils.h"

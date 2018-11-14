@@ -11,8 +11,12 @@
 
 #pragma once
 
-#include "../stdafx.h"
-
+#if defined(_WIN32) || defined(_WIN64)
+#include <wrl.h>
+#include <Windows.h>
+#include "d3dx12.h"
+#include <stdlib.h>  
+#include <iostream>
 
 // Note that while ComPtr is used to manage the lifetime of resources on the CPU,
 // it has no understanding of the lifetime of resources on the GPU. Apps must account
@@ -20,22 +24,26 @@
 // referenced by the GPU.
 using Microsoft::WRL::ComPtr;
 
-#ifdef _DEBUG
+#endif
+
+
+
+#if defined(_DEBUG) && (defined(_WIN32) || defined(_WIN64))
 class HrException : public std::runtime_error
 {
 public:
-    HrException( HRESULT hr ) : std::runtime_error( s_str ), m_hr( hr )
+    HrException(LV_RESULT hr ) : std::runtime_error( s_str ), m_hr( hr )
     {
         sprintf_s( s_str, "HRESULT of 0x%08X", static_cast<UINT>( hr ) );
     }
 
-    HRESULT Error() const { return m_hr; }
+	LV_RESULT Error() const { return m_hr; }
 private:
     char s_str[ 64 ] = {};
-    const HRESULT m_hr;
+    const LV_RESULT m_hr;
 };
 
-inline void ThrowIfFailed( HRESULT hr )
+inline void ThrowIfFailed(LV_RESULT hr )
 {
     if ( FAILED( hr ) )
     {
@@ -44,8 +52,10 @@ inline void ThrowIfFailed( HRESULT hr )
 }
 #else // _DEBUG
 
-inline void ThrowIfFailed( HRESULT hr ) { }
+inline void ThrowIfFailed( LV_RESULT hr ) { }
 #endif
+
+#if defined(_WIN32) || defined(_WIN64)
 
 #ifdef _DEBUG
 // Assign a name to the object to aid with debugging.
@@ -76,11 +86,11 @@ inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ...
         pObject->SetName( fullName );
     }
 }
-#else
+#else	
 inline void SetName( ID3D12Object*, LPCWSTR ) { }
 inline void SetNameIndexed( ID3D12Object*, LPCWSTR, UINT ) { }
 inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ... ) { }
-#endif
+#endif	//if debug
 
 // Naming helper for ComPtr<T>.
 // Assigns the name of the variable as the name of the object.
@@ -88,6 +98,8 @@ inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ...
 #define NAME_D3D12_OBJECT(x) SetName((x).Get(), L#x)
 #define NAME_D3D12_OBJECT_INDEXED(x, n) SetNameIndexed((x)[n].Get(), L#x, n)
 #define NAME_D3D12_OBJECT_WITH_NAME(x, n, ...) SetNameExtra((x).Get(), L#x, n, __VA_ARGS__)
+#endif	//if windows
+
 
 //we don't use the following
 /*

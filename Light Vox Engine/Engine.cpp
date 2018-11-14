@@ -14,18 +14,16 @@
 Engine* Engine::engineInstance = nullptr;
 
 /* LIFE CYCLE */
-
-Engine::Engine( HINSTANCE hInstance )
+Engine::Engine(LV_INSTANCE hInstance )
 {
-    this->hInstance = hInstance;
-    Engine::engineInstance = this;
-    windowWidth = 1280;
-    windowHeight = 720;
-    windowTitle = "STRUGGLE BUS";
-    hWindow = 0;
-
-    debugRenderer = Graphics::DebugRenderer::GetInstance();
-    camera = new Graphics::Camera();
+	if (hInstance != nullptr) {
+		this->hInstance = hInstance;
+		Engine::engineInstance = this;
+		windowWidth = 1280;
+		windowHeight = 720;
+		windowTitle = "STRUGGLE BUS";
+		hWindow = 0;
+	}
 }
 
 Engine::~Engine()
@@ -44,9 +42,9 @@ Engine::~Engine()
     Input::InputManager::ReleaseInstance();
 }
 
-HRESULT Engine::InitWindow()
-{
 #if defined(_WIN32) || defined(_WIN64)
+LV_RESULT Engine::InitWindow()
+{
     CreateConsoleWindow( 500, 120, 32, 120 );
 
     //initialize a window
@@ -99,17 +97,18 @@ HRESULT Engine::InitWindow()
         return HRESULT_FROM_WIN32( GetLastError() );
 
     ShowWindow( hWindow, SW_SHOW );
-#else
-    assert( "Unimplemented window creation" )
-#endif
-
-        return S_OK;
+	return S_OK;
 }
+
+#endif
 
 LV_RESULT Engine::InitSystems()
 {
     InitWindow();
     graphics = new Graphics::GraphicsCore( hWindow, static_cast<uint32_t>( windowWidth ), static_cast<uint32_t>( windowHeight ) );
+	debugRenderer = Graphics::DebugRenderer::GetInstance();
+	camera = new Graphics::Camera();
+
     physics = new Physics::Solver();
     rigidBody = new Physics::Rigidbody();
     time = GameTime::GetInstance();
@@ -161,9 +160,9 @@ LV_RESULT Engine::InitSystems()
     return S_OK;
 }
 
+#if defined(_WIN32) || defined(_WIN64)
 LV_RESULT Engine::Run()
 {
-#if defined(_WIN32) || defined(_WIN64)
     MSG msg = { };
     while ( msg.message != WM_QUIT )
     {
@@ -177,11 +176,6 @@ LV_RESULT Engine::Run()
             Update();
         }
     }
-#else
-
-#endif
-
-
     return (HRESULT) msg.wParam;
 }
 
@@ -189,6 +183,7 @@ void Engine::Quit()
 {
     PostMessage( this->hWindow, WM_CLOSE, NULL, NULL );
 }
+#endif
 
 /* EVENT PROCESSING */
 
@@ -300,6 +295,7 @@ inline void Engine::Update()
     debugRenderer->ClearCubes();
 }
 
+#if defined(_WIN32) || defined(_WIN64)
 void Engine::CreateConsoleWindow( int bufferLines, int bufferColumns, int windowLines, int windowColumns )
 {
     //#if defined(_DEBUG)  //we'll uncomment when we have imgui working
@@ -331,4 +327,4 @@ void Engine::CreateConsoleWindow( int bufferLines, int bufferColumns, int window
     EnableMenuItem( hmenu, SC_CLOSE, MF_GRAYED );
     //#endif
 }
-
+#endif

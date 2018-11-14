@@ -1,5 +1,5 @@
 #pragma once
-#include <Windows.h>
+#include "stdafx.h"
 #include <vector>
 #include "Graphics/GraphicsCore.h"
 #include "Graphics/DebugRenderer.h"
@@ -18,12 +18,7 @@ It's basically our entire engine (handles life cycle and windows related stuff)
 class Engine
 {
 public:
-#if defined(_WIN32) || defined(_WIN64)
-    Engine( HINSTANCE hInstance );
-#else
-    Engine();
-#endif
-
+    Engine( LV_INSTANCE hInstance );
     ~Engine();
 
     LV_RESULT InitSystems();
@@ -45,11 +40,7 @@ public:
 
     
 private:
-#if defined(_WIN32) || defined(_WIN64)
-    HINSTANCE hInstance;    //instance for windows type stuff
-#else
-    //hInstance for other class?
-#endif
+	LV_INSTANCE hInstance;    //instance for windows type stuff
     static Engine* engineInstance;
     LV_HANDLE hWindow;
     char* windowTitle;
