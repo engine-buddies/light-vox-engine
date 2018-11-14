@@ -5,7 +5,6 @@
 
 #include <deque>        // std::deque
 
-#include "CpuJob.h"
 
 namespace Jobs
 {
@@ -48,17 +47,11 @@ namespace Jobs
         /// </summary>
         void Wait();
 
-        /// <summary>
-        /// Get the next CPU job from this sequence. Removes it from this sequence deque
-        /// -- Does NOT have any mutexes or guards -- 
-        /// </summary>
-        /// <param name="aOutJob">Out variable to store the current job</param>
-        void GetNextJob_Unsafe( CpuJob& aOutJob );
 
     private:
 
         // The current set of jobs in this sequence
-        std::deque<CpuJob> sequenceJobs;
+        //std::deque<CpuJob> sequenceJobs;
 
         ///////////////////////////////////////////
         // Max settings for this sequence
