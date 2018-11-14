@@ -14,7 +14,7 @@ namespace ECS {
     {
         static const int NONE = -1;
         static const int USED = -2;
-        static const uint32_t MAX_GAME_OBJECTS = LV_MAX_INSTANCE_COUNT;
+        static const size_t MAX_GAME_OBJECTS = LV_MAX_INSTANCE_COUNT;
     public:
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace ECS {
         /// <summary>
         /// Returns Entity at index
         /// </summary>
-        Entity Get_Entity(int index) const;
+        Entity Get_Entity( size_t index) const;
 
         // We don't want anything making copies of this class so delete these operators
         EntityManager(EntityManager const&) = delete;

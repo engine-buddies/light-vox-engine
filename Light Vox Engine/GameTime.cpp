@@ -20,6 +20,7 @@ void GameTime::UpdateTimer()
 {
     int64_t now;
 	PerformanceCounter(now);
+
     currentTime = static_cast<double>( now );
 
     //Calc delta time and clamp to zero

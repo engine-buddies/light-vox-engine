@@ -47,10 +47,49 @@ inline void ThrowIfFailed( HRESULT hr )
 inline void ThrowIfFailed( HRESULT hr ) { }
 #endif
 
+#ifdef _DEBUG
+// Assign a name to the object to aid with debugging.
+inline void SetName( ID3D12Object* pObject, LPCWSTR name )
+{
+    pObject->SetName( name );
+}
+inline void SetNameIndexed( ID3D12Object* pObject, LPCWSTR name, UINT index )
+{
+    WCHAR fullName[ 50 ];
+    if ( swprintf_s( fullName, L"%s[%u]", name, index ) > 0 )
+    {
+        pObject->SetName( fullName );
+    }
+}
+inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ... )
+{
+    char extra[ 50 ];
+    va_list args;
+    va_start( args, format );
+    vsprintf_s( extra, format, args );
+    va_end( args );
 
 
+    WCHAR fullName[ 50 ];
+    if ( swprintf_s( fullName, L"%s-%hs", name, extra ) > 0 )
+    {
+        pObject->SetName( fullName );
+    }
+}
+#else
+inline void SetName( ID3D12Object*, LPCWSTR ) { }
+inline void SetNameIndexed( ID3D12Object*, LPCWSTR, UINT ) { }
+inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ... ) { }
+#endif
 
-//commented out because it requires <string>, and we don't need it
+// Naming helper for ComPtr<T>.
+// Assigns the name of the variable as the name of the object.
+// The indexed variant will include the index in the name of the object.
+#define NAME_D3D12_OBJECT(x) SetName((x).Get(), L#x)
+#define NAME_D3D12_OBJECT_INDEXED(x, n) SetNameIndexed((x)[n].Get(), L#x, n)
+#define NAME_D3D12_OBJECT_WITH_NAME(x, n, ...) SetNameExtra((x).Get(), L#x, n, __VA_ARGS__)
+
+//we don't use the following
 /*
 inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
 {
@@ -72,7 +111,6 @@ inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
         *(lastSlash + 1) = L'\0';
     }
 }
-*/
 
 #ifdef _DEBUG
 inline HRESULT ReadDataFromFile( LPCWSTR filename, byte** data, UINT* size )
@@ -115,46 +153,7 @@ inline HRESULT ReadDataFromFile( LPCWSTR filename, byte** data, UINT* size )
     return S_OK;
 }
 
-// Assign a name to the object to aid with debugging.
-inline void SetName( ID3D12Object* pObject, LPCWSTR name )
-{
-    pObject->SetName( name );
-}
-inline void SetNameIndexed( ID3D12Object* pObject, LPCWSTR name, UINT index )
-{
-    WCHAR fullName[ 50 ];
-    if ( swprintf_s( fullName, L"%s[%u]", name, index ) > 0 )
-    {
-        pObject->SetName( fullName );
-    }
-}
-inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ... )
-{
-    char extra[ 50 ];
-    va_list args;
-    va_start( args, format );
-    vsprintf_s( extra, format, args );
-    va_end( args );
 
-
-    WCHAR fullName[ 50 ];
-    if ( swprintf_s( fullName, L"%s-%hs", name, extra ) > 0 )
-    {
-        pObject->SetName( fullName );
-    }
-}
-#else
-inline void SetName( ID3D12Object*, LPCWSTR ) { }
-inline void SetNameIndexed( ID3D12Object*, LPCWSTR, UINT ) { }
-inline void SetNameExtra( ID3D12Object* pObject, LPCWSTR name, char* format, ... ) { }
-#endif
-
-// Naming helper for ComPtr<T>.
-// Assigns the name of the variable as the name of the object.
-// The indexed variant will include the index in the name of the object.
-#define NAME_D3D12_OBJECT(x) SetName((x).Get(), L#x)
-#define NAME_D3D12_OBJECT_INDEXED(x, n) SetNameIndexed((x)[n].Get(), L#x, n)
-#define NAME_D3D12_OBJECT_WITH_NAME(x, n, ...) SetNameExtra((x).Get(), L#x, n, __VA_ARGS__)
 
 inline UINT CalculateConstantBufferByteSize( UINT byteSize )
 {
@@ -163,7 +162,7 @@ inline UINT CalculateConstantBufferByteSize( UINT byteSize )
 }
 
 //don't need to compile shader because VS does that for us
-/*
+
 #ifdef D3D_COMPILE_STANDARD_FILE_INCLUDE
 inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
     const std::wstring& filename,
@@ -192,7 +191,6 @@ inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
     return byteCode;
 }
 #endif
-*/
 
 // Resets all elements in a ComPtr array.
 template<class T>
@@ -214,3 +212,4 @@ void ResetUniquePtrArray( T* uniquePtrArray )
         i.reset();
     }
 }
+*/

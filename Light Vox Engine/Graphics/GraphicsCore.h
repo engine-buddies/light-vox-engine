@@ -19,7 +19,7 @@ namespace Graphics
         /// <param name="hWindow">Handle to the window</param>
         /// <param name="windowW">Width of the window</param>
         /// <param name="windowH">Height of the window</param>
-        GraphicsCore( HWND hWindow, UINT windowW, UINT windowH );
+        GraphicsCore( HWND hWindow, uint32_t windowW, uint32_t windowH );
 
         /// <summary>
         /// Destructorino
@@ -36,7 +36,7 @@ namespace Graphics
         /// Handles our event fences and makes sure we're not writing to a frame
         /// that the GPU is still processing
         /// </summary>
-        void Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera );
+        void Update( glm::mat4x4_packed transforms[], Camera* camera );
 
         /// <summary>
         /// Where all the render logic lives
@@ -48,7 +48,7 @@ namespace Graphics
         /// </summary>
         /// <param name="width">New width of the window</param>
         /// <param name="height">New Height of the window</param>
-        void OnResize( UINT width, UINT height );
+        void OnResize( uint32_t width, uint32_t height );
     private:
 
         /*INITIALIZATION HELPERS*/
@@ -123,8 +123,8 @@ namespace Graphics
         inline void SetLightPassPSO( ID3D12GraphicsCommandList* commandList );
 
         HWND hWindow;		//handle to window
-        UINT windowWidth;	//width of window
-        UINT windowHeight;  //height of window
+        uint32_t windowWidth;	//width of window
+        uint32_t windowHeight;  //height of window
 
         CD3DX12_VIEWPORT viewport;  //viewport 
         CD3DX12_RECT scissorRect;   //scissor rectangle
@@ -151,8 +151,8 @@ namespace Graphics
         int currentFrameResourceIndex;
 
         //cached size of rtv descriptor (used to index through the heap)
-        UINT rtvDescriptorSize;
-        UINT cbvSrvDescriptorSize;
+        uint32_t rtvDescriptorSize;
+        uint32_t cbvSrvDescriptorSize;
 
         //vaiables for rendering one mesh
         D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
@@ -163,13 +163,13 @@ namespace Graphics
         Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferUpload;
         //Microsoft::WRL::ComPtr<ID3D12Resource> textures[1];           
         //Microsoft::WRL::ComPtr<ID3D12Resource> texturesUploads[1];
-        UINT verticesCount;
+        uint32_t verticesCount;
 
         //fence & synch related vars
-        UINT fenceFrameIndex;
+        uint32_t fenceFrameIndex;
         HANDLE fenceEvent;
         Microsoft::WRL::ComPtr<ID3D12Fence> fence;
-        UINT64 fenceValue;
+        uint64_t fenceValue;
 
         //Deferred Rendering members
         Microsoft::WRL::ComPtr<ID3D12Resource> fsqVertexBuffer; //For Full Screen Quad

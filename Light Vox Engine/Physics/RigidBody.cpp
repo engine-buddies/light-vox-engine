@@ -9,43 +9,42 @@ Physics::Rigidbody::~Rigidbody()
 {
 }
 
-void Physics::Rigidbody::Pos(glm::vec3 pos, UINT index)
+void Physics::Rigidbody::Pos(glm::vec3 pos, size_t index)
 {
     componentManager->transform[index].pos = pos;
 }
 
-void Physics::Rigidbody::RotateAxisAngle(glm::vec3 rotationAxis, float angle, UINT index)
+void Physics::Rigidbody::RotateAxisAngle(glm::vec3 rotationAxis, float angle, size_t index)
 {
-    componentManager->transform[index].rot = rotationAxis;
-    componentManager->transform[index].angle = angle;
+    componentManager->transform[ index ].rot = glm::rotate( componentManager->transform[ index ].rot, angle, rotationAxis );
 }
 
-void Physics::Rigidbody::Velocity(glm::vec3 vel, UINT index)
+void Physics::Rigidbody::Velocity(glm::vec3 vel, size_t index)
 {
     componentManager->bodyProperties[index].velocity = vel;
 }
 
-void Physics::Rigidbody::Acceleration(glm::vec3 accel, UINT index)
+void Physics::Rigidbody::Acceleration(glm::vec3 accel, size_t index)
 {
     componentManager->bodyProperties[index].acceleration= accel;
 }
 
-void Physics::Rigidbody::Force(glm::vec3 force, UINT index)
+void Physics::Rigidbody::Force(glm::vec3 force, size_t index)
 {
     componentManager->bodyProperties[index].force = force ;
 }
 
-void Physics::Rigidbody::Mass(float mass, UINT index)
+void Physics::Rigidbody::Mass(float mass, size_t index)
 {
     componentManager->bodyProperties[index].mass = mass;
 }
 
-void Physics::Rigidbody::Scale(glm::vec3 scale, UINT index)
+void Physics::Rigidbody::Scale(glm::vec3 scale, size_t index)
 {
-    componentManager->transform[index].scale = scale;
+    assert( "Hey you can't scale a voxel" );
 }
 
-void Physics::Rigidbody::BoxColliderSize(glm::vec3 size, UINT index)
+void Physics::Rigidbody::BoxColliderSize(glm::vec3 size, size_t index)
 {
     componentManager->boxCollider[index].size = size;
 }
