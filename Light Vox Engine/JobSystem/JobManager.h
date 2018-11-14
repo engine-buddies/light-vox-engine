@@ -5,9 +5,7 @@
 #include <vector>               // std::vector
 #include <atomic>               // std::atomic
 #include <future>
-#include <memory>
 
-#include "JobSequence.h"        // A job 
 #include "ConcurrentQueue.h"    // Concurrent queue that is NOT LOCKLESS
 
 namespace Jobs
