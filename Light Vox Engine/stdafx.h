@@ -2,14 +2,18 @@
 //for include files that are used often but rarely changed
 
 //For windows and graphics
+#if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
 #include <wrl.h>
 #include "Utils/d3dx12.h"
 #include <dxgi1_4.h>
 #include <d3dcompiler.h>
 #include <stdlib.h>  
+#include "Utils/DXSampleHelper.h"
+
 //events
 #include <pix3.h>
+#endif
 
 //Math 
 #define GLM_FORCE_SSE2 // or GLM_FORCE_SSE42 if your processor supports it
@@ -29,7 +33,8 @@ namespace glm
 }
 
 //Debug
-#if defined(_DEBUG)
+#if defined(_WIN32) || defined(_WIN64)
+#if defined(_DEBUG) 
 #define _CRTDBG_MAP_ALLOC  
 
 #include <crtdbg.h> 
@@ -41,9 +46,9 @@ namespace glm
 #include <stdexcpt.h>
 #include <stdexcept>
 #endif
+#endif
 
 //utils
-#include "Utils/DXSampleHelper.h"
 #include "Utils/Configs.h"
 #include <cstdint>
 #include "Utils/LVutils.h"
