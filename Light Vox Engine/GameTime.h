@@ -1,5 +1,11 @@
 #pragma once
+
+#include "stdafx.h"
+
+#if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
+#endif
+
 class GameTime
 {
 public:
@@ -37,6 +43,9 @@ public:
     float GetDeltaFloatTime();
 
 private:
+	void PerformanceFrequency(int64_t& perfFreq);
+	void PerformanceCounter(int64_t& now);
+
     static GameTime* instance;
 
     double startTime;
