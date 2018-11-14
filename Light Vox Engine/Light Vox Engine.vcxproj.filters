@@ -85,9 +85,6 @@
     <ClInclude Include="GameTime.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="JobSystem\CpuJob.h">
-      <Filter>Source Files\JobSystem</Filter>
-    </ClInclude>
     <ClInclude Include="JobSystem\JobSequence.h">
       <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
