@@ -1,10 +1,12 @@
 #pragma once
 
+#include "../stdafx.h"
+
 #include <thread>               // std::thread
 #include <condition_variable>   // std::condition_variable
 #include <vector>               // std::vector
 #include <atomic>               // std::atomic
-#include <future>
+#include <future>               // std::future, std::promise
 
 #include "ConcurrentQueue.h"    // Concurrent queue that is NOT LOCKLESS
 
@@ -54,27 +56,16 @@ namespace Jobs
             int Index )
         {
             CpuJob aJob = {};
-            aJob.args = args;
+            aJob.jobArgs = args;
             aJob.index = Index;
 
             // #TODO
             // make this a pooled resource
             IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
-            aJob.TaskPtr = jobPtr;
+            aJob.jobPtr = jobPtr;
 
             readyQueue.emplace_back( aJob );
             jobAvailableCondition.notify_one();
-        }
-
-        void TestTrackedFunc( void* aArgs, int index )
-        {
-            std::promise<void> *aPromise = ( std::promise<void>* )( aArgs );
-
-            printf( "Inside the test tracked func \n\n" );
-            std::this_thread::sleep_for( std::chrono::seconds::duration( 1 ) );
-            printf( "Done inside the tracked function\n\n" );
-            
-            aPromise->set_value();
         }
 
         // We don't want anything making copies of this class so delete these operators
@@ -106,8 +97,6 @@ namespace Jobs
         /// </summary>
         std::mutex readyQueueMutex;
 
-
-
         /// <summary>
         /// Conditional variable for if a job is available
         /// </summary>
@@ -130,6 +119,7 @@ namespace Jobs
         /// <summary>
         /// Base functor for jobs to use
         /// </summary>
+        /// <author>Ben Hoffman</author>
         struct IJob
         {
             virtual ~IJob() {}
@@ -139,6 +129,7 @@ namespace Jobs
         /// <summary>
         /// A job function that is not a member of a class
         /// </summary>
+        /// <author>Ben Hoffman</author>
         struct JobFunc : IJob
         {
             JobFunc( void( *aFunc_ptr )( void*, int ) )
@@ -166,6 +157,7 @@ namespace Jobs
         /// <summary>
         /// A job member function that is a member of a class
         /// </summary>
+        /// <author>Ben Hoffman</author>
         template <class T>
         struct JobMemberFunc : IJob
         {
@@ -190,7 +182,6 @@ namespace Jobs
             void ( T::*func_ptr )( void*, int );
         };
 
-
         /// <summary>
         /// A job that will be run in parallel with others on the CPU
         /// A function pointer for the worker threads to use
@@ -198,14 +189,14 @@ namespace Jobs
         /// <author>Ben Hoffman</author>
         struct CpuJob
         {
-            IJob* TaskPtr = nullptr;
-            void* args = nullptr;
+            IJob* jobPtr = nullptr;
+            void* jobArgs = nullptr;
             int index = 0;
         };
 
         // Ready queue for the jobs
         ConcurrentQueue<CpuJob> readyQueue;
 
-    };
+    };  // JobManager
 
-};      // namespace jobs
+};  // namespace jobs

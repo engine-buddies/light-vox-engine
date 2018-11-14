@@ -36,17 +36,6 @@ JobManager::JobManager()
     {
         workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
     }
-
-    //AddJob( &TestFunc, "Test Arguments", 1 );
-
-    /*std::promise<void> thePromise;
-    std::future<void> aFuture = thePromise.get_future();
-
-    AddJob( this, &Jobs::JobManager::TestTrackedFunc, ( &thePromise ), 1 );
-    
-    aFuture.wait();
-
-    printf( "Successfully waited for that function to complete!\n\n" );*/
  }
 
 JobManager::~JobManager()
@@ -68,11 +57,11 @@ JobManager::~JobManager()
 void JobManager::AddJob( void( *func_ptr )( void *, int ), void * args, int Index )
 {
     CpuJob aJob;
-    aJob.args = args;
+    aJob.jobArgs = args;
     aJob.index = Index;
 
     IJob* jobPtr = new JobFunc( func_ptr );
-    aJob.TaskPtr = jobPtr;
+    aJob.jobPtr = jobPtr;
 
     readyQueue.emplace_back( aJob );
     jobAvailableCondition.notify_one();
@@ -96,12 +85,12 @@ void JobManager::WorkerThread()
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
 
-            if ( CurJob.TaskPtr )
+            if ( CurJob.jobPtr )
             {
-                CurJob.TaskPtr->invoke( CurJob.args, CurJob.index );
+                CurJob.jobPtr->invoke( CurJob.jobArgs, CurJob.index );
                 // #TODO
                 // make this a pooled resource
-                delete CurJob.TaskPtr;
+                delete CurJob.jobPtr;
             }
 
             // Notify other threads that a job has been taken and we should probably
