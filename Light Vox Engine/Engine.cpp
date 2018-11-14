@@ -283,12 +283,6 @@ inline void Engine::Update()
     camera->SetTransform( pos, forward, up );
 
     physics->Update( time->GetTotalFloatTime() );
-    //memcpy( transforms, componentManager->transform, LV_MAX_INSTANCE_COUNT * sizeof( glm::mat4x4 ) );
-    //for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
-    //{
-    //    transforms[ i ] = glm::transpose( transforms[ i ] );
-    //}
-
     graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
     graphics->Render();
     time->UpdateTimer();

@@ -69,17 +69,3 @@ float GameTime::GetDeltaFloatTime()
 {
     return deltaFloatTime;
 }
-
-#if defined(_WIN32) || defined(_WIN64)
-
-void GameTime::PerformanceFrequency(int64_t & perfFreq)
-{
-	QueryPerformanceFrequency((LARGE_INTEGER*)&perfFreq);
-}
-
-void GameTime::PerformanceCounter(int64_t & now)
-{
-	QueryPerformanceCounter((LARGE_INTEGER*)&now);
-}
-
-#endif
