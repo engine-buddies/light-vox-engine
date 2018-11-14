@@ -99,6 +99,8 @@ void JobManager::WorkerThread()
             if ( CurJob.TaskPtr )
             {
                 CurJob.TaskPtr->invoke( CurJob.args, CurJob.index );
+                // #TODO
+                // make this a pooled resource
                 delete CurJob.TaskPtr;
             }
 

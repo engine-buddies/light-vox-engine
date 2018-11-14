@@ -70,6 +70,5 @@ namespace Physics
 
         PhysicsArguments* a_argument = nullptr;
         PhysicsArguments* b_argument = nullptr;
-
     };
 };

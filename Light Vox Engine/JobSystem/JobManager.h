@@ -60,6 +60,8 @@ namespace Jobs
             aJob.args = args;
             aJob.index = Index;
 
+            // #TODO
+            // make this a pooled resource
             IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
             aJob.TaskPtr = jobPtr;
 
@@ -106,8 +108,6 @@ namespace Jobs
         /// A mutex determining if the queue is ready
         /// </summary>
         std::mutex readyQueueMutex;
-
-
 
         // Ready queue for the jobs
         ConcurrentQueue<CpuJob> readyQueue;
