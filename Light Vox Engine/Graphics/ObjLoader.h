@@ -11,7 +11,7 @@ namespace Graphics
     struct MeshData
     {
         std::vector<Vertex> vertices;
-        std::vector<UINT> indices;
+        std::vector<uint32_t> indices;
     };
 
     class ObjLoader

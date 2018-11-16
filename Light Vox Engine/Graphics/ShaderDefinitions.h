@@ -55,7 +55,7 @@ namespace Graphics
 {
     struct InstanceBuffer
     {
-        DirectX::XMFLOAT4X4 model;
+        glm::mat4x4_packed model;
     };
 }
 #endif
@@ -77,9 +77,9 @@ namespace Graphics
 {
     struct SceneConstantBuffer
     {
-        DirectX::XMFLOAT4X4 view;
-        DirectX::XMFLOAT4X4 projection;
-        DirectX::XMFLOAT3 cameraPosition;
+        glm::mat4x4_packed view;
+        glm::mat4x4_packed projection;
+        glm::vec3_packed cameraPosition;
     };
 }
 #endif
@@ -115,9 +115,9 @@ namespace Graphics
 {
     struct Vertex
     {
-        DirectX::XMFLOAT3 position;
-        DirectX::XMFLOAT3 normal;
-        DirectX::XMFLOAT2 uv;
+        glm::vec3_packed position;
+        glm::vec3_packed normal;
+        glm::vec2_packed uv;
     };
 }
 

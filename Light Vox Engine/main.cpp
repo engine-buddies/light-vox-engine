@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "engine.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
     {
@@ -11,8 +13,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #endif
         Engine engine( hInstance );
 
-
-        LV_PRINT_DEBUG( "Initializing Systems" );
         ThrowIfFailed( engine.InitSystems() );	//init all 
         ThrowIfFailed( engine.Run() );			//run that baby
     }
@@ -23,3 +23,13 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #endif
     return 0;
 }
+
+#else   //defined windows
+
+int main() 
+{
+    assert( "Unimplemented main" );
+    return 0;
+}
+
+#endif

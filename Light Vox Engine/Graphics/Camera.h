@@ -1,5 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
+#include "../stdafx.h"
 
 namespace Graphics
 {
@@ -9,9 +9,9 @@ namespace Graphics
     class Camera
     {
     private:
-        DirectX::XMFLOAT3 position;
-        DirectX::XMFLOAT3 forward;
-        DirectX::XMFLOAT3 up;
+        glm::vec3 position;
+        glm::vec3 forward;
+        glm::vec3 up;
 
         float fov;      //field of view
         float nearZ;    //near plane (in Z)
@@ -27,9 +27,9 @@ namespace Graphics
         /// <param name="position">The position of the camera</param>
         /// <param name="forward">Where the camera is pointing to</param>
         /// <param name="up">What 'up' is in this world</param>
-        void SetTransform( DirectX::XMVECTOR position,
-            DirectX::XMVECTOR forward,
-            DirectX::XMVECTOR up
+        void SetTransform( glm::vec3 position,
+            glm::vec3 forward,
+            glm::vec3 up
         );
 
         /// <summary>
@@ -39,8 +39,8 @@ namespace Graphics
         /// <param name="proj">The location to save the projection matrix</param>
         /// <param name="screenWidth">The width of the screen</param>
         /// <param name="screenHeight">The height of the screen</param>
-        void GetViewProjMatrix( DirectX::XMFLOAT4X4 *view,
-            DirectX::XMFLOAT4X4 *proj,
+        void GetViewProjMatrix( glm::mat4x4_packed *view,
+            glm::mat4x4_packed *proj,
             float screenWidth,
             float screenHeight
         );
@@ -49,6 +49,6 @@ namespace Graphics
         /// Gets camera position
         /// </summary>
         /// <returns>Float 3 representing camera position</returns>
-        DirectX::XMFLOAT3 GetPosition() const { return position; }
+        glm::vec3 GetPosition() const { return position; }
     };
 }

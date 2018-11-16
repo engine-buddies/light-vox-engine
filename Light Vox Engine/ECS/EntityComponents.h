@@ -8,13 +8,15 @@
 
 namespace EntityComponents
 {
-    struct Transform
+    struct TransformMatrix
     {
         glm::mat4 transformMatrix;
+    };
+
+    struct Transform
+    {
+        glm::quat rot = { 1.0f, .0f, .0f, .0f };
         glm::vec3 pos = { .0f, .0f, .0f };
-        glm::vec3 rot = { .0f, .0f, .0f };
-        glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
-        float angle = .0f;
     };
 
     struct BoxCollider
@@ -24,9 +26,9 @@ namespace EntityComponents
 
     struct BodyProperties
     {
-        glm::vec3 velocity = { .0f, .0f, .0f };;
-        glm::vec3 force = { .0f, .0f, .0f };;
-        glm::vec3 acceleration = { .0f, .0f, .0f };;
+        glm::vec3 velocity = { .0f, .0f, .0f };
+        glm::vec3 force = { .0f, .0f, .0f };
+        glm::vec3 acceleration = { .0f, .0f, .0f };
         float mass = 1.0f;
     };
 };
