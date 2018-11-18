@@ -129,11 +129,61 @@ namespace {
             vertex.z = -vertex.z;
 
         //create the contact data 
-        contactData->contactNormal[0] = normal;
+        contactData[contactData->contactsFound].contactNormal = normal;
+        contactData[contactData->contactsFound].penetration = penetration;
+        contactData[contactData->contactsFound].contactPoint = two.transformMatrix * glm::vec4(vertex, 1.0f);
+        contactData[contactData->contactsFound].bodyPair = { one.tag, two.tag };
     }
 
-    inline glm::vec3 FindContactPoint()
+    inline glm::vec3 FindContactPoint(
+        const glm::vec3& pOne,
+        const glm::vec3& dOne, 
+        float oneSize,
+        const glm::vec3& pTwo,
+        const glm::vec3& dTwo,
+        float twoSize,
+        bool useOne)
     {
+        glm::vec3 toSt, cOne, cTwo;
+        float dpStaOne, dpStaTwo, dpOneTwo, smOne, smTwo;
+        float denom, mua, mub;
+
+        smOne = glm::length2(dOne);
+        smTwo = glm::length2(dTwo);
+        dpOneTwo = glm::dot(dTwo, dOne);
+
+        toSt = pOne - pTwo;
+        dpStaOne = glm::dot(dOne, toSt);
+        dpStaTwo = glm::dot(dTwo, toSt);
+
+        denom = smOne * smTwo - dpOneTwo * dpOneTwo;
+
+        // Zero denominator indicates parrallel lines
+        if (glm::abs(denom) < FLT_EPSILON) {
+            return useOne ? pOne : pTwo;
+        }
+
+        mua = (dpOneTwo * dpStaTwo - smTwo * dpStaOne) / denom;
+        mub = (smOne * dpStaTwo - dpOneTwo * dpStaOne) / denom;
+
+        // If either of the edges has the nearest point out
+        // of bounds, then the edges aren't crossed, we have
+        // an edge-face contact. Our point is on the edge, which
+        // we know from the useOne parameter.
+        if (mua > oneSize ||
+            mua < -oneSize ||
+            mub > twoSize ||
+            mub < -twoSize)
+        {
+            return useOne ? pOne : pTwo;
+        }
+        else
+        {
+            cOne = pOne + dOne * mua;
+            cTwo = pTwo + dTwo * mub;
+
+            return cOne * 0.5f + cTwo * 0.5f;
+        }
     }
 }
 
@@ -269,6 +319,8 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
     EntityComponents::BoxCollider& one = componentManager->boxCollider[entityA];
     EntityComponents::BoxCollider& two = componentManager->boxCollider[entityB];
 
+    EntityComponents::Contacts* contacts = componentManager->contacts;
+
     //Find the vector b/w two centers
     glm::vec3 toCenter = posA - posB;
 
@@ -307,15 +359,15 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
     if (best < 3)
     {
         //vertex of box two on a face of box one 
-        //fillPointFaceBoxBox(two, one, toCentre*-1.0f, data, best - 3, pen);
-        //data->addContacts(1);
+        FillPointFaceBoxBox(one, two, toCenter, contacts, best, pen);
+        ++contacts->contactsFound;
         return 1;
     }
     else if (best < 6)
     {
         // We've got a vertex of box one on a face of box two
-        //fillPointFaceBoxBox(two, one, toCentre*-1.0f, data, best - 3, pen);
-        //data->addContacts(1);
+        FillPointFaceBoxBox(two, one, toCenter*-1.0f, contacts, best - 3, pen);
+        ++contacts->contactsFound;
         return 1;
     }
     else
@@ -327,6 +379,7 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
         glm::vec3 oneAxis = GetAxisVector(oneAxisIndex, one.transformMatrix);
         glm::vec3 twoAxis = GetAxisVector(twoAxisIndex, two.transformMatrix);
         glm::vec3 axis = glm::cross(oneAxis, twoAxis);
+        axis = glm::normalize(axis);
 
         //if the axis point from box one to box two 
         if (glm::dot(axis, toCenter) > 0)
@@ -354,14 +407,23 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
         ptOnTwoEdge = two.transformMatrix * glm::vec4(ptOnTwoEdge, 1.0f);
 
         //find point closest to the two line-segments 
-
+        glm::vec3 vertex = FindContactPoint(
+            ptOnOneEdge,
+            oneAxis,
+            one.size[oneAxisIndex],
+            ptOnTwoEdge,
+            twoAxis,
+            two.size[twoAxisIndex],
+            bestSingleAxis > 2
+        );
         
-
+        contacts[contacts->contactsFound].penetration = pen;
+        contacts[contacts->contactsFound].contactNormal = axis;
+        contacts[contacts->contactsFound].contactPoint = vertex;
+        contacts[contacts->contactsFound].bodyPair = { one.tag, two.tag };
+        ++contacts->contactsFound;
         return 1;
     }
-
-
-
     return 0;
 }
 #undef CHECK_OVERLAP

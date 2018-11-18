@@ -35,18 +35,12 @@ void Solver::Collide()
                 continue;
 
             rigidBody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
-            //if (rigidBody->CollideBoxBox(i, j)) printf("hit");
-            /* glm::vec3& posA = componentManager->transform[ i ].pos;
-             glm::vec3& posB = componentManager->transform[ j ].pos;
-             glm::vec3& sizeA = componentManager->boxCollider[ i ].size;
-             glm::vec3& sizeB = componentManager->boxCollider[ j ].size;
-             if ( BoxIntersect( posA, posB, sizeA, sizeB ) )
-             {
-                 DEBUG_PRINT("Entity: %i hit Entity: %i \n", i, j);
-             }*/
 
         }
     }
+
+    //reset contacts
+    componentManager->contacts->contactsFound = 0;
 }
 
 void Solver::Integrate(float dt)

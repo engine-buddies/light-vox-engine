@@ -41,19 +41,24 @@ namespace EntityComponents
         uint16_t tag;
     };
 
+    struct BodyPair
+    {
+        uint16_t a;
+        uint16_t b;
+    };
+
     struct Contacts
     {
-        glm::vec3* contactPoint;
-        glm::vec3* contactNormal;
-        float* penetration;
-        float* friction;
-        float* restitution;
+        glm::vec3 contactPoint;
+        glm::vec3 contactNormal;
+        float penetration;
+        float friction = 1.0f;
+        float restitution = 1.0f;
+        BodyPair bodyPair;
         //number of contacts found so far
         uint32_t contactsFound = 0;
-        //holds maximum number of contacts 
-        uint32_t contactsLeft = 256;
         //Entity ID of colliding bodies
-        uint16_t* tags;
+        uint16_t tag;
     };
 
     struct PlaneCollider
