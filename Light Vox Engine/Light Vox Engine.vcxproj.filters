@@ -24,6 +24,9 @@
     <Filter Include="Source Files\ECS">
       <UniqueIdentifier>{31004666-e0be-4365-80ad-b1493839b90d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{ea2763a8-e76c-4340-a749-2cd7980bfad7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -64,6 +67,15 @@
     </ClCompile>
     <ClCompile Include="Physics\RigidBody.cpp">
       <Filter>Source Files\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\GraphicsBase.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DebugRenderer.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\InputManager.cpp">
+      <Filter>Source Files\Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,12 +145,30 @@
     <ClInclude Include="Physics\RigidBody.h">
       <Filter>Source Files\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\DebugRenderer.h">
+      <Filter>Source Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\InputManager.h">
+      <Filter>Source Files\Input</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\vs_basic.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ps_lighting.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\vs_FSQ.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\vs_debug.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ps_debug.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

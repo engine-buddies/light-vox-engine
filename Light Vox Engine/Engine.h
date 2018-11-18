@@ -10,6 +10,7 @@
 #include "Physics/RigidBody.h"
 #include "JobSystem/JobManager.h"
 #include "JobSystem/ConcurrentQueue.h"
+#include "Input/InputManager.h"
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -30,10 +31,7 @@ public:
     //responding to events
     LRESULT HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam );
     void OnResize( UINT width, UINT height );
-    void OnMouseDown( WPARAM buttonState, int x, int y );
-    void OnMouseUp( WPARAM buttonState, int x, int y );
-    void OnMouseMove( WPARAM buttonState, int x, int y );
-
+    
 private:
     static Engine* engineInstance;
     HINSTANCE hInstance;
@@ -57,7 +55,12 @@ private:
     Physics::Solver* physics;
     Physics::Rigidbody* rigidBody;
 
+    Input::InputManager* InputMan;
+
     HRESULT InitWindow();
+
+
+    void UsingInputFunc( float axis );
 
 #if defined(_DEBUG)
     /*Debug function to create a console window*/
