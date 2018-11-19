@@ -8,7 +8,7 @@
 using namespace Microsoft::WRL;
 using namespace Graphics;
 
-GraphicsCore::GraphicsCore( HWND hWindow, UINT windowW, UINT windowH )
+GraphicsCore::GraphicsCore( HWND hWindow, uint32_t windowW, uint32_t windowH )
 {
     this->hWindow = hWindow;
     windowWidth = windowW;
@@ -23,7 +23,7 @@ GraphicsCore::GraphicsCore( HWND hWindow, UINT windowW, UINT windowH )
 GraphicsCore::~GraphicsCore()
 {
     //wait for the current event fencce to complete
-    const UINT64 fenceToWaitFor = fenceValue;
+    const uint64_t fenceToWaitFor = fenceValue;
     ThrowIfFailed( commandQueue->Signal( fence.Get(), fenceToWaitFor ) );
     ThrowIfFailed( fence->SetEventOnCompletion( fenceToWaitFor, fenceEvent ) );
     WaitForSingleObject( fenceEvent, INFINITE );
@@ -33,7 +33,7 @@ GraphicsCore::~GraphicsCore()
         delete frameResources[ i ];
 }
 
-void GraphicsCore::OnResize( UINT width, UINT height )
+void GraphicsCore::OnResize( uint32_t width, uint32_t height )
 {
     //TODO - recreate scssisor rectangle, viewport, and back buffers
 }
@@ -79,11 +79,11 @@ HRESULT GraphicsCore::InitFrameResources()
     return S_OK;
 }
 
-void GraphicsCore::Update( DirectX::XMFLOAT4X4 transforms[], Camera* camera )
+void GraphicsCore::Update( glm::mat4x4_packed transforms[], Camera* camera )
 {
     PIXSetMarker( commandQueue.Get(), 0, L"Getting last completed fence" );
 
-    const UINT64 lastCompletedFence = fence->GetCompletedValue();
+    const uint64_t lastCompletedFence = fence->GetCompletedValue();
     fenceFrameIndex = ( fenceFrameIndex + 1 ) % LV_FRAME_COUNT;
     currentFrameResource = frameResources[ fenceFrameIndex ];
 
@@ -135,7 +135,7 @@ void GraphicsCore::Render()
             nullptr
         );
         rtvHandle.Offset( rtvDescriptorSize );
-        for ( UINT i = 1; i < LV_NUM_GBUFFER_RTV; ++i )
+        for ( uint32_t i = 1; i < LV_NUM_GBUFFER_RTV; ++i )
         {
             currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ]->ClearRenderTargetView(
                 rtvHandle,
@@ -514,7 +514,7 @@ HRESULT GraphicsCore::InitRtvHeap()
         rtvHeap->GetCPUDescriptorHandleForHeapStart()
     );
 
-    for ( UINT i = 0; i < LV_FRAME_COUNT; ++i )
+    for ( uint32_t i = 0; i < LV_FRAME_COUNT; ++i )
     {
         rtvHandle.Offset( LV_NUM_GBUFFER_RTV, rtvDescriptorSize );
 
@@ -617,13 +617,13 @@ HRESULT GraphicsCore::InitInputShaderResources()
     ObjLoader::LoadObj( vertices, indices, "Assets/Models/voxel.obj" );
 
     //make vertex buffer for 'n' floats
-    UINT vertexDataSize = static_cast<UINT>(vertices->size() * sizeof( Vertex ));
-    UINT vertexDataOffset = 0;
-    UINT vertexStride = sizeof( Vertex );
-    UINT indexDataSize = static_cast<UINT>(indices->size() * sizeof( uint16_t ));
-    UINT indexDataOffset = 0;
+    uint32_t vertexDataSize = static_cast<uint32_t>(vertices->size() * sizeof( Vertex ));
+    uint32_t vertexDataOffset = 0;
+    uint32_t vertexStride = sizeof( Vertex );
+    uint32_t indexDataSize = static_cast<uint32_t>(indices->size() * sizeof( uint16_t ));
+    uint32_t indexDataOffset = 0;
 
-    verticesCount = static_cast<UINT>(indices->size());
+    verticesCount = static_cast<uint32_t>(indices->size());
 
     //vertex buffer(s)
     {
@@ -687,9 +687,9 @@ HRESULT GraphicsCore::InitInputShaderResources()
         objl.GenerateFullScreenQuad( screenQuad );
 
         //make vertex buffer for 'n' floats
-        UINT fsqVertexDataSize = static_cast<UINT>(screenQuad.vertices.size() * sizeof( Vertex ));
-        UINT fsqVertexDataOffset = 0;
-        UINT fsqVertexStride = sizeof( Vertex );
+        uint32_t fsqVertexDataSize = static_cast<uint32_t>(screenQuad.vertices.size() * sizeof( Vertex ));
+        uint32_t fsqVertexDataOffset = 0;
+        uint32_t fsqVertexStride = sizeof( Vertex );
 
         //create FSQ vertex buffer
         ThrowIfFailed( device->CreateCommittedResource(
@@ -809,9 +809,9 @@ HRESULT GraphicsCore::InitInputShaderResources()
     // Describe and create a shader resource view (SRV) and constant 
     // buffer view (CBV) descriptor heap.  Heap layout: null views, 
     // frame 1's constant buffer, frame 2's constant buffers, etc...
-    const UINT nullSrvCount = LV_NUM_GBUFFER_RTV;		// Null descriptors are needed for out of bounds behavior reads.
-    const UINT cbvCount = LV_FRAME_COUNT * 1; //Frame Count * Number of CBVs
-    const UINT srvCount = LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV; // _countof(SampleAssets::Textures) + (FrameCount * 1);
+    const uint32_t nullSrvCount = LV_NUM_GBUFFER_RTV;		// Null descriptors are needed for out of bounds behavior reads.
+    const uint32_t cbvCount = LV_FRAME_COUNT * 1; //Frame Count * Number of CBVs
+    const uint32_t srvCount = LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV; // _countof(SampleAssets::Textures) + (FrameCount * 1);
     D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
     cbvSrvHeapDesc.NumDescriptors = nullSrvCount + cbvCount + srvCount;
     cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -822,7 +822,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart() );
     cbvSrvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
-    for ( UINT i = 0; i < LV_NUM_NULL_SRV; ++i )
+    for ( uint32_t i = 0; i < LV_NUM_NULL_SRV; ++i )
     {
         // Describe and create 2 null SRVs. Null descriptors are needed in order 
         // to achieve the effect of an "unbound" resource.
@@ -848,7 +848,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     //Create samplers
     {
         // Get the sampler descriptor size for the current device.
-        const UINT samplerDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
+        const uint32_t samplerDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
 
         // Get a handle to the start of the descriptor heap.
         CD3DX12_CPU_DESCRIPTOR_HANDLE samplerHandle( samplerHeap->GetCPUDescriptorHandleForHeapStart() );
@@ -874,7 +874,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     commandQueue->ExecuteCommandLists( _countof( ppCommandList ), ppCommandList );
     PIXEndEvent( commandQueue.Get() );
 
-    const UINT64 fenceToWaitFor = fenceValue;
+    const uint64_t fenceToWaitFor = fenceValue;
     ThrowIfFailed( commandQueue->Signal( fence.Get(), fenceToWaitFor ) );
     ++fenceValue;
 

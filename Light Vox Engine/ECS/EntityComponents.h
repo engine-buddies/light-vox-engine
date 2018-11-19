@@ -8,13 +8,16 @@
 
 namespace EntityComponents
 {
-    struct Transform
+    struct TransformMatrix
     {
         glm::mat4 transformMatrix;
+    };
+
+    struct Transform
+    {
         glm::quat orientation = glm::quat();
-        glm::vec3 rot = { .0f, .0f, .0f }; 
+        glm::vec3 rot = { .0f, .0f, .0f };
         glm::vec3 pos = { .0f, .0f, .0f };
-        glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
 
         ////transformation matricies 
         //glm::mat4 posMatrix = glm::mat4(1.0f);
@@ -23,10 +26,10 @@ namespace EntityComponents
 
         float angle = .0f;
     };
-    
+
     struct BoxCollider
     {
-        glm::vec3 vertices[8]; 
+        glm::vec3 vertices[8];
         glm::mat4 offset = glm::mat4(1.0f);
         glm::mat4 transformMatrix;
         glm::vec3 contactPoint;
@@ -58,14 +61,6 @@ namespace EntityComponents
         //number of contacts found so far
         uint32_t contactsFound = 0;
         //Entity ID of colliding bodies
-        uint16_t tag;
-    };
-
-    struct PlaneCollider
-    {
-        //plane normal
-        glm::vec3 direction;
-        float offset;
         uint16_t tag;
     };
 

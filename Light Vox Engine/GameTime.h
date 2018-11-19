@@ -1,5 +1,7 @@
 #pragma once
-#include <Windows.h>
+
+#include "stdafx.h"
+
 class GameTime
 {
 public:
@@ -37,6 +39,9 @@ public:
     float GetDeltaFloatTime();
 
 private:
+	void PerformanceFrequency(int64_t& perfFreq);
+	void PerformanceCounter(int64_t& now);
+
     static GameTime* instance;
 
     double startTime;

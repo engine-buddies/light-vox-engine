@@ -18,14 +18,15 @@ void GameTime::ReleaseInstance()
 
 void GameTime::UpdateTimer()
 {
-    __int64 now;
-    QueryPerformanceCounter( (LARGE_INTEGER*) &now );
+    int64_t now;
+	PerformanceCounter(now);
+
     currentTime = static_cast<double>( now );
 
     //Calc delta time and clamp to zero
     //Could go negitive if CPU goes into power saver mode
     //or the process itself gets moves to another core
-    deltaDoubleTime = max( ( ( currentTime - previousTime ) * perfCounterSeconds ), 0.0f );
+    deltaDoubleTime = glm::max( ( ( currentTime - previousTime ) * perfCounterSeconds ), 0.0 );
     totalDoubleTime = ( ( currentTime - startTime ) * perfCounterSeconds );
     totalFloatTime = static_cast<float>( totalDoubleTime );
     deltaFloatTime = static_cast<float>( deltaDoubleTime );
@@ -37,12 +38,12 @@ void GameTime::UpdateTimer()
 void GameTime::Init()
 {
     //Query preformance counter for accurate timing information
-    __int64 perfFreq;
-    QueryPerformanceFrequency( (LARGE_INTEGER*) &perfFreq );
+	int64_t perfFreq;
+	PerformanceFrequency(perfFreq);
     perfCounterSeconds = 1.0 / (double) perfFreq;
 
-    __int64 now;
-    QueryPerformanceCounter( (LARGE_INTEGER*) &now );
+	int64_t now;
+	PerformanceCounter(now);
     double doubleNow = static_cast<double>( now );
     startTime = doubleNow;
     currentTime = doubleNow;

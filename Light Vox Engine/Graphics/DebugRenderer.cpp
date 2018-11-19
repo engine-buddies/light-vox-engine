@@ -19,7 +19,7 @@ void DebugRenderer::ReleaseInstance()
     instance = nullptr;
 }
 
-void DebugRenderer::AddCube( glm::mat4x4 transform, glm::vec3 scale, glm::vec3 color )
+void DebugRenderer::AddCube( glm::mat4x4 transform, glm::vec3 scale, glm::float3 color )
 {
 #ifdef _DEBUG
     cubeInstanceData[ currCubeInstanceIndex ] = { };

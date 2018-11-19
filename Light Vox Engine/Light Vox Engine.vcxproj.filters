@@ -77,6 +77,9 @@
     <ClCompile Include="Input\InputManager.cpp">
       <Filter>Source Files\Input</Filter>
     </ClCompile>
+    <ClCompile Include="GameTimeWin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -84,9 +87,6 @@
     </ClInclude>
     <ClInclude Include="GameTime.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="JobSystem\CpuJob.h">
-      <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
     <ClInclude Include="JobSystem\JobSequence.h">
       <Filter>Source Files\JobSystem</Filter>

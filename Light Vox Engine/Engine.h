@@ -1,5 +1,5 @@
 #pragma once
-#include <Windows.h>
+#include "stdafx.h"
 #include <vector>
 #include "Graphics/GraphicsCore.h"
 #include "Graphics/DebugRenderer.h"
@@ -18,53 +18,59 @@ It's basically our entire engine (handles life cycle and windows related stuff)
 class Engine
 {
 public:
-    Engine( HINSTANCE hInstance );
+    Engine( LV_INSTANCE hInstance );
     ~Engine();
 
-    HRESULT InitSystems();
-    HRESULT Run();
+    LV_RESULT InitSystems();
+    LV_RESULT Run();
     void Quit();
 
+    //note: would prefer to not do our #defines this way, but not sure if every implementation will share same/abstractible interfaces
+#if defined(_WIN32) || defined(_WIN64)
+
     //OS-level message handling
-    static LRESULT CALLBACK ProcessMessage( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam );
+    static LRESULT CALLBACK ProcessMessage( LV_HANDLE hWindow, uint32_t message, WPARAM wParam, LPARAM lParam );
+
+    LRESULT HandleEvents( LV_HANDLE hWindow, uint32_t message, WPARAM wParam, LPARAM lParam );
 
     //responding to events
-    LRESULT HandleEvents( HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam );
-    void OnResize( UINT width, UINT height );
+    void OnResize( uint32_t width, uint32_t height );
+
+#endif
+
     
 private:
+	LV_INSTANCE hInstance;    //instance for windows type stuff
     static Engine* engineInstance;
-    HINSTANCE hInstance;
-    HWND hWindow;
+    LV_HANDLE hWindow;
     char* windowTitle;
     float windowWidth;
     float windowHeight;
 
+    // Input
+    Input::InputManager* inputManager = nullptr;
+
     //ECS
-    ECS::EntityManager* entityManager;
-    ECS::ComponentManager* componentManager;
+    ECS::EntityManager* entityManager = nullptr;
+    ECS::ComponentManager* componentManager = nullptr;
 
     //Systems
-    Graphics::GraphicsCore* graphics;
-    Graphics::Camera* camera;
-    GameTime* time;
+    Graphics::GraphicsCore* graphics = nullptr;
+    Graphics::Camera* camera = nullptr;
+    GameTime* time = nullptr;
+    Jobs::JobManager* jobManager = nullptr;
 
-    Graphics::DebugRenderer* debugRenderer;
+    Graphics::DebugRenderer* debugRenderer = nullptr;
 
     //Physics 
-    Physics::Solver* physics;
-    Physics::Rigidbody* rigidBody;
+    Physics::Solver* physics = nullptr;
+    Physics::Rigidbody* rigidBody = nullptr;
 
-    Input::InputManager* InputMan;
+    LV_RESULT InitWindow();
 
-    HRESULT InitWindow();
+    void UsingInputFunc();
+    inline void Update();
 
-
-    void UsingInputFunc( float axis );
-
-#if defined(_DEBUG)
     /*Debug function to create a console window*/
     void CreateConsoleWindow( int bufferLines, int bufferColumns, int windowLines, int windowColumns );
-#endif
-
 };

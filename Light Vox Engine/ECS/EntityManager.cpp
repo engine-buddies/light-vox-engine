@@ -66,10 +66,10 @@ void EntityManager::Clear()
     entries.clear();
 }
 
-Entity EntityManager::Get_Entity( int index ) const
+Entity EntityManager::Get_Entity( size_t index ) const
 {
     if ( index >= 0 && index < entries.size() )
-        return Entity( index, entries[ index ].counter );
+        return Entity( static_cast<unsigned int>(index), entries[ index ].counter );
     return {};
 }
 

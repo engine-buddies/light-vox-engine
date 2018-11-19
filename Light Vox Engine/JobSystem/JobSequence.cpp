@@ -2,7 +2,7 @@
 
 using namespace Jobs;
 
-JobSequence::JobSequence( UINT aMaxJobsAllowed, UINT aMaxBarriers, UINT aMaxWaits )
+JobSequence::JobSequence( uint32_t aMaxJobsAllowed, uint32_t aMaxBarriers, uint32_t aMaxWaits )
     : maxJobs( aMaxJobsAllowed ), maxBarriers( aMaxBarriers ), maxWaits( aMaxWaits )
 {
     
@@ -16,11 +16,11 @@ JobSequence::~JobSequence()
     // Wait for any remaining jobs to be complete 
 }
 
-UINT JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
+uint32_t JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
 {
     // TODO: Add a job to this sequence and add it the job queue
     // Of the job manager
-    if ( sequenceJobs.size() + 1 >= maxJobs ) return 1;
+    //if ( sequenceJobs.size() + 1 >= maxJobs ) return 1;
     if ( aJob == nullptr ) return 2;
 
     /*CpuJob TheJob { };
@@ -31,18 +31,6 @@ UINT JobSequence::Dispatch( void * aJob, void * aArgs, int aJobCount )
     sequenceJobs.emplace_front( TheJob );*/
 
     return 0;
-}
-
-void JobSequence::GetNextJob_Unsafe( CpuJob& aOutJob )
-{
-
-  /*  aOutJob = std::move( sequenceJobs.front() );
-
-
-    sequenceJobs.pop_front();*/
-
-    
-
 }
 
 void JobSequence::Barrier()

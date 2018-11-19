@@ -4,13 +4,13 @@
 #include <mutex>
 #include <condition_variable>
 
-template<typename T>
 /// <summary>
 /// Wrapper around std::deque to make it concurrent
 /// and preserve the integrity of the data inside the object.
 /// WARNING: Contains mutexes and locks 
 /// </summary>
 /// <author>Ben Hoffman</author>
+template<typename T>
 class ConcurrentQueue
 {
 

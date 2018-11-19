@@ -4,7 +4,7 @@ using namespace Graphics;
 
 HRESULT GraphicsCore::InitDeviceCommandQueueSwapChain()
 {
-    UINT dxgiFactoryFlags = 0;
+    uint32_t dxgiFactoryFlags = 0;
 
     //enable debug layer if needed (must do before device creation)
 #if defined(_DEBUG)

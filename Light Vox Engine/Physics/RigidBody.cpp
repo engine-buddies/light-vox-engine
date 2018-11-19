@@ -19,14 +19,6 @@ namespace {
             (minA.z < maxB.z && maxA.z > minB.z);
     }
 
-    inline bool BoxIntersectHalfSpace(
-        const EntityComponents::BoxCollider& box,
-        const EntityComponents::PlaneCollider& plane)
-    {
-
-    }
-
-
     //gets a basis vector from the transformation matrix
     inline glm::vec3 GetAxisVector(int i, const glm::mat4& mat)
     {
@@ -78,9 +70,9 @@ namespace {
         const EntityComponents::BoxCollider& two,
         glm::vec3 axis,
         const glm::vec3 toCenter,
-        UINT axisIndex,
+        uint32_t axisIndex,
         float& smallestPenetration,
-        UINT& smallestCase)
+        uint32_t& smallestCase)
     {
         if (glm::length2(axis) < FLT_EPSILON)
             return true;
@@ -101,6 +93,8 @@ namespace {
         return true;
     }
 
+    //helper method to find contact information
+    //for vertex vertex collision in SAT
     inline void FillPointFaceBoxBox(
         const EntityComponents::BoxCollider& one,
         const EntityComponents::BoxCollider& two,
@@ -135,9 +129,11 @@ namespace {
         contactData[contactData->contactsFound].bodyPair = { one.tag, two.tag };
     }
 
+    //helper method for finding contact points for edge to edge
+    //collision in SAT
     inline glm::vec3 FindContactPoint(
         const glm::vec3& pOne,
-        const glm::vec3& dOne, 
+        const glm::vec3& dOne,
         float oneSize,
         const glm::vec3& pTwo,
         const glm::vec3& dTwo,
@@ -196,32 +192,32 @@ Physics::Rigidbody::~Rigidbody()
 {
 }
 
-void Physics::Rigidbody::Pos(glm::vec3& pos, const UINT& index)
+void Physics::Rigidbody::Pos(glm::vec3& pos, const size_t& index)
 {
     componentManager->transform[index].pos = pos;
 }
 
-void Physics::Rigidbody::RotateAxisAngle(glm::vec3& rotationAxis, float angle, const UINT& index)
+void Physics::Rigidbody::RotateAxisAngle(glm::vec3& rotationAxis, float angle, const size_t& index)
 {
     componentManager->transform[index].orientation = glm::angleAxis(glm::degrees(angle), rotationAxis);
 }
 
-void Physics::Rigidbody::Velocity(glm::vec3& vel, const UINT& index)
+void Physics::Rigidbody::Velocity(glm::vec3& vel, const size_t& index)
 {
     componentManager->bodyProperties[index].velocity = vel;
 }
 
-void Physics::Rigidbody::Acceleration(glm::vec3& accel, const UINT& index)
+void Physics::Rigidbody::Acceleration(glm::vec3& accel, const size_t& index)
 {
     componentManager->bodyProperties[index].acceleration = accel;
 }
 
-void Physics::Rigidbody::Force(glm::vec3& force, const UINT& index)
+void Physics::Rigidbody::Force(glm::vec3& force, const size_t& index)
 {
     componentManager->bodyProperties[index].force = force;
 }
 
-void Physics::Rigidbody::Mass(float mass, const UINT& index)
+void Physics::Rigidbody::Mass(float mass, const size_t& index)
 {
     if (mass = 0.0f)
         mass = 1.0f;
@@ -230,22 +226,22 @@ void Physics::Rigidbody::Mass(float mass, const UINT& index)
     componentManager->bodyProperties[index].invMass = (1 / mass);
 }
 
-void Physics::Rigidbody::Scale(glm::vec3& scale, const UINT& index)
+void Physics::Rigidbody::Scale(glm::vec3& scale, const size_t& index)
 {
-    componentManager->transform[index].scale = scale;
+    assert("Hey you can't scale a voxel");
 }
 
-void Physics::Rigidbody::BoxColliderSize(glm::vec3& size, const UINT& index)
+void Physics::Rigidbody::BoxColliderSize(glm::vec3& size, const size_t& index)
 {
     componentManager->boxCollider[index].size = size;
 }
 
-void Physics::Rigidbody::InertiaTensor(glm::mat3 & inertiaTensor, const UINT& index)
+void Physics::Rigidbody::InertiaTensor(glm::mat3 & inertiaTensor, const size_t& index)
 {
     componentManager->bodyProperties[index].inertiaTensor = inertiaTensor;
 }
 
-void Physics::Rigidbody::SetAwake(const bool awake, const UINT& index)
+void Physics::Rigidbody::SetAwake(const bool awake, const size_t& index)
 {
     bool& bodyAwake = componentManager->bodyProperties[index].isAwake;
     if (awake)
@@ -264,9 +260,9 @@ void Physics::Rigidbody::SetAwake(const bool awake, const UINT& index)
 void Physics::Rigidbody::AddForceAtPoint(
     const glm::vec3 & force,
     const glm::vec3 & point,
-    const UINT& index)
+    const size_t& index)
 {
-    glm::mat4& transformMatrix = componentManager->transform[index].transformMatrix;
+    glm::mat4& transformMatrix = componentManager->transformMatrix[index].transformMatrix;
     glm::vec3& pos = componentManager->transform[index].pos;
     glm::vec3& _force = componentManager->bodyProperties[index].force;
     glm::vec3& _torque = componentManager->bodyProperties[index].torque;
@@ -281,7 +277,7 @@ void Physics::Rigidbody::AddForceAtPoint(
 }
 
 
-bool Physics::Rigidbody::IntersectBoxBox(const UINT& entityA, const UINT& entityB)
+bool Physics::Rigidbody::IntersectBoxBox(const size_t& entityA, const size_t& entityB)
 {
     if (entityA == entityB)
         return false;
@@ -311,7 +307,7 @@ bool Physics::Rigidbody::IntersectBoxBox(const UINT& entityA, const UINT& entity
 #define CHECK_OVERLAP(axis, index) \
     if (!tryAxis(one, two, (axis), toCenter, (index), pen, best)) return 0;
 
-int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
+int Physics::Rigidbody::CollideBoxBox(const size_t& entityA, const size_t& entityB)
 {
     glm::vec3& posA = componentManager->transform[entityA].pos;
     glm::vec3& posB = componentManager->transform[entityB].pos;
@@ -416,7 +412,7 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
             two.size[twoAxisIndex],
             bestSingleAxis > 2
         );
-        
+
         contacts[contacts->contactsFound].penetration = pen;
         contacts[contacts->contactsFound].contactNormal = axis;
         contacts[contacts->contactsFound].contactPoint = vertex;
@@ -429,14 +425,14 @@ int Physics::Rigidbody::CollideBoxBox(const UINT& entityA, const UINT& entityB)
 #undef CHECK_OVERLAP
 
 
-void Physics::Rigidbody::CalcHalfSize(const UINT & index)
+void Physics::Rigidbody::CalcHalfSize(const size_t & index)
 {
     glm::vec3* vertices = componentManager->boxCollider[index].vertices;
     glm::vec3& halfSize = componentManager->boxCollider[index].size;
 
     glm::mat4& collideTransform = componentManager->boxCollider[index].transformMatrix;
     glm::mat4& offset = componentManager->boxCollider[index].offset;
-    glm::mat4& transform = componentManager->transform[index].transformMatrix;
+    glm::mat4& transform = componentManager->transformMatrix[index].transformMatrix;
 
     //calc. collide transform matrix 
     collideTransform = transform * offset;

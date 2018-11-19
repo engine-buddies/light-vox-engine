@@ -1,34 +1,26 @@
 #pragma once
 
+#include "../stdafx.h"
+#include <unordered_map>
+#include <vector>
+
 #if defined(_WIN32) || defined(_WIN64)
 
 #include <Windows.h>
 
 #endif // Windows
 
-#include <functional>
-
-
 
 namespace Input
 {
 
-    enum InputAction
+    enum InputType
     {
+        Horizontal,
+        Vertical,
         Fire,
         Use
     };
-
-    /// <summary>
-    /// Axis mappings for input. An axis is 
-    /// </summary>
-    enum InputAxis
-    {
-        Horizontal,
-        Vertical
-    };
-
-    typedef std::function<void( float )> axisCallbackFunction_t;
 
     /// <summary>
     /// Input Manager that will be in charge of handling input events and 
@@ -37,31 +29,104 @@ namespace Input
     /// <author>Ben Hoffman</author>
     class InputManager
     {
-    public:
-        //BindAxis("MoveForward", this, &ASampleCharacter::MoveForward);
-        // Where MoveForward is a function like this :
-            // ASampleCharacter::MoveForward(float inputValue)
 
-        template<class UserClass>
-        static void BindAxis(
-            const char* aAxisName,
-            UserClass* aObject,
-            void ( UserClass::*func_ptr )( float )
-        )
+        typedef void( *input_action_func )( );
+
+    public:
+
+        /// <summary>
+        /// Gets a staticinstance of the input manager, if it is null 
+        /// then it will be created. 
+        /// </summary>
+        /// <returns>Pointer to the current input manager instance</returns>
+        static InputManager* GetInstance();
+
+        /// <summary>
+        /// Destroy the input manager instance
+        /// </summary>
+        static void ReleaseInstance();
+
+        void BindAxis( InputType type, input_action_func inputListenerFunc );
+
+        template<class T>
+        void BindAxis( InputType type, T* parentObj, void ( T::*inputListenerFunc )( ) )
         {
-            DEBUG_PRINT( "Add axis name %s to the boi", aAxisName );
-            // Wowza
-            std::invoke( func_ptr, aObject, 1.f );
+            IListener* newListener = new ListenerMember<T>( parentObj, inputListenerFunc );
+
+            actionListeners[ type ].push_back( newListener );
         }
+
+        bool IsKeyDown( int vKey );
+
+        // Windows specific input callbacks
+#if defined(_WIN32) || defined(_WIN64)
 
         void OnMouseDown( WPARAM buttonState, int x, int y );
         void OnMouseUp( WPARAM buttonState, int x, int y );
         void OnMouseMove( WPARAM buttonState, int x, int y );
 
+#endif
+
     private:
 
+        InputManager();
 
+        ~InputManager();
 
+        /** The instance of the input manager */
+        static InputManager* instance;
+
+        void SignalInput( InputType type );
+
+        ///////////////////////////////////////////////////////
+        // Listener definitions 
+
+        struct IListener
+        {
+            virtual ~IListener() {}
+            virtual void operator () () = 0;
+        };
+
+        struct ListenerFunc : IListener
+        {
+            ListenerFunc( input_action_func aFunc_ptr )
+                : func_ptr( aFunc_ptr )
+            {
+            }
+
+            virtual void operator () () override
+            {
+                return ( func_ptr() );
+            }
+
+            /** The function pointer for this input action to invoke */
+            input_action_func func_ptr;
+        };
+
+        template <class T>
+        struct ListenerMember : IListener
+        {
+            ListenerMember( T* aParent, void ( T::*f )( ) )
+                : parentObj( aParent ), func_ptr( f )
+            {
+            }
+
+            virtual void operator () () override
+            {
+                assert( parentObj != nullptr );
+
+                return ( ( parentObj->*func_ptr )( ) );
+            }
+
+            /** the object to invoke the function pointer on */
+            T* parentObj;
+
+            /** The function pointer to call when we invoke this function */
+            void ( T::*func_ptr )( );
+        };
+
+        /** A map of active listeners */
+        std::unordered_map<InputType, std::vector<IListener*>> actionListeners;
 
     };  // class InputManager
 

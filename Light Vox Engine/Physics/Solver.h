@@ -4,7 +4,7 @@
 #pragma once
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
-#include "../Graphics/DebugRenderer.h"
+#include "../JobSystem/JobManager.h"
 #include "RigidBody.h"
 
 namespace Physics
@@ -25,10 +25,6 @@ namespace Physics
         /// </summary>
         /// <param name="dt"></param>
         void Update(float dt);
-        /// <summary>
-        /// Calc model to world matrix
-        /// </summary>
-        void ModelToWorld();
 
     private:
 
@@ -40,24 +36,42 @@ namespace Physics
         /// Semi Implicit euler intergration for position
         /// </summary>
         /// <param name="dt"></param>
-        void Integrate(float dt);
+        void Integrate(void* args, int index);
         /// <summary>
         /// Calc. total force
         /// </summary>
-        void AccumlateForces();
+        void AccumlateForces(void* args, int index);
         /// <summary>
         /// Calc. total torque
         /// </summary>
-        void AccumlateTorque();
+        void AccumlateTorque(void* args, int index);
+        /// <summary>
+        /// Calc model to world matrix
+        /// </summary>
+        void ModelToWorld(void* args, int index);
         /// <summary>
         /// Calcs the transformation matrix based on the given offset
-        /// and transform the bounding box vertices from local to world space
+         /// and transform the bounding box vertices from local to world space
         /// </summary>
-        void SetColliderData();
-
+        void SetColliderData(void* args, int index);
 
         glm::vec3 gravity;
         ECS::ComponentManager* componentManager;
-        Physics::Rigidbody* rigidBody;
+        Jobs::JobManager* jobManager = nullptr;
+        Rigidbody* rigidbody;
+
+
+        struct PhysicsArguments
+        {
+            float DeltaTime;
+
+            int StartElem;
+            int EndElm;
+
+            std::promise<void>* jobPromise;
+        };
+
+        PhysicsArguments* a_argument = nullptr;
+        PhysicsArguments* b_argument = nullptr;
     };
 };

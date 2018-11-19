@@ -5,7 +5,6 @@
 
 #include <deque>        // std::deque
 
-#include "CpuJob.h"
 
 namespace Jobs
 {
@@ -19,7 +18,7 @@ namespace Jobs
     public:
 
 
-        JobSequence( UINT aMaxJobsAllowed, UINT aMaxBarriers, UINT aMaxWaits );
+        JobSequence( uint32_t aMaxJobsAllowed, uint32_t aMaxBarriers, uint32_t aMaxWaits );
 
         ~JobSequence();
 
@@ -31,7 +30,7 @@ namespace Jobs
         /// <param name="aArgs">Arguments to pass to the job function</param>
         /// <param name="aJobCount">Number of jobs</param>
         /// <returns>Success if 0, error code if not</returns>
-        UINT Dispatch( void* aJob, void* aArgs, int aJobCount );
+        uint32_t Dispatch( void* aJob, void* aArgs, int aJobCount );
 
         /// <summary>
         /// Dispatch a barrier synchronization to a sequence.
@@ -48,26 +47,20 @@ namespace Jobs
         /// </summary>
         void Wait();
 
-        /// <summary>
-        /// Get the next CPU job from this sequence. Removes it from this sequence deque
-        /// -- Does NOT have any mutexes or guards -- 
-        /// </summary>
-        /// <param name="aOutJob">Out variable to store the current job</param>
-        void GetNextJob_Unsafe( CpuJob& aOutJob );
 
     private:
 
         // The current set of jobs in this sequence
-        std::deque<CpuJob> sequenceJobs;
+        //std::deque<CpuJob> sequenceJobs;
 
         ///////////////////////////////////////////
         // Max settings for this sequence
 
-        UINT maxJobs;
+        uint32_t maxJobs;
 
-        UINT maxBarriers;
+        uint32_t maxBarriers;
 
-        UINT maxWaits;
+        uint32_t maxWaits;
 
     };
 
