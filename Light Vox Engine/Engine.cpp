@@ -259,14 +259,14 @@ inline void Engine::Update()
 {
     float dtfloat = time->GetDeltaFloatTime();
     const static float speed = 2.f;
-    if ( inputManager->IsKeyDown( 0x41 ) ) // A
+    if ( inputManager->IsKeyDown( VK_LEFT ) ) // A
         camera->MoveSideways( dtfloat * speed );
-    else if ( inputManager->IsKeyDown( 0x44 ) ) // d
+    else if ( inputManager->IsKeyDown( VK_RIGHT ) ) // d
         camera->MoveSideways( - dtfloat * speed );
 
-    if ( inputManager->IsKeyDown( 0x57 ) ) // W
+    if ( inputManager->IsKeyDown( VK_UP ) ) // W
         camera->MoveForward( dtfloat * speed );
-    else if ( inputManager->IsKeyDown( 0x53 ) ) // S
+    else if ( inputManager->IsKeyDown( VK_DOWN ) ) // S
         camera->MoveForward( -dtfloat * speed );
 
     //DEBUG collision code 

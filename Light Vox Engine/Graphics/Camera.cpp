@@ -25,17 +25,17 @@ void Camera::SetTransform( glm::vec3 position, glm::vec3 forward, glm::vec3 up )
     this->up = up;
 }
 
-void Graphics::Camera::MoveForward( float amount )
+void Camera::MoveForward( float amount )
 {
     this->position += this->forward * amount;
 }
 
-void Graphics::Camera::MoveSideways( float amount )
+void Camera::MoveSideways( float amount )
 {
     this->position += this->right * amount;
 }
 
-void Graphics::Camera::RotateAlongRight( float angle )
+void Camera::RotateAlongRight( float angle )
 {
     if ( pitchAngle > -MAX_PITCH || pitchAngle < MAX_PITCH )
     {
@@ -47,7 +47,7 @@ void Graphics::Camera::RotateAlongRight( float angle )
     }
 }
 
-void Graphics::Camera::RotateAlongUp( float angle )
+void Camera::RotateAlongUp( float angle )
 {
     static glm::vec3 globalUp = glm::vec3( 0.0f, 1.0f, 0.0f );
     glm::quat rotation = glm::angleAxis( angle, globalUp );
