@@ -58,7 +58,7 @@ namespace Physics
         glm::vec3 gravity;
         ECS::ComponentManager* componentManager;
         Jobs::JobManager* jobManager = nullptr;
-        Rigidbody* rigidbody;
+        Rigidbody* rigidbody = nullptr;
 
 
         struct PhysicsArguments

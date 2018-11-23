@@ -52,13 +52,13 @@ namespace EntityComponents
 
     struct Contacts
     {
+        //number of contacts found so far
+        BodyPair bodyPair;
         glm::vec3 contactPoint;
         glm::vec3 contactNormal;
         float penetration;
         float friction = 1.0f;
         float restitution = 1.0f;
-        BodyPair bodyPair;
-        //number of contacts found so far
         uint32_t contactsFound = 0;
         //Entity ID of colliding bodies
         uint16_t tag;

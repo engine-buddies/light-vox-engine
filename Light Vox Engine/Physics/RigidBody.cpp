@@ -297,7 +297,7 @@ bool Physics::Rigidbody::IntersectBoxBox(const size_t& entityA, const size_t& en
     }
     return false;
 #else
-    return BoxIntersectBox(posA, posB, sizeA, sizeB);
+    return BoxIntersectBox(maxA, minA, maxB, minB);
 #endif
 }
 
