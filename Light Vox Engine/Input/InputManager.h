@@ -20,7 +20,7 @@ namespace Input
         int y;
     };
 
-    enum InputType
+    enum LV_InputActions
     {
         Horizontal,
         Vertical,
@@ -53,10 +53,10 @@ namespace Input
         /// </summary>
         static void ReleaseInstance();
 
-        void BindAxis( InputType type, input_action_func inputListenerFunc );
+        void BindAxis( LV_InputActions type, input_action_func inputListenerFunc );
 
         template<class T>
-        void BindAxis( InputType type, T* parentObj, void ( T::*inputListenerFunc )( ) )
+        void BindAxis( LV_InputActions type, T* parentObj, void ( T::*inputListenerFunc )( ) )
         {
             IListener* newListener = new ListenerMember<T>( parentObj, inputListenerFunc );
 
@@ -64,6 +64,9 @@ namespace Input
         }
 
         bool IsKeyDown( int vKey );
+
+		/** Polls for input and signals appropriately */
+		virtual void Update();
 
         // Windows specific input callbacks
 #if defined(_WIN32) || defined(_WIN64)
@@ -78,16 +81,21 @@ namespace Input
 
 #endif
 
+	protected:
+
+		InputManager();
+
+		virtual ~InputManager();
+
+		virtual void Init();
+
+		void SignalInput(LV_InputActions type);
+
     private:
-
-        InputManager();
-
-        ~InputManager();
 
         /** The instance of the input manager */
         static InputManager* instance;
 
-        void SignalInput( InputType type );
         
         Point CurMousePos;
         
@@ -142,7 +150,7 @@ namespace Input
         };
 
         /** A map of active listeners */
-        std::unordered_map<InputType, std::vector<IListener*>> actionListeners;
+        std::unordered_map<LV_InputActions, std::vector<IListener*>> actionListeners;
 
     };  // class InputManager
 

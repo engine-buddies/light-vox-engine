@@ -26,7 +26,12 @@ void Input::InputManager::ReleaseInstance()
 InputManager::InputManager()
 {
     // Register and OS callbacks here
+	Init();
+}
 
+void InputManager::Init()
+{
+	// Do stuff
 }
 
 // Private d'tor
@@ -48,7 +53,7 @@ InputManager::~InputManager()
     DEBUG_PRINT( "Input Listeners destroyed!" );
 }
 
-void Input::InputManager::SignalInput( InputType type )
+void Input::InputManager::SignalInput(LV_InputActions type )
 {
     auto const map_itr = actionListeners.find( type );
     if ( map_itr == actionListeners.end() ) { return; }
@@ -59,7 +64,7 @@ void Input::InputManager::SignalInput( InputType type )
         ( *( *vec_itr ) ) ( );
 }
 
-void Input::InputManager::BindAxis( InputType type, input_action_func inputListenerFunc )
+void Input::InputManager::BindAxis(LV_InputActions type, input_action_func inputListenerFunc )
 {
     IListener* newListener = new ListenerFunc( inputListenerFunc );
 
@@ -72,7 +77,7 @@ void Input::InputManager::BindAxis( InputType type, input_action_func inputListe
 void InputManager::OnMouseDown( WPARAM buttonState, int x, int y )
 {
     // Test out the signaling of the system
-    SignalInput( InputType::Fire );
+    SignalInput(LV_InputActions::Fire );
 }
 
 void InputManager::OnMouseUp( WPARAM buttonState, int x, int y )
@@ -87,12 +92,18 @@ void InputManager::OnMouseMove( WPARAM buttonState, int x, int y )
     CurMousePos.x = x;
     CurMousePos.y = y;
 
-    SignalInput( InputType::Look );
+    SignalInput(LV_InputActions::Look );
 }
-
-#endif
 
 bool Input::InputManager::IsKeyDown( int vKey )
 {
     return GetAsyncKeyState( vKey ) & 0x80000;
+}
+
+
+#endif
+
+void Input::InputManager::Update()
+{
+	// Poll for any input here
 }
