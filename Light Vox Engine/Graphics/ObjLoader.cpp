@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 
-using namespace DirectX;
 using namespace Graphics;
 
 //thanks chris <3
@@ -22,9 +21,9 @@ void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* i
     }
 
     // Variables used while reading the file
-    std::vector<XMFLOAT3> positions;     // Positions from the file
-    std::vector<XMFLOAT2> uvs;           // UVs from the file
-    std::vector<XMFLOAT3> normals;       // Normals from the file
+    std::vector<glm::vec3> positions;     // Positions from the file
+    std::vector<glm::vec2> uvs;           // UVs from the file
+    std::vector<glm::vec3> normals;       // Normals from the file
     int16_t vertCounter = 0;        // Count of vertices/indices
     char chars[ 100 ];                     // String for line reading
 
@@ -38,7 +37,7 @@ void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* i
         if ( chars[ 0 ] == 'v' && chars[ 1 ] == 'n' )
         {
             // Read the 3 numbers directly into an XMFLOAT3
-            XMFLOAT3 norm;
+            glm::vec3 norm;
             sscanf_s(
                 chars,
                 "vn %f %f %f",
@@ -50,7 +49,7 @@ void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* i
         else if ( chars[ 0 ] == 'v' && chars[ 1 ] == 't' )
         {
             // Read the 2 numbers directly into an XMFLOAT2
-            XMFLOAT2 uv;
+            glm::vec2 uv;
             sscanf_s(
                 chars,
                 "vt %f %f",
@@ -62,7 +61,7 @@ void ObjLoader::LoadObj( std::vector<Vertex>* vertices, std::vector<uint16_t>* i
         else if ( chars[ 0 ] == 'v' )
         {
             // Read the 3 numbers directly into an XMFLOAT3
-            XMFLOAT3 pos;
+            glm::vec3 pos;
             sscanf_s(
                 chars,
                 "v %f %f %f",
@@ -176,8 +175,8 @@ void ObjLoader::GenerateFullScreenQuad( MeshData & meshData )
 
     meshData.vertices[ 0 ] = { };
     meshData.vertices[ 0 ].position = { -1.0f, 1.0f, 0.0f };
-    meshData.vertices[ 0 ].uv       = {  0.0f, 0.0f };
-    meshData.vertices[ 0 ].normal   = {  0.0f, 0.0f, -1.0f };
+    meshData.vertices[ 0 ].uv = { 0.0f, 0.0f };
+    meshData.vertices[ 0 ].normal = { 0.0f, 0.0f, -1.0f };
 
     meshData.vertices[ 1 ] = { };
     meshData.vertices[ 1 ].position = { 1.0f, 1.0f, 0.0f };

@@ -1,51 +1,36 @@
 #include "Camera.h"
 
-using namespace DirectX;
 using namespace Graphics;
 
 Camera::Camera()
 {
     //default values
-    fov = 90.0f;
+    fov = 90.f * glm::pi<float>() / 180.0f;
     nearZ = 0.01f;
     farZ = 100.f;
 
-    position = XMFLOAT3( 0.f, 0.f, -2.f );
-    forward = XMFLOAT3( 0.0f, 0.f, 1.f );
-    up = XMFLOAT3( 0.f, 1.f, 0.f );
+    position = glm::vec3( 0.f, 0.f, -2.f );
+    forward = glm::vec3( 0.0f, 0.f, 1.f );
+    up = glm::vec3( 0.f, 1.f, 0.f );
 }
 
 Camera::~Camera() {}
 
-void Camera::SetTransform( XMVECTOR position, XMVECTOR forward, XMVECTOR up )
+void Camera::SetTransform( glm::vec3 position, glm::vec3 forward, glm::vec3 up )
 {
-    XMStoreFloat3( &this->position, position );
-    XMStoreFloat3( &this->forward, forward );
-    XMStoreFloat3( &this->up, up );
+    this->position = position;
+    this->forward = forward;
+    this->up = up;
 }
 
-void Camera::GetViewProjMatrix( DirectX::XMFLOAT4X4 * view,
-    DirectX::XMFLOAT4X4 * proj,
+void Camera::GetViewProjMatrix( glm::mat4x4_packed* view,
+    glm::mat4x4_packed* proj,
     float screenWidth, float
     screenHeight )
 {
     //calculate view
-    XMStoreFloat4x4(
-        view,
-        XMMatrixTranspose( XMMatrixLookToLH(
-            XMLoadFloat3( &position ),
-            XMLoadFloat3( &forward ),
-            XMLoadFloat3( &up ) ) )
-    );
-
-    float aspectRatio = screenWidth / screenHeight;
-    float fovAngleY = 90.f * XM_PI / 180.0f;
+    *view = glm::transpose( glm::lookAtLH( position, position + forward, up ) );
 
     //calculate proj
-    XMStoreFloat4x4(
-        proj,
-        XMMatrixTranspose(
-            XMMatrixPerspectiveFovLH( fovAngleY, aspectRatio, nearZ, farZ )
-        )
-    );
+    *proj = glm::transpose( glm::perspectiveFovLH( fov, screenWidth, screenHeight, nearZ, farZ ) );
 }

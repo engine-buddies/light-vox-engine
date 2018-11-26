@@ -2,32 +2,41 @@
 //for include files that are used often but rarely changed
 
 //For windows and graphics
+#if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
 #include <wrl.h>
 #include "Utils/d3dx12.h"
 #include <dxgi1_4.h>
 #include <d3dcompiler.h>
-#include <DirectXMath.h>
 #include <stdlib.h>  
+
 //events
 #include <pix3.h>
+#endif
 
-//utils
-#include "Utils/lvUtils.h"
+#include "Utils/LVutils.h"
 #include "Utils/DXSampleHelper.h"
-#include "Utils/Configs.h"
-#include <cstdint>
 
 //Math 
 #define GLM_FORCE_SSE2 // or GLM_FORCE_SSE42 if your processor supports it
 #define GLM_FORCE_ALIGNED
+//#define GLM_FORCE_PURE
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+//typedef glm::m
+namespace glm
+{
+    typedef mat<4, 4, float, highp>		mat4x4_packed;
+    typedef vec<3, float, highp>		vec3_packed;
+    typedef vec<2, float, highp>		vec2_packed;
+}
+
 //Debug
-#if defined(_DEBUG)
+#if defined(_WIN32) || defined(_WIN64)
+#if defined(_DEBUG) 
 #define _CRTDBG_MAP_ALLOC  
 
 #include <crtdbg.h> 
@@ -39,14 +48,8 @@
 #include <stdexcpt.h>
 #include <stdexcept>
 #endif
-// Debug Macros
-
-#ifdef _DEBUG
-
-#define DEBUG_PRINT(a, ...) printf("%s: %d(): " a "\n", __FILE__, __LINE__, __VA_ARGS__);
-
-#else
-
-#define DEBUG_PRINT(a, ...)
-
 #endif
+
+//utils
+#include "Utils/Configs.h"
+#include <cstdint>

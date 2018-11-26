@@ -237,6 +237,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="ECS\ComponentManager.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="GameTimeWin.cpp" />
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Graphics\DebugRenderer.cpp" />
     <ClCompile Include="Graphics\FrameResource.cpp" />

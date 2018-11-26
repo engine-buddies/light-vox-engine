@@ -27,7 +27,7 @@ namespace Graphics
             ID3D12DescriptorHeap * rtvHeap,
             ID3D12DescriptorHeap * cbvSrvHeap,
             D3D12_VIEWPORT * viewport,
-            UINT frameResourceIndex
+            uint32_t frameResourceIndex
         );
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Graphics
         /// <param name="viewport">The viewport</param>
         /// <param name="camera">The camera of the scene</param>
         void WriteConstantBuffers(
-            DirectX::XMFLOAT4X4 transforms[],
+            glm::mat4x4_packed transforms[],
             D3D12_VIEWPORT* viewport,
             Camera* camera
         );
@@ -88,18 +88,18 @@ namespace Graphics
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandLists[ LV_COMMAND_LIST_COUNT ];
 
         //used to synchronize instructions
-        UINT64 fenceValue;
+        uint64_t fenceValue;
 
     private:
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> geometryCmdAllocators[ LV_NUM_CONTEXTS ];
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocators[ LV_COMMAND_LIST_COUNT ];
 
-        inline void InitCmdAllocatorsAndLists( ID3D12Device * device, UINT frameResourceIndex );
+        inline void InitCmdAllocatorsAndLists( ID3D12Device * device, uint32_t frameResourceIndex );
         inline void InitDescriptorHandles( ID3D12Device * device, ID3D12DescriptorHeap * dsvHeap,
-            ID3D12DescriptorHeap * rtvHeap, ID3D12DescriptorHeap * cbvSrvHeap, UINT frameResourceIndex );
+            ID3D12DescriptorHeap * rtvHeap, ID3D12DescriptorHeap * cbvSrvHeap, uint32_t frameResourceIndex );
         inline void InitGraphicsResources( ID3D12Device * device, ID3D12DescriptorHeap * dsvHeap, ID3D12DescriptorHeap * rtvHeap,
-            ID3D12DescriptorHeap * cbvSrvHeap, D3D12_VIEWPORT * viewport, UINT frameResourceIndex );
-        inline void InitCBV( ID3D12Device * device, ID3D12DescriptorHeap * cbvSrvHeap, UINT frameResourceIndex );
+            ID3D12DescriptorHeap * cbvSrvHeap, D3D12_VIEWPORT * viewport, uint32_t frameResourceIndex );
+        inline void InitCBV( ID3D12Device * device, ID3D12DescriptorHeap * cbvSrvHeap, uint32_t frameResourceIndex );
 
         //pointer to things we need to properly render
         Microsoft::WRL::ComPtr<ID3D12PipelineState> geometryBufferPso;
