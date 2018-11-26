@@ -1,5 +1,7 @@
 #include "RigidBody.h"
 
+using namespace Physics;
+
 namespace {
 
     /// <summary>

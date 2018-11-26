@@ -22,6 +22,7 @@ Solver::Solver()
 Solver::~Solver()
 {
     jobManager = nullptr;
+    componentManager = nullptr;
 
     if (rigidbody != nullptr)
     {
@@ -60,17 +61,15 @@ void Solver::Update( float dt )
 
     aFuture.wait();
     bFuture.wait();
-
-    //AccumlateForces( a_argument, 0 );
-    //Integrate( a_argument, 0 );
-    //ModelToWorld( a_argument, 0 );
 }
 
-void Solver::Collide()
+void Solver::Collide(void* args, int index)
 {
-    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
-        for (size_t j = 0; j < LV_MAX_INSTANCE_COUNT; ++j)
+        for (size_t j = myArgs->StartElem; j < myArgs->EndElm; ++j)
         {
             if (i == j)
                 continue;
@@ -82,6 +81,8 @@ void Solver::Collide()
 
     //reset contacts
     componentManager->contacts->contactsFound = 0;
+
+    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, args, 0);
 }
 
 void Solver::AccumlateForces( void* args, int index )
@@ -126,7 +127,7 @@ void Solver::Integrate( void* args, int index )
     for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
     {
         if (!componentManager->bodyProperties[i].isAwake)
-            return;
+            continue;
 
         //movement
         glm::vec3& acceleration = componentManager->bodyProperties[i].acceleration;
@@ -204,5 +205,5 @@ void Physics::Solver::SetColliderData(void * args, int index)
     }
     assert(myArgs->jobPromise != nullptr);
 
-    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, args, 0);
+    jobManager->AddJob(this, &Physics::Solver::Collide, args, 0);
 }

@@ -2,6 +2,7 @@
 /// By Arturo Kuang
 /// </summary>
 #pragma once
+#include "../stdafx.h"
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
 #include "../JobSystem/JobManager.h"
@@ -31,7 +32,7 @@ namespace Physics
         /// <summary>
         /// Solves Collision (aabb to aabb) 
         /// </summary>
-        void Collide();
+        void Collide(void* args, int index);
         /// <summary>
         /// Semi Implicit euler intergration for position
         /// </summary>

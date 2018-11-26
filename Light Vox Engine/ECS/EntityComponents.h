@@ -22,7 +22,6 @@ namespace EntityComponents
         ////transformation matricies 
         //glm::mat4 posMatrix = glm::mat4(1.0f);
         //glm::mat4 rotMatrix = glm::mat4(1.0f);
-        //glm::mat4 scaleMatrix = glm::mat4(1.0f);
 
         float angle = .0f;
     };
@@ -46,22 +45,25 @@ namespace EntityComponents
 
     struct BodyPair
     {
-        uint16_t a;
-        uint16_t b;
+        uint32_t a;
+        uint32_t b;
     };
 
     struct Contacts
     {
-        //number of contacts found so far
-        BodyPair bodyPair;
+        glm::mat3x3 contactWorld;
+        glm::vec3 relativeContactPosition[2];
         glm::vec3 contactPoint;
         glm::vec3 contactNormal;
+        glm::vec3 contactVelocity;
+        //entites colliding 
+        BodyPair bodyPair;
+        float desiredVelocity;
         float penetration;
         float friction = 1.0f;
         float restitution = 1.0f;
+        //number of contacts found so far
         uint32_t contactsFound = 0;
-        //Entity ID of colliding bodies
-        uint16_t tag;
     };
 
     struct BodyProperties

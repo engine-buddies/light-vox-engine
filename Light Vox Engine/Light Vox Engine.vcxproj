@@ -249,6 +249,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="JobSystem\JobSequence.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="GameTime.cpp" />
+    <ClCompile Include="Physics\ContactSolver.cpp" />
     <ClCompile Include="Physics\Solver.cpp" />
     <ClCompile Include="Physics\RigidBody.cpp" />
   </ItemGroup>
@@ -268,6 +269,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="JobSystem\ConcurrentQueue.h" />
     <ClInclude Include="JobSystem\JobManager.h" />
     <ClInclude Include="JobSystem\JobSequence.h" />
+    <ClInclude Include="Physics\ContactSolver.h" />
     <ClInclude Include="Physics\Solver.h" />
     <ClInclude Include="Physics\RigidBody.h" />
     <ClInclude Include="stdafx.h" />

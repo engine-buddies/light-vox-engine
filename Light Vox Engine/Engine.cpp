@@ -158,7 +158,7 @@ LV_RESULT Engine::InitSystems()
                 inertiaTensor[1][1] = inertia;
                 inertiaTensor[2][2] = inertia;
                 componentManager->boxCollider->tag = entityID;
-                componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
+                //componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
                 //componentManager->transform[entityID].rot = glm::vec3(0.0f, 0.0f, 10.0f);
 
                 x += 2;
@@ -272,7 +272,6 @@ inline void Engine::Update()
 {
 
     //DEBUG collision code 
-    float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
         //componentManager->transform[i].pos.x += x;
@@ -283,7 +282,7 @@ inline void Engine::Update()
             componentManager->bodyProperties[i].velocity.x = 10.0f;
 
         //add torque
-        //componentManager->transform[i].rot = glm::vec3(1.f, 0.0f, 1.0f);
+        componentManager->transform[i].rot = glm::vec3(0.f, 0.0f, 0.0f);
 
         glm::vec3 color = glm::vec3(1, 0, 0);
     }
@@ -304,7 +303,10 @@ inline void Engine::Update()
     glm::vec3 up = glm::vec3( 0.f, 1.f, 0.f );
     camera->SetTransform( pos, forward, up );
 
-    physics->Update( time->GetDeltaFloatTime() );
+    if (!inputManager->IsKeyDown(VK_SPACE))
+    {
+        physics->Update(time->GetDeltaFloatTime());
+    }
     graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
     graphics->Render();
     time->UpdateTimer();

@@ -80,6 +80,9 @@
     <ClCompile Include="GameTimeWin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Physics\ContactSolver.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -150,6 +153,9 @@
     </ClInclude>
     <ClInclude Include="Input\InputManager.h">
       <Filter>Source Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\ContactSolver.h">
+      <Filter>Source Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
