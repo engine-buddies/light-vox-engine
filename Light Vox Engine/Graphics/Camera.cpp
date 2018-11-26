@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "../Input/InputManager.h"
 
 using namespace Graphics;
 
@@ -14,6 +15,12 @@ Camera::Camera()
     up = glm::vec3( 0.f, 1.f, 0.f );
     right = glm::vec3( 1.0f, 0.0f, 0.0f );
     pitchAngle = 0;
+
+    Input::InputManager::GetInstance()->BindAxis( 
+        Input::InputType::Look,
+        this,
+        &Graphics::Camera::OnLookAxis 
+    );
 }
 
 Camera::~Camera() {}
@@ -54,6 +61,14 @@ void Camera::RotateAlongUp( float angle )
 
     this->forward = rotation * this->forward;
     this->right = rotation * this->right;
+}
+
+void Graphics::Camera::OnLookAxis()
+{
+    // Called when the mouse moves
+    Input::InputManager* man = Input::InputManager::GetInstance();
+
+    printf( "Mouse Moved! X: %d  Y: %d", man->GetCurrentMousePos().x, man->GetCurrentMousePos().y );
 }
 
 void Camera::GetViewProjMatrix( glm::mat4x4_packed* view,

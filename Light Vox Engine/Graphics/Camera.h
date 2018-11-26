@@ -58,6 +58,12 @@ namespace Graphics
         void RotateAlongUp( float angle );
 
         /// <summary>
+        /// Signaled by the input manager when the player uses
+        /// the look axis
+        /// </summary>
+        void OnLookAxis();
+
+        /// <summary>
         /// Calculates the view projection matrix
         /// </summary>
         /// <param name="view">The location to save the view matrix</param>
