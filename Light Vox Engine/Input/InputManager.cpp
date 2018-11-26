@@ -66,9 +66,12 @@ void Input::InputManager::BindAxis( InputType type, input_action_func inputListe
     actionListeners[ type ].push_back( newListener );
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+
+
 void InputManager::OnMouseDown( WPARAM buttonState, int x, int y )
 {
-    // Test out the signalling of the system
+    // Test out the signaling of the system
     SignalInput( InputType::Fire );
 }
 
@@ -79,8 +82,15 @@ void InputManager::OnMouseUp( WPARAM buttonState, int x, int y )
 
 void InputManager::OnMouseMove( WPARAM buttonState, int x, int y )
 {
-    SignalInput( InputType::Use );
+    PrevMousePos = CurMousePos;
+
+    CurMousePos.x = x;
+    CurMousePos.y = y;
+
+    SignalInput( InputType::Look );
 }
+
+#endif
 
 bool Input::InputManager::IsKeyDown( int vKey )
 {
