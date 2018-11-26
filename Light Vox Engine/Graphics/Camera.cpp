@@ -9,9 +9,11 @@ Camera::Camera()
     nearZ = 0.01f;
     farZ = 100.f;
 
-    position = glm::vec3( 0.f, 0.f, -2.f );
-    forward = glm::vec3( 0.0f, 0.f, 1.f );
+    position = glm::vec3( 0.f, 0.f, 0.f );
+    forward = glm::vec3( 0.0f, 0.f, -1.f );
     up = glm::vec3( 0.f, 1.f, 0.f );
+    right = glm::vec3( 1.0f, 0.0f, 0.0f );
+    pitchAngle = 0;
 }
 
 Camera::~Camera() {}
@@ -21,6 +23,37 @@ void Camera::SetTransform( glm::vec3 position, glm::vec3 forward, glm::vec3 up )
     this->position = position;
     this->forward = forward;
     this->up = up;
+}
+
+void Camera::MoveForward( float amount )
+{
+    this->position += this->forward * amount;
+}
+
+void Camera::MoveSideways( float amount )
+{
+    this->position += this->right * amount;
+}
+
+void Camera::RotateAlongRight( float angle )
+{
+    if ( pitchAngle > -MAX_PITCH || pitchAngle < MAX_PITCH )
+    {
+        pitchAngle += angle;
+        glm::quat rotation = glm::angleAxis( angle, right );
+        this->forward = rotation * this->forward;
+        this->up = rotation * this->up;
+        this->right = rotation * this->right;
+    }
+}
+
+void Camera::RotateAlongUp( float angle )
+{
+    static glm::vec3 globalUp = glm::vec3( 0.0f, 1.0f, 0.0f );
+    glm::quat rotation = glm::angleAxis( angle, globalUp );
+
+    this->forward = rotation * this->forward;
+    this->right = rotation * this->right;
 }
 
 void Camera::GetViewProjMatrix( glm::mat4x4_packed* view,

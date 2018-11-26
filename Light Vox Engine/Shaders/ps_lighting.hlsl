@@ -42,15 +42,15 @@ float4 main( VStoPS input ) : SV_TARGET
 
     PointLight pointLights[ 5 ];
     pointLights[ 0 ].diffuseColor = float3( 1, 0, 0);
-    pointLights[ 0 ].position = float3( 2, 0, 0 );
+    pointLights[ 0 ].position = float3( 2, 0, 2 );
     pointLights[ 1 ].diffuseColor = float3( 0, 1, 0);
     pointLights[ 1 ].position = float3( -5, 0, -1 );
     pointLights[ 2 ].diffuseColor = float3( 0, 0, 1);
-    pointLights[ 2 ].position = float3( 1, 2, 0 );
+    pointLights[ 2 ].position = float3( 1, 2, 1 );
     pointLights[ 3 ].diffuseColor = float3( 1, 1, 0);
-    pointLights[ 3 ].position = float3( -2, -3, 0 );
+    pointLights[ 3 ].position = float3( -2, -3, 3 );
     pointLights[ 4 ].diffuseColor = float3( 0, 1, 1 );
-    pointLights[ 4 ].position = float3( -5, 2, -1 );
+    pointLights[ 4 ].position = float3( -5, 2, 1 );
 
     //diffuse
     float3 diffuse = float3( 0, 0, 0 );

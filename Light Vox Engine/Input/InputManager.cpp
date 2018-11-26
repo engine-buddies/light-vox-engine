@@ -55,7 +55,6 @@ void Input::InputManager::SignalInput( InputType type )
 
     std::vector<IListener*>::iterator vec_itr = map_itr->second.begin();
 
-    // Why doesnt this heckin work
     for ( ; vec_itr != map_itr->second.end(); ++vec_itr )    
         ( *( *vec_itr ) ) ( );
 }
@@ -80,7 +79,7 @@ void InputManager::OnMouseUp( WPARAM buttonState, int x, int y )
 
 void InputManager::OnMouseMove( WPARAM buttonState, int x, int y )
 {
-
+    SignalInput( InputType::Use );
 }
 
 bool Input::InputManager::IsKeyDown( int vKey )

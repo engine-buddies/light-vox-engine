@@ -147,46 +147,44 @@ inline void FrameResource::InitGraphicsResources(
         cbvSrvDescriptorSize
     );
 
-    DXGI_FORMAT textureFormat = DXGI_FORMAT_R32G32B32A32_FLOAT;
     uint16_t textureMipLevels = 1;
-
     {
-        //Texture Description for G Buffer
-        D3D12_RESOURCE_DESC textureDesc = { };
-        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        textureDesc.Alignment = 0;
-        textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 0;
-        textureDesc.MipLevels = textureMipLevels;
-        textureDesc.DepthOrArraySize = 1;
-        textureDesc.Width = static_cast<uint64_t>( viewport->Width );
-        textureDesc.Height = static_cast<uint32_t>( viewport->Height );
-        textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-        textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-        textureDesc.Format = textureFormat;
-
-        //Clear color for the RTVs
-        //Normal and Position RTVs MUST BE CLEARED TO BLACK
-        D3D12_CLEAR_VALUE clearValueBlack = { };
-        float gBufferClearColor[ 4 ] = LV_RTV_CLEAR_COLOR;
-        clearValueBlack.Color[ 0 ] = gBufferClearColor[ 0 ];
-        clearValueBlack.Color[ 1 ] = gBufferClearColor[ 1 ];
-        clearValueBlack.Color[ 2 ] = gBufferClearColor[ 2 ];
-        clearValueBlack.Color[ 3 ] = gBufferClearColor[ 3 ];
-        clearValueBlack.Format = textureFormat;
-
-        D3D12_CLEAR_VALUE clearValueAlbedo = { };
-        float gBufferClearColorAlbedo[ 4 ] = LV_RTV_CLEAR_BG_COLOR;
-        clearValueAlbedo.Color[ 0 ] = gBufferClearColorAlbedo[ 0 ];
-        clearValueAlbedo.Color[ 1 ] = gBufferClearColorAlbedo[ 1 ];
-        clearValueAlbedo.Color[ 2 ] = gBufferClearColorAlbedo[ 2 ];
-        clearValueAlbedo.Color[ 3 ] = gBufferClearColorAlbedo[ 3 ];
-        clearValueAlbedo.Format = textureFormat;
-
         //Create texture resources for the RTV/SRV
         CD3DX12_HEAP_PROPERTIES heapProperty( D3D12_HEAP_TYPE_DEFAULT );
-        for ( uint32_t i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
+        for ( size_t i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
         {
+            //Texture Description for G Buffer
+            D3D12_RESOURCE_DESC textureDesc = { };
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            textureDesc.Alignment = 0;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.SampleDesc.Quality = 0;
+            textureDesc.MipLevels = textureMipLevels;
+            textureDesc.DepthOrArraySize = 1;
+            textureDesc.Width = static_cast<uint64_t>( viewport->Width );
+            textureDesc.Height = static_cast<uint32_t>( viewport->Height );
+            textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            textureDesc.Format = ShaderDefinitions::GeometryBufferFormat( i );
+
+            //Clear color for the RTVs
+            //Normal and Position RTVs MUST BE CLEARED TO BLACK
+            D3D12_CLEAR_VALUE clearValueBlack = { };
+            float gBufferClearColor[ 4 ] = LV_RTV_CLEAR_COLOR;
+            clearValueBlack.Color[ 0 ] = gBufferClearColor[ 0 ];
+            clearValueBlack.Color[ 1 ] = gBufferClearColor[ 1 ];
+            clearValueBlack.Color[ 2 ] = gBufferClearColor[ 2 ];
+            clearValueBlack.Color[ 3 ] = gBufferClearColor[ 3 ];
+            clearValueBlack.Format = ShaderDefinitions::GeometryBufferFormat( i );
+
+            D3D12_CLEAR_VALUE clearValueAlbedo = { };
+            float gBufferClearColorAlbedo[ 4 ] = LV_RTV_CLEAR_BG_COLOR;
+            clearValueAlbedo.Color[ 0 ] = gBufferClearColorAlbedo[ 0 ];
+            clearValueAlbedo.Color[ 1 ] = gBufferClearColorAlbedo[ 1 ];
+            clearValueAlbedo.Color[ 2 ] = gBufferClearColorAlbedo[ 2 ];
+            clearValueAlbedo.Color[ 3 ] = gBufferClearColorAlbedo[ 3 ];
+            clearValueAlbedo.Format = ShaderDefinitions::GeometryBufferFormat( i );
+
             D3D12_CLEAR_VALUE clearVal = clearValueBlack;
             if ( i == 0 )
                 clearVal = clearValueAlbedo;
@@ -204,29 +202,28 @@ inline void FrameResource::InitGraphicsResources(
         }
     }
     {
-        //Render Target View Description
-        D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = { };
-        {
-            rtvDesc.Texture2D.MipSlice = 0;
-            rtvDesc.Texture2D.PlaneSlice = 0;
-            rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-            rtvDesc.Format = textureFormat;
-        }
-
-        //Shader Resource View Description
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
-        {
-            srvDesc.Texture2D.MipLevels = textureMipLevels;
-            srvDesc.Texture2D.MostDetailedMip = 0;
-            srvDesc.Format = textureFormat;
-            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        }
-
-
 
         for ( uint32_t i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
         {
+            //Render Target View Description
+            D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = { };
+            {
+                rtvDesc.Texture2D.MipSlice = 0;
+                rtvDesc.Texture2D.PlaneSlice = 0;
+                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+                rtvDesc.Format = ShaderDefinitions::GeometryBufferFormat( i );
+            }
+
+            //Shader Resource View Description
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
+            {
+                srvDesc.Texture2D.MipLevels = textureMipLevels;
+                srvDesc.Texture2D.MostDetailedMip = 0;
+                srvDesc.Format = ShaderDefinitions::GeometryBufferFormat( i );
+                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            }
+
             //create RTV and SRV and stay consistent
             device->CreateRenderTargetView( rtvTextures[ i ].Get(), &rtvDesc, rtvHandle );
             device->CreateShaderResourceView( rtvTextures[ i ].Get(), &srvDesc, cbvSrvCpuHandle );
@@ -456,7 +453,7 @@ void FrameResource::WriteConstantBuffers(
 }
 
 #ifdef _DEBUG
-void FrameResource::WriteDebugInstanceBuffers( 
+void FrameResource::WriteDebugInstanceBuffers(
     CubeInstanceData instanceData[],
     size_t count
 )

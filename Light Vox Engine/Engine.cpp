@@ -200,7 +200,7 @@ LRESULT Engine::HandleEvents( LV_HANDLE hWindow, uint32_t message, WPARAM wParam
     {
         //handle mouse down/up
         case WM_MOUSEMOVE:
-            //OnMouseMove( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            inputManager->OnMouseMove( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
@@ -210,7 +210,7 @@ LRESULT Engine::HandleEvents( LV_HANDLE hWindow, uint32_t message, WPARAM wParam
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
-            //OnMouseUp( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            inputManager->OnMouseUp( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
 
             //handle resizing
@@ -253,11 +253,21 @@ void Engine::OnResize( uint32_t width, uint32_t height )
 void Engine::UsingInputFunc()
 {
     DEBUG_PRINT( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
-    printf( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
 }
 
 inline void Engine::Update()
 {
+    float dtfloat = time->GetDeltaFloatTime();
+    const static float speed = 2.f;
+    if ( inputManager->IsKeyDown( VK_LEFT ) ) // A
+        camera->MoveSideways( dtfloat * speed );
+    else if ( inputManager->IsKeyDown( VK_RIGHT ) ) // d
+        camera->MoveSideways( - dtfloat * speed );
+
+    if ( inputManager->IsKeyDown( VK_UP ) ) // W
+        camera->MoveForward( dtfloat * speed );
+    else if ( inputManager->IsKeyDown( VK_DOWN ) ) // S
+        camera->MoveForward( -dtfloat * speed );
 
     //DEBUG collision code 
     float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
@@ -277,10 +287,7 @@ inline void Engine::Update()
     debugRenderer->AddCube( transform, scale, color );
 
     //DEBUG CODE for basic camera update
-    glm::vec3 pos = glm::vec3( 0.f, 0.f, -5.f );
-    glm::vec3 forward = glm::vec3( 0.f, 0.f, 1.f );
-    glm::vec3 up = glm::vec3( 0.f, 1.f, 0.f );
-    camera->SetTransform( pos, forward, up );
+
 
     physics->Update( time->GetTotalFloatTime() );
     graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );

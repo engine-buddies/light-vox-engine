@@ -12,10 +12,14 @@ namespace Graphics
         glm::vec3 position;
         glm::vec3 forward;
         glm::vec3 up;
+        glm::vec3 right;
 
+        float pitchAngle;
         float fov;      //field of view
         float nearZ;    //near plane (in Z)
         float farZ;     //far plane (in Z)
+
+        const float MAX_PITCH = glm::pi<float>() / 2.0f;
 
     public:
         Camera();
@@ -27,10 +31,31 @@ namespace Graphics
         /// <param name="position">The position of the camera</param>
         /// <param name="forward">Where the camera is pointing to</param>
         /// <param name="up">What 'up' is in this world</param>
-        void SetTransform( glm::vec3 position,
-            glm::vec3 forward,
-            glm::vec3 up
-        );
+        void SetTransform( glm::vec3 position, glm::vec3 forward, glm::vec3 up );
+
+        /// <summary>
+        /// Move forward by a certain amount
+        /// </summary>
+        /// <param name="amount">Amount to move forward by</param>
+        void MoveForward( float amount );
+
+        /// <summary>
+        /// Move sideways by a certain amount
+        /// </summary>
+        /// <param name="amount">Amount to move sideways by</param>
+        void MoveSideways( float amount );
+
+        /// <summary>
+        /// Rotate the camera long it's right
+        /// </summary>
+        /// <param name="angle">Angle to rotate by</param>
+        void RotateAlongRight( float angle );
+
+        /// <summary>
+        /// Rotate along the global Y-axis
+        /// </summary>
+        /// <param name="angle">Angle to rotate by</param>
+        void RotateAlongUp( float angle );
 
         /// <summary>
         /// Calculates the view projection matrix

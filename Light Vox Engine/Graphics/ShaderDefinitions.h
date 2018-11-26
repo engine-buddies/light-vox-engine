@@ -36,6 +36,15 @@ namespace Graphics
     public:
         static inline void SetGeometryPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
         static inline void SetLightingPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
+        
+        static const DXGI_FORMAT GeometryBufferFormat( size_t index ) {
+            static const DXGI_FORMAT GEOMETRY_BUFFER_FORMAT[] = {
+                DXGI_FORMAT_R8G8B8A8_UNORM,
+                DXGI_FORMAT_R8G8B8A8_SNORM,
+                DXGI_FORMAT_R16G16B16A16_FLOAT
+            };
+            return GEOMETRY_BUFFER_FORMAT[ index ];
+        }
     };
 }
 #endif
@@ -159,8 +168,6 @@ struct PSOutput
 #define _G_BUFFER_NORMAL_REG t1
 #define _G_BUFFER_POSITION_REG t2
 #endif
-//TODO: move G-Buffer constants here
-
 
 // ----------------- INPUT ASSEMBLER (LIGHTING) -----------------
 // TODO - actually use this in code
