@@ -75,7 +75,7 @@ void Solver::Collide(void* args, int index)
                 continue;
 
             //rigidbody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
-
+            rigidbody->IntersectBoxBox(i, j);
         }
     }
 
