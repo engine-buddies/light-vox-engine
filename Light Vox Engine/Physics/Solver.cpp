@@ -8,13 +8,13 @@ Solver::Solver()
     componentManager = ECS::ComponentManager::GetInstance();
     jobManager = Jobs::JobManager::GetInstance();
     rigidbody = new Rigidbody();
-    
+
     a_argument = new PhysicsArguments();
     a_argument->StartElem = 0;
-    a_argument->EndElm = ( LV_MAX_INSTANCE_COUNT  / 2 );
+    a_argument->EndElm = (LV_MAX_INSTANCE_COUNT / 2);
 
     b_argument = new PhysicsArguments();
-    b_argument->StartElem = ( LV_MAX_INSTANCE_COUNT / 2 );
+    b_argument->StartElem = (LV_MAX_INSTANCE_COUNT / 2);
     b_argument->EndElm = LV_MAX_INSTANCE_COUNT;
 
 }
@@ -22,6 +22,7 @@ Solver::Solver()
 Solver::~Solver()
 {
     jobManager = nullptr;
+    componentManager = nullptr;
 
     if (rigidbody != nullptr)
     {
@@ -29,20 +30,20 @@ Solver::~Solver()
         rigidbody = nullptr;
     }
 
-    if ( a_argument != nullptr )
+    if (a_argument != nullptr)
     {
         delete a_argument;
         a_argument = nullptr;
     }
 
-    if ( b_argument != nullptr )
+    if (b_argument != nullptr)
     {
         delete b_argument;
         b_argument = nullptr;
     }
 }
 
-void Solver::Update( float dt )
+void Solver::Update(float dt)
 {
     a_argument->DeltaTime = dt;
     b_argument->DeltaTime = dt;
@@ -55,22 +56,20 @@ void Solver::Update( float dt )
     std::future<void> bFuture = bPromise.get_future();
     b_argument->jobPromise = &bPromise;
 
-    jobManager->AddJob( this, &Physics::Solver::SetColliderData, ( void* ) ( a_argument ), 0 );
-    jobManager->AddJob( this, &Physics::Solver::SetColliderData, ( void* ) ( b_argument ), 0 );
+    jobManager->AddJob(this, &Physics::Solver::SetColliderData, (void*)(a_argument), 0);
+    jobManager->AddJob(this, &Physics::Solver::SetColliderData, (void*)(b_argument), 0);
 
     aFuture.wait();
     bFuture.wait();
-
-    //AccumlateForces( a_argument, 0 );
-    //Integrate( a_argument, 0 );
-    //ModelToWorld( a_argument, 0 );
 }
 
-void Solver::Collide()
+void Solver::Collide(void* args, int index)
 {
-    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
+   /* for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
-        for (size_t j = 0; j < LV_MAX_INSTANCE_COUNT; ++j)
+        for (size_t j = myArgs->StartElem; j < myArgs->EndElm; ++j)
         {
             if (i == j)
                 continue;
@@ -78,25 +77,27 @@ void Solver::Collide()
             rigidbody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
 
         }
-    }
+    }*/
 
     //reset contacts
     componentManager->contacts->contactsFound = 0;
+
+    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, args, 0);
 }
 
-void Solver::AccumlateForces( void* args, int index )
+void Solver::AccumlateForces(void* args, int index)
 {
-    PhysicsArguments* myArgs = static_cast< PhysicsArguments* >( args );
-    assert( myArgs != nullptr );
-    for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
-        glm::vec3& acceleration = componentManager->bodyProperties[ i ].acceleration;
-        glm::vec3& force = componentManager->bodyProperties[ i ].force;
-        float& mass = componentManager->bodyProperties[ i ].mass;
+        glm::vec3& acceleration = componentManager->bodyProperties[i].acceleration;
+        glm::vec3& force = componentManager->bodyProperties[i].force;
+        float& mass = componentManager->bodyProperties[i].mass;
         acceleration += force / mass;
     }
 
-    jobManager->AddJob( this, &Physics::Solver::AccumlateTorque, args, 0 );
+    jobManager->AddJob(this, &Physics::Solver::AccumlateTorque, args, 0);
 }
 
 void Physics::Solver::AccumlateTorque(void * args, int index)
@@ -115,18 +116,18 @@ void Physics::Solver::AccumlateTorque(void * args, int index)
 
 
 
-void Solver::Integrate( void* args, int index )
+void Solver::Integrate(void* args, int index)
 {
-    PhysicsArguments* myArgs = static_cast< PhysicsArguments* >( args );
-    assert( myArgs != nullptr );
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
 
     float dt = myArgs->DeltaTime;
 
     //semi implicit euler 
-    for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
         if (!componentManager->bodyProperties[i].isAwake)
-            return;
+            continue;
 
         //movement
         glm::vec3& acceleration = componentManager->bodyProperties[i].acceleration;
@@ -169,15 +170,15 @@ void Solver::Integrate( void* args, int index )
         torque = { .0f, .0f, .0f };
     }
 
-    jobManager->AddJob( this, &Physics::Solver::ModelToWorld, args, 0 );
+    jobManager->AddJob(this, &Physics::Solver::ModelToWorld, args, 0);
 }
 
-void Solver::ModelToWorld( void* args, int index )
+void Solver::ModelToWorld(void* args, int index)
 {
-    PhysicsArguments* myArgs = static_cast< PhysicsArguments* >( args );
-    assert( myArgs != nullptr );
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
 
-    for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
         glm::mat4& transformMatrix = componentManager->transformMatrix[i].transformMatrix;
         glm::vec3& pos = componentManager->transform[i].pos;
@@ -188,7 +189,7 @@ void Solver::ModelToWorld( void* args, int index )
         transformMatrix = glm::transpose(transformMatrix);
     }
 
-    assert( myArgs->jobPromise != nullptr );
+    assert(myArgs->jobPromise != nullptr);
 
     myArgs->jobPromise->set_value();
 }
@@ -204,5 +205,5 @@ void Physics::Solver::SetColliderData(void * args, int index)
     }
     assert(myArgs->jobPromise != nullptr);
 
-    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, args, 0);
+    jobManager->AddJob(this, &Physics::Solver::Collide, args, 0);
 }
