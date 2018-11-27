@@ -67,17 +67,17 @@ void Solver::Collide(void* args, int index)
 {
     PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
     assert(myArgs != nullptr);
-   /* for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
         for (size_t j = myArgs->StartElem; j < myArgs->EndElm; ++j)
         {
             if (i == j)
                 continue;
 
-            rigidbody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
+            //rigidbody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
 
         }
-    }*/
+    }
 
     //reset contacts
     componentManager->contacts->contactsFound = 0;
