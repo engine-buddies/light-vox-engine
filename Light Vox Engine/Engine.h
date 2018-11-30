@@ -69,6 +69,7 @@ private:
     LV_RESULT InitWindow();
 
     void UsingInputFunc();
+
     inline void Update();
 
     /*Debug function to create a console window*/

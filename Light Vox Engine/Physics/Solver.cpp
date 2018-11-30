@@ -12,10 +12,10 @@ Solver::Solver()
     
     a_argument = new PhysicsArguments();
     a_argument->StartElem = 0;
-    a_argument->EndElm = ( LV_MAX_INSTANCE_COUNT  / 2 );
+    a_argument->EndElm = (LV_MAX_INSTANCE_COUNT / 2);
 
     b_argument = new PhysicsArguments();
-    b_argument->StartElem = ( LV_MAX_INSTANCE_COUNT / 2 );
+    b_argument->StartElem = (LV_MAX_INSTANCE_COUNT / 2);
     b_argument->EndElm = LV_MAX_INSTANCE_COUNT;
 
 }
@@ -37,13 +37,19 @@ Solver::~Solver()
         contactSolver = nullptr;
     }
 
-    if ( a_argument != nullptr )
+    if (rigidbody != nullptr)
+    {
+        delete rigidbody;
+        rigidbody = nullptr;
+    }
+
+    if (a_argument != nullptr)
     {
         delete a_argument;
         a_argument = nullptr;
     }
 
-    if ( b_argument != nullptr )
+    if (b_argument != nullptr)
     {
         delete b_argument;
         b_argument = nullptr;
@@ -273,8 +279,6 @@ void Physics::Solver::AccumlateTorque()
         angularAccel += invInertiaTensor * torque;
     }
 }
-
-
 
 void Solver::Integrate(float dt)
 {

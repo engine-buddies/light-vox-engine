@@ -14,10 +14,17 @@
 namespace Input
 {
 
+    struct Point
+    {
+        int x;
+        int y;
+    };
+
     enum InputType
     {
         Horizontal,
         Vertical,
+        Look,
         Fire,
         Use
     };
@@ -65,6 +72,10 @@ namespace Input
         void OnMouseUp( WPARAM buttonState, int x, int y );
         void OnMouseMove( WPARAM buttonState, int x, int y );
 
+        const Point GetCurrentMousePos() { return CurMousePos; }
+
+        const Point GetPrevMousePos() { return PrevMousePos; }
+
 #endif
 
     private:
@@ -77,6 +88,11 @@ namespace Input
         static InputManager* instance;
 
         void SignalInput( InputType type );
+        
+        Point CurMousePos;
+        
+        Point PrevMousePos;
+
 
         ///////////////////////////////////////////////////////
         // Listener definitions 

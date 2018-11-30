@@ -96,7 +96,6 @@ namespace {
     }
 
 
-
     //helper method for finding contact points for edge to edge
     //collision in SAT
     inline glm::vec3 FindContactPoint(
@@ -421,6 +420,7 @@ int Physics::Rigidbody::CollideBoxBox(const size_t& entityA, const size_t& entit
         contacts[componentManager->contactsFound].contactPoint = vertex;
         contacts[componentManager->contactsFound].bodyPair = { one.tag, two.tag };
         ++componentManager->contactsFound;
+
         return 1;
     }
     return 0;
