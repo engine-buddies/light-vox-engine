@@ -204,7 +204,7 @@ void Physics::ContactSolver::CalculateDesiredDeltaVelocity(float dt, Contacts* c
 
     //if the velocity is  slow, limit restitution
     float thisRestitution = c->restitution;
-    if (glm::abs(c->contactVelocity.x) < velocityLimit);
+    if (glm::abs(c->contactVelocity.x) < velocityLimit)
     {
         thisRestitution = 0.0f;
     }
@@ -333,7 +333,7 @@ void Physics::ContactSolver::ApplyPositionChange(
     {
         //the linear and angular movements required are in proportion to the 
         //inverse inertias
-        float sign = (i == 0) ? 1 : -1;
+        float sign = (i == 0) ? 1.f : -1.f;
         angularMove[i] = 
             sign * penetration * (angularInertia[i] / totalInertia);
         linearMove[i] =
@@ -431,7 +431,7 @@ void Physics::ContactSolver::AdjustVelocities(
     while(velocityIterationsUsed < velocityIterations)
     {
         float max = velocityEpsilon;
-        uint32_t index = numContacts;
+        size_t index = numContacts;
         for(size_t i = 0; i < numContacts; ++i)
         {
             if(contacts[i].desiredVelocity > max)
@@ -481,7 +481,7 @@ void Physics::ContactSolver::AdjustPositions(
     uint32_t numContacts, 
     float dt)
 {
-    unsigned i, index;
+    size_t index;
     glm::vec3 linearChange[2], angularChange[2];
     float max;
     glm::vec3 deltaPosition;
