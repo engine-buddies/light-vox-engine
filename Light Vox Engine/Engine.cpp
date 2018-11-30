@@ -145,9 +145,21 @@ LV_RESULT Engine::InitSystems()
             for ( int j = 0; j < count; ++j )
             {
                 int index = i * count + j;
-                size_t entityID = entityManager->Get_Entity( index ).index;
-                rigidBody->Pos( glm::vec3( x + rotation, y, z ), entityID );
-                rigidBody->RotateAxisAngle( glm::vec3( .0f, 1.0f, .0f ), rotation, entityID );
+                UINT entityID = entityManager->Get_Entity(index).index;
+                rigidBody->Pos(glm::vec3(x + 1.0f, y, z), entityID);
+                rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
+                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
+
+                //calc. moment of inertia 
+                float& mass = componentManager->bodyProperties[entityID].mass;
+                float inertia = ((mass * 0.4f) * 0.4f) / 6.0f;
+                glm::mat3& inertiaTensor = componentManager->bodyProperties[entityID].inertiaTensor;
+                inertiaTensor[0][0] = inertia;
+                inertiaTensor[1][1] = inertia;
+                inertiaTensor[2][2] = inertia;
+                componentManager->boxCollider->tag = entityID;
+                componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
+                //componentManager->transform[entityID].rot = glm::vec3(0.0f, 0.0f, 10.0f);
 
                 x += 2;
             }
@@ -273,7 +285,17 @@ inline void Engine::Update()
     float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
-        componentManager->transform[ i ].pos.x += x;
+        //componentManager->transform[i].pos.x += x;
+        if (componentManager->transform[i].pos.x > 5.0f)
+            componentManager->bodyProperties[i].velocity.x = -10.0f;
+
+        else if (componentManager->transform[i].pos.x < -5.0f)
+            componentManager->bodyProperties[i].velocity.x = 10.0f;
+
+        //add torque
+        //componentManager->transform[i].rot = glm::vec3(1.f, 0.0f, 1.0f);
+
+        glm::vec3 color = glm::vec3(1, 0, 0);
     }
 
     //DEBUG CODE for debug wireframe renderer
@@ -289,7 +311,7 @@ inline void Engine::Update()
     //DEBUG CODE for basic camera update
 
 
-    physics->Update( time->GetTotalFloatTime() );
+    physics->Update( time->GetDeltaFloatTime() );
     graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
     graphics->Render();
     time->UpdateTimer();

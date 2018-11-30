@@ -25,6 +25,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/norm.hpp>
+
+//typedef glm::m
+namespace glm
+{
+    typedef mat<4, 4, float, highp>		mat4x4_packed;
+    typedef vec<3, float, highp>		vec3_packed;
+    typedef vec<2, float, highp>		vec2_packed;
+}
 
 //typedef glm::m
 namespace glm
