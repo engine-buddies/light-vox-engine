@@ -41,22 +41,32 @@ namespace Physics
         uint16_t velocityIterationsUsed;
         uint16_t positionIterationsUsed;
 
+        struct ContactBodies
+        {
+            BodyProperties* bodyProps;
+            Transform* transform;
+        };
+
         /// <summary>
         /// Return true if the resolver has valid settings
         /// </summary>
         /// <returns></returns>
         bool isValid();
 
-        glm::vec3 CalculateLocalVelocity(uint32_t bodyIndex, float dt);
+        glm::vec3 CalculateLocalVelocity(Contacts* c,
+            uint32_t bodyIndex, 
+            uint16_t bodyPair, 
+            float dt);
         void CalculateDesiredDeltaVelocity(float dt, Contacts* c);
-        void ApplyVelocityChanges(
+        void ApplyVelocityChange(
             glm::vec3 velocityChange[2], 
             glm::vec3 rotationChange[2], 
             Contacts* c);
-        void ApplyPositionChanges(
+        void ApplyPositionChange(
             glm::vec3 linearChange[2], 
-            glm::vec3 angularChange[2], 
-            Contacts* c);
+            glm::vec3 angularChange[2],
+            Contacts* c,
+            float penetration);
 
         /// <summary>
         /// Calc. internal data from state data

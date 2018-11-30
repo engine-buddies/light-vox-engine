@@ -104,6 +104,13 @@ namespace Physics
         /// <param name="index"></param>
         void CalcHalfSize(const size_t& index);
 
+        void FillPointFaceBoxBox(const EntityComponents::BoxCollider& one,
+            const EntityComponents::BoxCollider& two,
+            const glm::vec3& toCenter,
+            EntityComponents::Contacts* contactData,
+            unsigned best,
+            float penetration);
+
     private:
         ECS::ComponentManager* componentManager;
 

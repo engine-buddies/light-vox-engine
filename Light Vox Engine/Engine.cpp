@@ -157,7 +157,7 @@ LV_RESULT Engine::InitSystems()
                 inertiaTensor[0][0] = inertia;
                 inertiaTensor[1][1] = inertia;
                 inertiaTensor[2][2] = inertia;
-                componentManager->boxCollider->tag = entityID;
+                componentManager->boxCollider[entityID].tag = entityID;
                 //componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
                 //componentManager->transform[entityID].rot = glm::vec3(0.0f, 0.0f, 10.0f);
 

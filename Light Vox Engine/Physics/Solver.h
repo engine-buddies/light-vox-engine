@@ -6,6 +6,7 @@
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
 #include "../JobSystem/JobManager.h"
+#include "ContactSolver.h"
 #include "RigidBody.h"
 
 namespace Physics
@@ -29,7 +30,7 @@ namespace Physics
 
     private:
 
-        /// <summary>
+       /* /// <summary>
         /// Solves Collision (aabb to aabb) 
         /// </summary>
         void Collide(void* args, int index);
@@ -54,12 +55,42 @@ namespace Physics
         /// Calcs the transformation matrix based on the given offset
          /// and transform the bounding box vertices from local to world space
         /// </summary>
-        void SetColliderData(void* args, int index);
+        void SetColliderData(void* args, int index);*/
+
+        /// <summary>
+       /// Solves Collision (aabb to aabb) 
+       /// </summary>
+        void Collide();
+        /// <summary>
+        /// Semi Implicit euler intergration for position
+        /// </summary>
+        /// <param name="dt"></param>
+        void Integrate(float dt);
+        /// <summary>
+        /// Calc. total force
+        /// </summary>
+        void AccumlateForces();
+        /// <summary>
+        /// Calc. total torque
+        /// </summary>
+        void AccumlateTorque();
+        /// <summary>
+        /// Calc model to world matrix
+        /// </summary>
+        void ModelToWorld();
+        /// <summary>
+        /// Calcs the transformation matrix based on the given offset
+         /// and transform the bounding box vertices from local to world space
+        /// </summary>
+        void SetColliderData();
+
+        void ResolveContacts(float dt);
 
         glm::vec3 gravity;
         ECS::ComponentManager* componentManager;
         Jobs::JobManager* jobManager = nullptr;
         Rigidbody* rigidbody = nullptr;
+        ContactSolver* contactSolver = nullptr;
 
 
         struct PhysicsArguments

@@ -95,41 +95,7 @@ namespace {
         return true;
     }
 
-    //helper method to find contact information
-    //for vertex vertex collision in SAT
-    inline void FillPointFaceBoxBox(
-        const EntityComponents::BoxCollider& one,
-        const EntityComponents::BoxCollider& two,
-        const glm::vec3& toCenter,
-        EntityComponents::Contacts* contactData,
-        unsigned best,
-        float penetration
-    )
-    {
-        //determine which direction the axis of collision is facing
-        glm::vec3 normal = GetAxisVector(best, one.transformMatrix);
-        if (glm::dot(normal, toCenter) > 0)
-        {
-            normal = normal * -1.0f;
-        }
 
-        //work out which vertex of box two we're colliding with
-        glm::vec3 vertex = two.size;
-        if (glm::dot(GetAxisVector(0, two.transformMatrix), normal) < 0)
-            vertex.x = -vertex.x;
-
-        if (glm::dot(GetAxisVector(1, two.transformMatrix), normal) < 0)
-            vertex.y = -vertex.y;
-
-        if (glm::dot(GetAxisVector(2, two.transformMatrix), normal) < 0)
-            vertex.z = -vertex.z;
-
-        //create the contact data 
-        contactData[contactData->contactsFound].contactNormal = normal;
-        contactData[contactData->contactsFound].penetration = penetration;
-        contactData[contactData->contactsFound].contactPoint = two.transformMatrix * glm::vec4(vertex, 1.0f);
-        contactData[contactData->contactsFound].bodyPair = { one.tag, two.tag };
-    }
 
     //helper method for finding contact points for edge to edge
     //collision in SAT
@@ -303,6 +269,41 @@ bool Physics::Rigidbody::IntersectBoxBox(const size_t& entityA, const size_t& en
 #endif
 }
 
+//helper method to find contact information
+//for vertex vertex collision in SAT
+ void Physics::Rigidbody::FillPointFaceBoxBox(
+    const EntityComponents::BoxCollider& one,
+    const EntityComponents::BoxCollider& two,
+    const glm::vec3& toCenter,
+    EntityComponents::Contacts* contactData,
+    unsigned best,
+    float penetration
+)
+{
+    //determine which direction the axis of collision is facing
+    glm::vec3 normal = GetAxisVector(best, one.transformMatrix);
+    if (glm::dot(normal, toCenter) > 0)
+    {
+        normal = normal * -1.0f;
+    }
+
+    //work out which vertex of box two we're colliding with
+    glm::vec3 vertex = two.size;
+    if (glm::dot(GetAxisVector(0, two.transformMatrix), normal) < 0)
+        vertex.x = -vertex.x;
+
+    if (glm::dot(GetAxisVector(1, two.transformMatrix), normal) < 0)
+        vertex.y = -vertex.y;
+
+    if (glm::dot(GetAxisVector(2, two.transformMatrix), normal) < 0)
+        vertex.z = -vertex.z;
+
+    //create the contact data 
+    contactData[componentManager->contactsFound].contactNormal = normal;
+    contactData[componentManager->contactsFound].penetration = penetration;
+    contactData[componentManager->contactsFound].contactPoint = two.transformMatrix * glm::vec4(vertex, 1.0f);
+    contactData[componentManager->contactsFound].bodyPair = { one.tag, two.tag };
+}
 
 // preprocessor definition is only used as a convenience
 // in the boxAndBox contact generation method.
@@ -358,14 +359,14 @@ int Physics::Rigidbody::CollideBoxBox(const size_t& entityA, const size_t& entit
     {
         //vertex of box two on a face of box one 
         FillPointFaceBoxBox(one, two, toCenter, contacts, best, pen);
-        ++contacts->contactsFound;
+        ++componentManager->contactsFound;
         return 1;
     }
     else if (best < 6)
     {
         // We've got a vertex of box one on a face of box two
         FillPointFaceBoxBox(two, one, toCenter*-1.0f, contacts, best - 3, pen);
-        ++contacts->contactsFound;
+        ++componentManager->contactsFound;
         return 1;
     }
     else
@@ -415,11 +416,11 @@ int Physics::Rigidbody::CollideBoxBox(const size_t& entityA, const size_t& entit
             bestSingleAxis > 2
         );
 
-        contacts[contacts->contactsFound].penetration = pen;
-        contacts[contacts->contactsFound].contactNormal = axis;
-        contacts[contacts->contactsFound].contactPoint = vertex;
-        contacts[contacts->contactsFound].bodyPair = { one.tag, two.tag };
-        ++contacts->contactsFound;
+        contacts[componentManager->contactsFound].penetration = pen;
+        contacts[componentManager->contactsFound].contactNormal = axis;
+        contacts[componentManager->contactsFound].contactPoint = vertex;
+        contacts[componentManager->contactsFound].bodyPair = { one.tag, two.tag };
+        ++componentManager->contactsFound;
         return 1;
     }
     return 0;
