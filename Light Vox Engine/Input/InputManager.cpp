@@ -73,11 +73,12 @@ void InputManager::OnMouseDown( WPARAM buttonState, int x, int y )
 {
     // Test out the signaling of the system
     SignalInput( InputType::Fire );
+    SignalInput( InputType::StartLook );
 }
 
 void InputManager::OnMouseUp( WPARAM buttonState, int x, int y )
 {
-
+    SignalInput( InputType::StopLook );
 }
 
 void InputManager::OnMouseMove( WPARAM buttonState, int x, int y )

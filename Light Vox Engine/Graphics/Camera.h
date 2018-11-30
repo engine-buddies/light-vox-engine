@@ -1,6 +1,9 @@
 #pragma once
 #include "../stdafx.h"
 
+//forward declare input manager
+namespace Input { class InputManager; }
+
 namespace Graphics
 {
     /// <summary>
@@ -9,17 +12,33 @@ namespace Graphics
     class Camera
     {
     private:
+        const glm::vec4 DEFAULT_UP      = glm::vec4( 0.f, 1.f,  0.f, 0.f );
+        const glm::vec4 DEFAULT_FORWARD = glm::vec4( 0.f, 0.f, -1.f, 0.f );
+        const glm::vec4 DEFAULT_RIGHT   = glm::vec4( 1.f, 1.f,  0.f, 0.f );
+
         glm::vec3 position;
         glm::vec3 forward;
         glm::vec3 up;
         glm::vec3 right;
 
+        const float MAX_PITCH = glm::pi<float>() / 2.0f;
+        const float SENSITIVITY = 0.01f;
+
         float pitchAngle;
+        float yawAngle;
+
         float fov;      //field of view
         float nearZ;    //near plane (in Z)
         float farZ;     //far plane (in Z)
 
-        const float MAX_PITCH = glm::pi<float>() / 2.0f;
+        Input::InputManager *inputManager;
+
+        bool isLooking;
+
+        /// <summary>
+        /// Calculate direction based off of the yaw and pitch angle
+        /// </summary>
+        void CalculateDirection();
 
     public:
         Camera();
@@ -62,6 +81,11 @@ namespace Graphics
         /// the look axis
         /// </summary>
         void OnLookAxis();
+
+        void StartCameraLook();
+
+        void StopCameraLook();
+
 
         /// <summary>
         /// Calculates the view projection matrix

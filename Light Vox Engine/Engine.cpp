@@ -14,16 +14,17 @@
 Engine* Engine::engineInstance = nullptr;
 
 /* LIFE CYCLE */
-Engine::Engine(LV_INSTANCE hInstance )
+Engine::Engine( LV_INSTANCE hInstance )
 {
-	if (hInstance != nullptr) {
-		this->hInstance = hInstance;
-		Engine::engineInstance = this;
-		windowWidth = 1280;
-		windowHeight = 720;
-		windowTitle = "STRUGGLE BUS";
-		hWindow = 0;
-	}
+    if ( hInstance != nullptr )
+    {
+        this->hInstance = hInstance;
+        Engine::engineInstance = this;
+        windowWidth = 1280;
+        windowHeight = 720;
+        windowTitle = "STRUGGLE BUS";
+        hWindow = 0;
+    }
 }
 
 Engine::~Engine()
@@ -97,7 +98,7 @@ LV_RESULT Engine::InitWindow()
         return HRESULT_FROM_WIN32( GetLastError() );
 
     ShowWindow( hWindow, SW_SHOW );
-	return S_OK;
+    return S_OK;
 }
 
 #endif
@@ -106,8 +107,8 @@ LV_RESULT Engine::InitSystems()
 {
     InitWindow();
     graphics = new Graphics::GraphicsCore( hWindow, static_cast<uint32_t>( windowWidth ), static_cast<uint32_t>( windowHeight ) );
-	debugRenderer = Graphics::DebugRenderer::GetInstance();
-	camera = new Graphics::Camera();
+    debugRenderer = Graphics::DebugRenderer::GetInstance();
+    camera = new Graphics::Camera();
 
     physics = new Physics::Solver();
     rigidBody = new Physics::Rigidbody();
@@ -133,10 +134,9 @@ LV_RESULT Engine::InitSystems()
     }
 
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
-    static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
-    static float rotation = 0.001f;
     {
-
+        static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
+        static float rotation = 0.001f;
         float x = static_cast <float>( -count );
         float y = static_cast <float>( -count );
         float z = 0;
@@ -160,12 +160,18 @@ LV_RESULT Engine::InitSystems()
                 componentManager->boxCollider[entityID].tag = entityID;
                 //componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
                 //componentManager->transform[entityID].rot = glm::vec3(0.0f, 0.0f, 10.0f);
-
                 x += 2;
             }
 
             y += 2;
             x = static_cast <float>( -count );
+        }
+
+        for ( size_t i = count * count; i < LV_MAX_INSTANCE_COUNT; ++i )
+        {
+            x += 2;
+            size_t entityID = entityManager->Get_Entity( i ).index;
+            rigidBody->Pos( glm::vec3( x, y, z ), entityID );
         }
     }
 
@@ -274,7 +280,7 @@ inline void Engine::Update()
     if ( inputManager->IsKeyDown( VK_LEFT ) ) // A
         camera->MoveSideways( dtfloat * speed );
     else if ( inputManager->IsKeyDown( VK_RIGHT ) ) // d
-        camera->MoveSideways( - dtfloat * speed );
+        camera->MoveSideways( -dtfloat * speed );
 
     if ( inputManager->IsKeyDown( VK_UP ) ) // W
         camera->MoveForward( dtfloat * speed );
