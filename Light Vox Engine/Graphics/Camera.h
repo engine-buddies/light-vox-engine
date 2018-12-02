@@ -31,14 +31,9 @@ namespace Graphics
         float nearZ;    //near plane (in Z)
         float farZ;     //far plane (in Z)
 
-        Input::InputManager *inputManager;
+		Input::InputManager *inputManager = nullptr;
 
-        bool isLooking;
-
-        /// <summary>
-        /// Calculate direction based off of the yaw and pitch angle
-        /// </summary>
-        void CalculateDirection();
+        bool isLooking;	//bool flag for mouse control
 
     public:
         Camera();
@@ -65,27 +60,20 @@ namespace Graphics
         void MoveSideways( float amount );
 
         /// <summary>
-        /// Rotate the camera long it's right
-        /// </summary>
-        /// <param name="angle">Angle to rotate by</param>
-        void RotateAlongRight( float angle );
-
-        /// <summary>
-        /// Rotate along the global Y-axis
-        /// </summary>
-        /// <param name="angle">Angle to rotate by</param>
-        void RotateAlongUp( float angle );
-
-        /// <summary>
         /// Signaled by the input manager when the player uses
         /// the look axis
         /// </summary>
         void OnLookAxis();
 
+		/// <summary>
+		/// Makes the mouse input start controlling camera
+		/// </summary>
         void StartCameraLook();
 
+		/// <summary>
+		/// Makes the mouse input stop controlling camera
+		/// </summary>
         void StopCameraLook();
-
 
         /// <summary>
         /// Calculates the view projection matrix

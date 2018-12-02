@@ -51,22 +51,6 @@ void Camera::MoveSideways( float amount )
     this->position += this->right * amount;
 }
 
-void Camera::RotateAlongRight( float angle )
-{
-    pitchAngle += angle;
-    glm::clamp( pitchAngle, -MAX_PITCH, MAX_PITCH );
-}
-
-void Camera::RotateAlongUp( float angle )
-{
-    yawAngle += angle;
-}
-
-void Camera::CalculateDirection()
-{
-    glm::eulerAngleXY( pitchAngle, yawAngle );
-}
-
 void Graphics::Camera::OnLookAxis()
 {
     //only if right click is held down
