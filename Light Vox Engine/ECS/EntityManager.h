@@ -41,12 +41,12 @@ namespace ECS {
         /// <summary>
         /// Removes Entity from index and makes it available
         /// </summary>
-        void Free_Entity(Entity e);
+        void Free_Entity( Entity e );
 
         /// <summary>
         /// Checks if Entity exist 
         /// </summary>
-        bool Is_Valid(Entity e) const;
+        bool Is_Valid( Entity e ) const;
 
         /// <summary>
         /// Removes all entities
@@ -56,11 +56,11 @@ namespace ECS {
         /// <summary>
         /// Returns Entity at index
         /// </summary>
-        Entity Get_Entity( size_t index) const;
+        Entity Get_Entity( size_t index ) const;
 
         // We don't want anything making copies of this class so delete these operators
-        EntityManager(EntityManager const&) = delete;
-        void operator=(EntityManager const&) = delete;
+        EntityManager( EntityManager const& ) = delete;
+        void operator=( EntityManager const& ) = delete;
 
     private:
         EntityManager();
@@ -72,7 +72,7 @@ namespace ECS {
             unsigned int counter;
             int next_free;
 
-            index_entry() : counter(0), next_free(NONE) {}
+            index_entry() : counter( 0 ), next_free( NONE ) {}
         };
 
         int firstFree;
