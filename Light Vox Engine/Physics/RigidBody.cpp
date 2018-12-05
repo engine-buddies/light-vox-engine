@@ -192,27 +192,27 @@ Physics::Rigidbody::~Rigidbody()
 {
 }
 
-void Physics::Rigidbody::Pos(glm::vec3& pos, const size_t& index)
+void Physics::Rigidbody::Pos(glm::vec3&& pos, const size_t& index)
 {
     componentManager->transform[index].pos = pos;
 }
 
-void Physics::Rigidbody::RotateAxisAngle(glm::vec3& rotationAxis, float angle, const size_t& index)
+void Physics::Rigidbody::RotateAxisAngle(glm::vec3&& rotationAxis, float angle, const size_t& index)
 {
     componentManager->transform[index].orientation = glm::angleAxis(glm::degrees(angle), rotationAxis);
 }
 
-void Physics::Rigidbody::Velocity(glm::vec3& vel, const size_t& index)
+void Physics::Rigidbody::Velocity(glm::vec3&& vel, const size_t& index)
 {
     componentManager->bodyProperties[index].velocity = vel;
 }
 
-void Physics::Rigidbody::Acceleration(glm::vec3& accel, const size_t& index)
+void Physics::Rigidbody::Acceleration(glm::vec3&& accel, const size_t& index)
 {
     componentManager->bodyProperties[index].acceleration = accel;
 }
 
-void Physics::Rigidbody::Force(glm::vec3& force, const size_t& index)
+void Physics::Rigidbody::Force(glm::vec3&& force, const size_t& index)
 {
     componentManager->bodyProperties[index].force = force;
 }

@@ -17,7 +17,7 @@ namespace Physics
         /// </summary>
         /// <param name="pos"></param>
         /// <param name="e"></param>
-        void Pos(glm::vec3& pos, const size_t& index);
+        void Pos(glm::vec3&& pos, const size_t& index);
         /// <summary>
         /// Set quaternion roation for entity
         /// </summary>
@@ -25,7 +25,7 @@ namespace Physics
         /// <param name="angle"></param>
         /// <param name="e"></param>
         void RotateAxisAngle(
-            glm::vec3& rotationAxis,
+            glm::vec3&& rotationAxis,
             float angle,
             const size_t& index);
         /// <summary>
@@ -33,19 +33,19 @@ namespace Physics
         /// </summary>
         /// <param name="vel"></param>
         /// <param name="index"></param>
-        void Velocity(glm::vec3& vel, const size_t& index);
+        void Velocity(glm::vec3&& vel, const size_t& index);
         /// <summary>
         /// Set acceleration
         /// </summary>
         /// <param name="accel"></param>
         /// <param name="index"></param>
-        void Acceleration(glm::vec3& accel, const size_t& index);
+        void Acceleration(glm::vec3&& accel, const size_t& index);
         /// <summary>
         /// Set force
         /// </summary>
         /// <param name="force"></param>
         /// <param name="index"></param>
-        void Force(glm::vec3& force, const size_t& index);
+        void Force(glm::vec3&& force, const size_t& index);
         /// <summary>
        /// Set mass
        /// </summary>
