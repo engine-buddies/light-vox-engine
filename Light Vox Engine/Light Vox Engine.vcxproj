@@ -90,7 +90,7 @@
     <TargetName>$(ProjectName) x64</TargetName>
   </PropertyGroup>
   <PropertyGroup Label="LLVM" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <UseLldLink>true</UseLldLink>
+    <UseLldLink>false</UseLldLink>
     <ClangClAdditionalOptions>-std=c++11 -Wc++11-narrowing </ClangClAdditionalOptions>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

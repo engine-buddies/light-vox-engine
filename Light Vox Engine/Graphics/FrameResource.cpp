@@ -248,11 +248,15 @@ inline void FrameResource::InitCBV(
         cbvSrvDescriptorSize
     );
 
+    //temporary descriptors to be passed
+    CD3DX12_HEAP_PROPERTIES uploadHeapProperty = CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD );
+    CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer( sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
+
     //create the upload buffer for instance data
     ThrowIfFailed( device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+        &uploadHeapProperty,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer( sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT ),
+        &uploadBufferDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS( &instanceUploadBuffer )
@@ -284,14 +288,18 @@ inline void FrameResource::InitCBV(
 #endif
 
 
-    // Create the constant buffers.
+    // creating temporary variables/descriptors
     const uint32_t constantBufferSize = ( sizeof( SceneConstantBuffer )
         + ( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ) )
         & ~( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ); // must be a multiple 256 bytes
+    uploadHeapProperty = CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD );
+    uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer( constantBufferSize );
+
+    // Create the constant buffers.
     ThrowIfFailed( device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+        &uploadHeapProperty,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer( constantBufferSize ),
+        &uploadBufferDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS( &sceneConstantBuffer ) )
