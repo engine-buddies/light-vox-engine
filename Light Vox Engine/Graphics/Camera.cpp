@@ -3,6 +3,7 @@
 
 using namespace Graphics;
 
+
 Camera::Camera()
 {
     //default values
@@ -11,16 +12,24 @@ Camera::Camera()
     farZ = 100.f;
 
     position = glm::vec3( 0.f, 0.f, 0.f );
-    forward = glm::vec3( 0.0f, 0.f, -1.f );
-    up = glm::vec3( 0.f, 1.f, 0.f );
-    right = glm::vec3( 1.0f, 0.0f, 0.0f );
-    pitchAngle = 0;
+    forward = glm::vec3( DEFAULT_FORWARD );
+    up = glm::vec3( DEFAULT_UP );
+    right = glm::vec3( DEFAULT_RIGHT );
 
-    Input::InputManager::GetInstance()->BindAxis( 
+    pitchAngle = 0;
+    yawAngle = 0;
+    isLooking = false;
+
+    inputManager = Input::InputManager::GetInstance();
+    inputManager->BindAxis(
         Input::InputType::Look,
         this,
-        &Graphics::Camera::OnLookAxis 
+        &Graphics::Camera::OnLookAxis
     );
+
+    inputManager->BindAxis( Input::InputType::StartLook, this, &Graphics::Camera::StartCameraLook );
+    inputManager->BindAxis( Input::InputType::StopLook, this, &Graphics::Camera::StopCameraLook );
+
 }
 
 Camera::~Camera() {}
@@ -42,33 +51,34 @@ void Camera::MoveSideways( float amount )
     this->position += this->right * amount;
 }
 
-void Camera::RotateAlongRight( float angle )
-{
-    if ( pitchAngle > -MAX_PITCH || pitchAngle < MAX_PITCH )
-    {
-        pitchAngle += angle;
-        glm::quat rotation = glm::angleAxis( angle, right );
-        this->forward = rotation * this->forward;
-        this->up = rotation * this->up;
-        this->right = rotation * this->right;
-    }
-}
-
-void Camera::RotateAlongUp( float angle )
-{
-    static glm::vec3 globalUp = glm::vec3( 0.0f, 1.0f, 0.0f );
-    glm::quat rotation = glm::angleAxis( angle, globalUp );
-
-    this->forward = rotation * this->forward;
-    this->right = rotation * this->right;
-}
-
 void Graphics::Camera::OnLookAxis()
 {
-    // Called when the mouse moves
-    Input::InputManager* man = Input::InputManager::GetInstance();
+    //only if right click is held down
+    if ( !isLooking )
+        return;
 
-    printf( "Mouse Moved! X: %d  Y: %d", man->GetCurrentMousePos().x, man->GetCurrentMousePos().y );
+    Input::Point currPos = inputManager->GetCurrentMousePos();
+    Input::Point prevPos = inputManager->GetPrevMousePos();
+
+    pitchAngle += static_cast<float>( prevPos.y - currPos.y ) * SENSITIVITY;
+    glm::clamp( pitchAngle, -MAX_PITCH, MAX_PITCH );
+    yawAngle += static_cast<float>( currPos.x - prevPos.x ) * SENSITIVITY;
+
+    //rotate along x and y
+    glm::mat4x4 rotation = glm::eulerAngleYX( yawAngle, pitchAngle );
+    forward = rotation * DEFAULT_FORWARD;
+    up = rotation * DEFAULT_UP;
+    right = glm::cross( forward, up );
+}
+
+void Graphics::Camera::StartCameraLook()
+{
+    isLooking = true;
+}
+
+void Graphics::Camera::StopCameraLook()
+{
+    isLooking = false;
 }
 
 void Camera::GetViewProjMatrix( glm::mat4x4_packed* view,

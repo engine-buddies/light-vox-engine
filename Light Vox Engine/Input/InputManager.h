@@ -26,7 +26,8 @@ namespace Input
         Vertical,
         Look,
         Fire,
-        Use
+        StartLook,
+        StopLook
     };
 
     /// <summary>
@@ -73,9 +74,7 @@ namespace Input
         void OnMouseMove( WPARAM buttonState, int x, int y );
 
         const Point GetCurrentMousePos() { return CurMousePos; }
-
         const Point GetPrevMousePos() { return PrevMousePos; }
-
 #endif
 
     private:
@@ -92,7 +91,6 @@ namespace Input
         Point CurMousePos;
         
         Point PrevMousePos;
-
 
         ///////////////////////////////////////////////////////
         // Listener definitions 
