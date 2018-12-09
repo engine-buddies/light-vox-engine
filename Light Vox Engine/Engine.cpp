@@ -148,7 +148,10 @@ LV_RESULT Engine::InitSystems()
                 UINT entityID = entityManager->Get_Entity(index).index;
                 rigidBody->Pos(glm::vec3(x + 1.0f, y, z), entityID);
                 rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
-                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
+                if(j % 2 == 0)
+                    rigidBody->Velocity(glm::vec3(1.0f, 0.0f, 0.0f), entityID);
+                else
+                    rigidBody->Velocity(glm::vec3(-1.0f, 0.0f, 0.0f), entityID);
 
                 //calc. moment of inertia 
                 float& mass = componentManager->bodyProperties[entityID].mass;
@@ -158,8 +161,6 @@ LV_RESULT Engine::InitSystems()
                 inertiaTensor[1][1] = inertia;
                 inertiaTensor[2][2] = inertia;
                 componentManager->boxCollider[entityID].tag = entityID;
-                //componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
-                //componentManager->transform[entityID].rot = glm::vec3(0.0f, 0.0f, 10.0f);
 
                 x += 2;
             }
@@ -167,6 +168,17 @@ LV_RESULT Engine::InitSystems()
             y += 2;
             x = static_cast <float>( -count );
         }
+        //platform
+       // size_t platformID = entityManager->Get_Entity(LV_MAX_INSTANCE_COUNT - 1).index;
+       // rigidBody->Pos(glm::vec3(0.0f, -count - 2, z), platformID);
+       // rigidBody->Velocity(glm::vec3(0.0f, 0.0f, 0.0f), platformID);
+       // rigidBody->Mass(1000.0f, platformID);
+       // rigidBody->BoxColliderSize(glm::vec3(10.0f, 1.0f, 10.0f), platformID);
+      /* ///* float inertia = ((10.0f * 0.4f) * 0.4f) / 6.0f;
+        glm::mat3& inertiaTensor = componentManager->bodyProperties[platformID].inertiaTensor;
+        inertiaTensor[0][0] = inertia;
+        inertiaTensor[1][1] = inertia;
+        inertiaTensor[2][2] = inertia;*/
     }
 
     return S_OK;
@@ -276,15 +288,14 @@ inline void Engine::Update()
     {
         //componentManager->transform[i].pos.x += x;
         if (componentManager->transform[i].pos.x > 5.0f)
-            componentManager->bodyProperties[i].velocity.x = -10.0f;
+            componentManager->bodyProperties[i].velocity.x = -1.0f;
 
         else if (componentManager->transform[i].pos.x < -5.0f)
-            componentManager->bodyProperties[i].velocity.x = 10.0f;
+            componentManager->bodyProperties[i].velocity.x = 1.0f;
 
         //add torque
-        componentManager->transform[i].rot = glm::vec3(0.f, 0.0f, 0.0f);
+        //componentManager->transform[i].rot = glm::vec3(0.f, 0.0f, 0.0f);
 
-        glm::vec3 color = glm::vec3(1, 0, 0);
     }
 
     //DEBUG CODE for debug wireframe renderer
@@ -306,9 +317,9 @@ inline void Engine::Update()
     if (!inputManager->IsKeyDown(VK_SPACE))
     {
         physics->Update(time->GetDeltaFloatTime());
+        graphics->Update(reinterpret_cast<glm::mat4x4_packed *>(componentManager->transformMatrix), camera);
+        graphics->Render();
     }
-    graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
-    graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();
 }

@@ -8,8 +8,9 @@ Solver::Solver()
     componentManager = ECS::ComponentManager::GetInstance();
     jobManager = Jobs::JobManager::GetInstance();
     rigidbody = new Rigidbody();
-    contactSolver = new ContactSolver(10);
-    
+    contactSolver = new ContactSolver(24);
+    debugRenderer = Graphics::DebugRenderer::GetInstance();
+
     a_argument = new PhysicsArguments();
     a_argument->StartElem = 0;
     a_argument->EndElm = ( LV_MAX_INSTANCE_COUNT  / 2 );
@@ -240,10 +241,21 @@ void Solver::Collide()
             if (i == j)
                 continue;
 
-            //rigidbody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
+           //rigidbody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
+            //if ()
+            //{
+            //    //componentManager->bodyProperties[i].velocity = -componentManager->bodyProperties[i].velocity;
+            //}
             if (rigidbody->CollideBoxBox(i, j))
             {
-                componentManager->bodyProperties[i].velocity = -componentManager->bodyProperties[i].velocity;
+                glm::vec3 collisionPoint = 
+                    glm::vec4(componentManager->contacts[i].contactNormal, 1.0f)
+                    * componentManager->transformMatrix[i].transformMatrix;
+                glm::mat4 collisionMatrix = 
+                    glm::translate(glm::mat4(1.0f), collisionPoint);
+             /*   debugRenderer->AddCube(collisionMatrix, 
+                    glm::float3(.25, .25, .25), 
+                    glm::float3(1.0, 1.0, 1.0));*/
             }
 
         }
@@ -350,7 +362,7 @@ void Physics::Solver::SetColliderData()
 
 void Physics::Solver::ResolveContacts(float dt)
 {
-    //contactSolver->ResolveContacts(componentManager->contacts, componentManager->contactsFound, dt);
+    contactSolver->ResolveContacts(componentManager->contacts, componentManager->contactsFound, dt);
     componentManager->contactsFound = 0;
 }
 

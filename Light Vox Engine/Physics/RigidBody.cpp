@@ -187,7 +187,7 @@ void Physics::Rigidbody::Force(glm::vec3& force, const size_t& index)
 
 void Physics::Rigidbody::Mass(float mass, const size_t& index)
 {
-    if (mass = 0.0f)
+    if (mass == 0.0f)
         mass = 1.0f;
 
     componentManager->bodyProperties[index].mass = mass;
@@ -256,17 +256,7 @@ bool Physics::Rigidbody::IntersectBoxBox(const size_t& entityA, const size_t& en
     glm::vec3& maxB = componentManager->boxCollider[entityB].maxVertex;
     glm::vec3& minB = componentManager->boxCollider[entityB].minVertex;
 
-#ifdef _DEBUG
-
-    if (BoxIntersectBox(maxA, minA, maxB, minB))
-    {
-        DEBUG_PRINT("Entity: %i hit Entity: %i \n", entityA, entityB);
-        return true;
-    }
-    return false;
-#else
     return BoxIntersectBox(maxA, minA, maxB, minB);
-#endif
 }
 
 //helper method to find contact information

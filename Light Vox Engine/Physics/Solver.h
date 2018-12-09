@@ -8,6 +8,7 @@
 #include "../JobSystem/JobManager.h"
 #include "ContactSolver.h"
 #include "RigidBody.h"
+#include "../Graphics/DebugRenderer.h"
 
 namespace Physics
 {
@@ -91,7 +92,7 @@ namespace Physics
         Jobs::JobManager* jobManager = nullptr;
         Rigidbody* rigidbody = nullptr;
         ContactSolver* contactSolver = nullptr;
-
+        Graphics::DebugRenderer* debugRenderer = nullptr;
 
         struct PhysicsArguments
         {

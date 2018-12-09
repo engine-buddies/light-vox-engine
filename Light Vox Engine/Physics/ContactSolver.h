@@ -36,10 +36,10 @@ namespace Physics
         float velocityEpsilon;
         float positionEpsilon;
 
-        uint16_t positionIterations;
-        uint16_t velocityIterations;
-        uint16_t velocityIterationsUsed;
-        uint16_t positionIterationsUsed;
+        uint16_t positionIterations = 0;
+        uint16_t velocityIterations = 0;
+        uint16_t velocityIterationsUsed = 0;
+        uint16_t positionIterationsUsed = 0;
 
         struct ContactBodies
         {

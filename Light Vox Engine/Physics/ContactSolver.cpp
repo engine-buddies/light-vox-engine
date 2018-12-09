@@ -49,13 +49,8 @@ namespace
             contactTangent[1].z = contactNormal.x*contactTangent[0].y;
         }
 
-        //make a matrix from the three vectors
-        float basis[9] = {
-            contactNormal.x, contactNormal.y, contactNormal.z,
-            contactTangent[0].x, contactTangent[0].y, contactTangent[0].z,
-            contactTangent[1].x, contactTangent[1].y, contactTangent[1].z
-        };
-        glm::mat3 contactToWorld = glm::mat3(1.0);
+        //create basis matrix from the three vectors
+        glm::mat3 contactToWorld;
         contactToWorld[0] = contactNormal;
         contactToWorld[1] = contactTangent[0];
         contactToWorld[2] = contactTangent[1];
@@ -87,7 +82,7 @@ namespace
     {
         glm::vec3 impulseContact;
 
-        //Build a vector that shows the chaneg in velocity in 
+        //Build a vector that shows the change in velocity in 
         //world space 
 
         glm::vec3 deltaVelWorld =
@@ -141,10 +136,10 @@ void Physics::ContactSolver::ResolveContacts(Contacts * contacts, uint32_t numCo
     // Prepare the contacts for processing
     PrepareContacts(contacts, numContacts, dt);
 
-    //adjustPositions
+    // Solve interpenetration 
     AdjustPositions(contacts, numContacts, dt);
 
-    //adjustVelocities 
+    // Resolve velocity 
     AdjustVelocities(contacts, numContacts, dt);
 }
 
@@ -183,7 +178,7 @@ glm::vec3 Physics::ContactSolver::CalculateLocalVelocity(Contacts* c, uint32_t b
 
 void Physics::ContactSolver::CalculateDesiredDeltaVelocity(float dt, Contacts* c)
 {
-    const static float velocityLimit = 0.25f;
+    float velocityLimit = 0.25f;
     BodyProperties* bodyA = &componentManager->bodyProperties[c->bodyPair.a];
     BodyProperties* bodyB = &componentManager->bodyProperties[c->bodyPair.b];
 
@@ -196,7 +191,7 @@ void Physics::ContactSolver::CalculateDesiredDeltaVelocity(float dt, Contacts* c
             glm::dot((bodyA->acceleration * dt), c->contactNormal);
     }
 
-    if (bodyB && bodyB->isAwake)
+    if (bodyB->isAwake)
     {
         velocityFromAcc -= 
             glm::dot((bodyB->acceleration * dt), c->contactNormal);
@@ -204,7 +199,7 @@ void Physics::ContactSolver::CalculateDesiredDeltaVelocity(float dt, Contacts* c
 
     //if the velocity is  slow, limit restitution
     float thisRestitution = c->restitution;
-    if (glm::abs(c->contactVelocity.x) < velocityLimit);
+    if (glm::abs(c->contactVelocity.x) < velocityLimit)
     {
         thisRestitution = 0.0f;
     }
@@ -221,17 +216,11 @@ void Physics::ContactSolver::CalculateInternals(float dt, Contacts* c)
 
     //store the relative position
     c->relativeContactPosition[0] = c->contactPoint - componentManager->transform[c->bodyPair.a].pos;
-    if (c->bodyPair.a)
-    {
-        c->relativeContactPosition[1] = c->contactPoint - componentManager->transform[c->bodyPair.b].pos;
-    }
+    c->relativeContactPosition[1] = c->contactPoint - componentManager->transform[c->bodyPair.b].pos;
 
     //find the relative velocity of the bodies at the contact
     c->contactVelocity = CalculateLocalVelocity(c, c->bodyPair.a, 0, dt);
-    if (c->bodyPair.b)
-    {
-        c->contactVelocity -= CalculateLocalVelocity(c, c->bodyPair.a, 1, dt);
-    }
+    c->contactVelocity -= CalculateLocalVelocity(c, c->bodyPair.b, 1, dt);
 
     //calc. desired velocity change 
     CalculateDesiredDeltaVelocity(dt, c);
@@ -252,20 +241,10 @@ void Physics::ContactSolver::ApplyVelocityChange(
     //Convert intertia tensor to world coords.
     glm::mat3x3 inverseInteriaTensor[2];
     inverseInteriaTensor[0] = a->inertiaTensor;
-    if (b)
-        inverseInteriaTensor[1] = b->inertiaTensor;
+    inverseInteriaTensor[1] = b->inertiaTensor;
 
     glm::vec3 impulseContact;
-
-    if (c->friction == 0.0f)
-    {
-        impulseContact = calcFrictionlessImpulse(inverseInteriaTensor, a->invMass, b->invMass, c);
-    }
-    else
-    {
-        //TODO:
-        //calcFritionImpluse 
-    }
+    impulseContact = calcFrictionlessImpulse(inverseInteriaTensor, a->invMass, b->invMass, c);
     glm::vec3 impulse = c->contactWorld * impulseContact;
 
     //split in the impulse into linear and rotational component
@@ -279,17 +258,14 @@ void Physics::ContactSolver::ApplyVelocityChange(
     aTransform->rot += rotationChange[0];
 
     //Apply changes to body B
-    if (b)
-    {
-        glm::vec3 impulsiveTorque = glm::cross(c->relativeContactPosition[1], impulse);
-        rotationChange[1] = inverseInteriaTensor[0] * impulsiveTorque;
-        velocityChange[1] = glm::vec3(0.0f);
-        velocityChange[1] += (impulse * -b->invMass);
+    impulsiveTorque = glm::cross(c->relativeContactPosition[1], impulse);
+    rotationChange[1] = inverseInteriaTensor[0] * impulsiveTorque;
+    velocityChange[1] = glm::vec3(0.0f);
+    velocityChange[1] += (impulse * -b->invMass);
 
-        //apply changes
-        b->velocity += velocityChange[1];
-        bTransform->rot += rotationChange[1];
-    }
+    //apply changes
+    b->velocity += velocityChange[1];
+    bTransform->rot += rotationChange[1];
     
 }
 
@@ -329,11 +305,11 @@ void Physics::ContactSolver::ApplyPositionChange(
     }
 
 
-    for (size_t i = 0; i < i; ++i)
+    for (size_t i = 0; i < 2; ++i)
     {
         //the linear and angular movements required are in proportion to the 
         //inverse inertias
-        float sign = (i == 0) ? 1 : -1;
+        float sign = (i == 0) ? -1 : 1;
         angularMove[i] = 
             sign * penetration * (angularInertia[i] / totalInertia);
         linearMove[i] =
@@ -343,7 +319,7 @@ void Physics::ContactSolver::ApplyPositionChange(
         //but inertia tensor is small) limit the angular move
         glm::vec3 projection = c->relativeContactPosition[i];
         projection +=
-            (c->contactNormal * (glm::dot(-c->relativeContactPosition[i], c->contactNormal)));
+            (c->contactNormal * (-glm::dot(c->relativeContactPosition[i], c->contactNormal)));
 
         //use small angle aprox. for sin of the angle
         float maxMagnitude = angularLimit * glm::length(projection);
@@ -453,25 +429,30 @@ void Physics::ContactSolver::AdjustVelocities(
 
         for(size_t i = 0; i < numContacts; ++i)
         {
-            for(size_t j = 0; j < 2; ++j) if(contacts[i].bodyPair.b)
+            for(size_t j = 0; j < 2; ++j)
             {
                 //check for a match with each body
                 for(size_t k = 0; k < 2; ++k)
                 {
-                    deltaVel = velocityChange[k] + 
-                        rotationChange[k] * contacts[index].relativeContactPosition[j];
+                    uint32_t a = (j == 0) ? contacts[i].bodyPair.a : contacts[i].bodyPair.b;
+                    uint32_t b = (k == 0) ? contacts[index].bodyPair.a : contacts[index].bodyPair.b;
+                    if (a == b)
+                    {
+                        deltaVel = velocityChange[k] +
+                            rotationChange[k] * contacts[i].relativeContactPosition[j];
 
-                    //the sign of the change is negative if we're dealing
-                    //with the 2nd body
-                    contacts[index].contactVelocity += 
-                        glm::transpose(contacts[index].contactWorld) * deltaVel *
+                        //the sign of the change is negative if we're dealing
+                        //with the 2nd body
+                        contacts[i].contactVelocity +=
+                            glm::transpose(contacts[i].contactWorld) * deltaVel *
                             (j ? -1.0f : 1.0f);
-                    
-                    CalculateDesiredDeltaVelocity(dt, &contacts[index]);
+
+                        CalculateDesiredDeltaVelocity(dt, &contacts[i]);
+                    }
                 }
             }
         }
-        velocityIterations++;
+        velocityIterationsUsed++;
     }
 
 }
@@ -487,7 +468,6 @@ void Physics::ContactSolver::AdjustPositions(
     glm::vec3 deltaPosition;
 
     positionIterationsUsed = 0;
-
 
     while(positionIterationsUsed < positionIterations)
     {
@@ -517,20 +497,24 @@ void Physics::ContactSolver::AdjustPositions(
         // bodies, so we update contacts.
         for(size_t i = 0; i < numContacts; ++i)
         {
-            for(size_t j = 0; j < 2; ++j) if(contacts[i].bodyPair.b)
+            for(size_t j = 0; j < 2; ++j) 
             {
                 //check for a match with each body
                 for(size_t k = 0; k < 2; ++k)
                 {
-                    deltaPosition = linearChange[k] + 
-                        angularChange[k] * contacts[index].relativeContactPosition[j];
+                    uint32_t a = (j == 0) ? contacts[i].bodyPair.a : contacts[i].bodyPair.b;
+                    uint32_t b = (k == 0) ? contacts[index].bodyPair.a : contacts[index].bodyPair.b;
+                    if (a == b)
+                    {
+                        deltaPosition = linearChange[k] +
+                            angularChange[k] * contacts[i].relativeContactPosition[j];
 
-                    //the sign of the change is negative if we're dealing
-                    //with the 2nd body
-                    contacts[index].penetration += 
-                        glm::dot(deltaPosition, contacts[index].contactNormal) *
+                        //the sign of the change is negative if we're dealing
+                        //with the 2nd body
+                        contacts[i].penetration +=
+                            glm::dot(deltaPosition, contacts[i].contactNormal) *
                             (j ? -1.0f : 1.0f);
-                    
+                    }
                 }
             }
         }
