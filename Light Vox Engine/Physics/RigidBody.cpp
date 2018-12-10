@@ -273,20 +273,20 @@ void Physics::Rigidbody::FillPointFaceBoxBox(
     glm::vec3 normal = GetAxisVector(best, one.transformMatrix);
     size_t contactsFound = componentManager->GetContactsFound();
 
-    if (glm::dot(normal, toCenter) > 0)
+    if (glm::dot(normal, toCenter) > 0.0f)
     {
         normal = normal * -1.0f;
     }
 
     //work out which vertex of box two we're colliding with
     glm::vec3 vertex = two.size;
-    if (glm::dot(GetAxisVector(0, two.transformMatrix), normal) < 0)
+    if (glm::dot(GetAxisVector(0, two.transformMatrix), normal) < 0.0f)
         vertex.x = -vertex.x;
 
-    if (glm::dot(GetAxisVector(1, two.transformMatrix), normal) < 0)
+    if (glm::dot(GetAxisVector(1, two.transformMatrix), normal) < 0.0f)
         vertex.y = -vertex.y;
 
-    if (glm::dot(GetAxisVector(2, two.transformMatrix), normal) < 0)
+    if (glm::dot(GetAxisVector(2, two.transformMatrix), normal) < 0.0f)
         vertex.z = -vertex.z;
 
     //create the contact data 

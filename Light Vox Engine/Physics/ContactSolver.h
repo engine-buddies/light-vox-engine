@@ -6,8 +6,6 @@
 #include "../ECS/EntityComponents.h"
 #include "../ECS/ComponentManager.h"
 
-using namespace EntityComponents;
-
 namespace Physics
 {
     class ContactSolver
@@ -24,7 +22,7 @@ namespace Physics
         /// <param name="numContacts"> the number of contacts resolved</param>
         /// <param name="dt"> the number iterations through the resolution algorithm</param>
         void ResolveContacts(
-            Contacts* contacts,
+			EntityComponents::Contacts*  contacts,
             size_t numContacts,
             float dt);
         /// <summary>
@@ -45,8 +43,8 @@ namespace Physics
 
         struct ContactBodies
         {
-            BodyProperties* bodyProps;
-            Transform* transform;
+			EntityComponents::BodyProperties* bodyProps;
+			EntityComponents::Transform* transform;
         };
 
         /// <summary>
@@ -62,7 +60,7 @@ namespace Physics
         /// <param name="bodyPair"></param>
         /// <param name="dt"></param>
         /// <returns></returns>
-        glm::vec3 CalculateLocalVelocity(Contacts* c,
+        glm::vec3 CalculateLocalVelocity(EntityComponents::Contacts* c,
             uint32_t bodyIndex,
             uint16_t bodyPair,
             float dt);
@@ -71,7 +69,7 @@ namespace Physics
         /// </summary>
         /// <param name="dt"></param>
         /// <param name="c"></param>
-        void CalculateDesiredDeltaVelocity(float dt, Contacts* c);
+        void CalculateDesiredDeltaVelocity(float dt, EntityComponents::Contacts* c);
         /// <summary>
         /// Solves angular and linear momentum
         /// </summary>
@@ -81,7 +79,7 @@ namespace Physics
         void ApplyVelocityChange(
             glm::vec3 velocityChange[2],
             glm::vec3 rotationChange[2],
-            Contacts* c);
+			EntityComponents::Contacts* c);
         /// <summary>
         /// Solves interpenetration
         /// </summary>
@@ -92,13 +90,13 @@ namespace Physics
         void ApplyPositionChange(
             glm::vec3 linearChange[2],
             glm::vec3 angularChange[2],
-            Contacts* c,
+			EntityComponents::Contacts* c,
             float penetration);
         /// <summary>
         /// Calc. internal data from state data
         /// </summary>
         /// <param name="dt"></param>
-        void CalculateInternals(float dt, Contacts* contact);
+        void CalculateInternals(float dt, EntityComponents::Contacts* contact);
         /// <summary>
         /// Sets up contacts ready for processing. 
         /// This makes sure their internal data is configured correctly
@@ -108,7 +106,7 @@ namespace Physics
         /// <param name="numContacts"></param>
         /// <param name="dt"></param>
         void PrepareContacts(
-            Contacts* contacts,
+			EntityComponents::Contacts*,
             size_t numContacts,
             float dt);
         /// <summary>
@@ -118,7 +116,7 @@ namespace Physics
         /// <param name="numContacts"></param>
         /// <param name="duration"></param>
         void AdjustVelocities(
-            Contacts* contacts,
+			EntityComponents::Contacts*,
             size_t numContacts,
             float dt);
         /// <summary>
@@ -128,7 +126,7 @@ namespace Physics
         /// <param name="numContacts"></param>
         /// <param name="dt"></param>
         void AdjustPositions(
-            Contacts* contacts,
+			EntityComponents::Contacts*,
             size_t numContacts,
             float dt);
     };

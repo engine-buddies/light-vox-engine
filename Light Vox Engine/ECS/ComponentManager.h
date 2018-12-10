@@ -23,10 +23,9 @@ namespace ECS {
         void AddContactsFound();
         void ClearContactsFound();
         size_t GetContactsFound();
-
+    private:
         size_t contactsFound = 0;
 
-    private:
         ComponentManager();
         ~ComponentManager();
 

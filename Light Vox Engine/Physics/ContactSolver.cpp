@@ -1,8 +1,7 @@
 #include "ContactSolver.h"
 
 using namespace Physics;
-
-
+using namespace EntityComponents;
 
 namespace
 {
