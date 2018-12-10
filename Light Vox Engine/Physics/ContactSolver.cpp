@@ -127,10 +127,10 @@ Physics::ContactSolver::~ContactSolver()
     componentManager = nullptr;
 }
 
-void Physics::ContactSolver::ResolveContacts(Contacts * contacts, uint32_t numContacts, float dt)
+void Physics::ContactSolver::ResolveContacts(Contacts * contacts, size_t numContacts, float dt)
 {
     //make sure we have something to do 
-    if (numContacts == 0) return;
+    if (numContacts == 0 || numContacts > 0xfffff) return;
     if (!isValid()) return;
 
     // Prepare the contacts for processing
@@ -143,7 +143,7 @@ void Physics::ContactSolver::ResolveContacts(Contacts * contacts, uint32_t numCo
     AdjustVelocities(contacts, numContacts, dt);
 }
 
-void Physics::ContactSolver::SetIterations(uint16_t iterations)
+void Physics::ContactSolver::SetIterations(size_t iterations)
 {
     positionIterations = iterations;
     velocityIterations = iterations;
@@ -391,7 +391,7 @@ void Physics::ContactSolver::ApplyPositionChange(
     }
 }
 
-void Physics::ContactSolver::PrepareContacts(Contacts * contacts, uint32_t numContacts, float dt)
+void Physics::ContactSolver::PrepareContacts(Contacts * contacts, size_t numContacts, float dt)
 {
     //generate contact velocity and axis information
     for (size_t i = 0; i < numContacts; ++i)
@@ -402,7 +402,7 @@ void Physics::ContactSolver::PrepareContacts(Contacts * contacts, uint32_t numCo
 
 void Physics::ContactSolver::AdjustVelocities(
     Contacts * contacts,
-    uint32_t numContacts,
+    size_t numContacts,
     float dt)
 {
     glm::vec3 velocityChange[2], rotationChange[2];
@@ -465,7 +465,7 @@ void Physics::ContactSolver::AdjustVelocities(
 
 void Physics::ContactSolver::AdjustPositions(
     Contacts * contacts,
-    uint32_t numContacts,
+    size_t numContacts,
     float dt)
 {
     size_t index;

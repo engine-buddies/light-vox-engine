@@ -254,7 +254,7 @@ HRESULT GraphicsCore::InitRootSignature()
     rootParameters[ LV_ROOT_SIGNATURE_INSTANCED_DATA ].InitAsShaderResourceView(
         0,       //register
         1        //space
-    );  
+    );
 
     //G-Buffer: Albedo + Normal + Position
     descriptorRanges[ LV_ROOT_SIGNATURE_GBUFFER_SRV ].Init(
@@ -342,17 +342,17 @@ HRESULT GraphicsCore::InitGeometryPSO()
     //build the input layout
     D3D12_INPUT_ELEMENT_DESC vertexInputDescription[ LV_NUM_VS_INPUT_COUNT ];
     ShaderDefinitions::SetGeometryPassInputLayout( vertexInputDescription );
-    
+
     D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
     inputLayoutDescription.pInputElementDescs = vertexInputDescription;
     inputLayoutDescription.NumElements = _countof( vertexInputDescription );
 
     //build out our depth stencil description
     CD3DX12_DEPTH_STENCIL_DESC1 depthStencilDesc( D3D12_DEFAULT );
-    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthEnable = TRUE;
     depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
     depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-    depthStencilDesc.StencilEnable = FALSE;
+    depthStencilDesc.StencilEnable = TRUE;
 
     //describe our PSO
     D3D12_GRAPHICS_PIPELINE_STATE_DESC geometryPsoDesc = { };
@@ -366,9 +366,9 @@ HRESULT GraphicsCore::InitGeometryPSO()
     geometryPsoDesc.SampleMask = UINT_MAX;
     geometryPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     geometryPsoDesc.NumRenderTargets = LV_NUM_GBUFFER_RTV;
-    geometryPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    geometryPsoDesc.RTVFormats[ 1 ] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    geometryPsoDesc.RTVFormats[ 2 ] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    geometryPsoDesc.RTVFormats[ 0 ] = ShaderDefinitions::GeometryBufferFormat( 0 );   //albedo
+    geometryPsoDesc.RTVFormats[ 1 ] = ShaderDefinitions::GeometryBufferFormat( 1 );   //normal
+    geometryPsoDesc.RTVFormats[ 2 ] = ShaderDefinitions::GeometryBufferFormat( 2 );   //position
     geometryPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     geometryPsoDesc.SampleDesc.Count = 1;
 
@@ -459,7 +459,7 @@ HRESULT GraphicsCore::InitLightPassPSO()
     lightPsoDesc.InputLayout.pInputElementDescs = screenQuadVertexDesc;
     lightPsoDesc.InputLayout.NumElements = _countof( screenQuadVertexDesc );
     lightPsoDesc.pRootSignature = rootSignature.Get();
-    lightPsoDesc.DepthStencilState = depthStencilDesc; 
+    lightPsoDesc.DepthStencilState = depthStencilDesc;
     lightPsoDesc.BlendState = CD3DX12_BLEND_DESC( D3D12_DEFAULT );
     lightPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC( D3D12_DEFAULT );
     lightPsoDesc.RasterizerState.DepthClipEnable = false;
@@ -617,13 +617,13 @@ HRESULT GraphicsCore::InitInputShaderResources()
     ObjLoader::LoadObj( vertices, indices, "Assets/Models/voxel.obj" );
 
     //make vertex buffer for 'n' floats
-    uint32_t vertexDataSize = static_cast<uint32_t>(vertices->size() * sizeof( Vertex ));
+    uint32_t vertexDataSize = static_cast<uint32_t>( vertices->size() * sizeof( Vertex ) );
     uint32_t vertexDataOffset = 0;
     uint32_t vertexStride = sizeof( Vertex );
-    uint32_t indexDataSize = static_cast<uint32_t>(indices->size() * sizeof( uint16_t ));
+    uint32_t indexDataSize = static_cast<uint32_t>( indices->size() * sizeof( uint16_t ) );
     uint32_t indexDataOffset = 0;
 
-    verticesCount = static_cast<uint32_t>(indices->size());
+    verticesCount = static_cast<uint32_t>( indices->size() );
 
     //vertex buffer(s)
     {
@@ -687,7 +687,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         objl.GenerateFullScreenQuad( screenQuad );
 
         //make vertex buffer for 'n' floats
-        uint32_t fsqVertexDataSize = static_cast<uint32_t>(screenQuad.vertices.size() * sizeof( Vertex ));
+        uint32_t fsqVertexDataSize = static_cast<uint32_t>( screenQuad.vertices.size() * sizeof( Vertex ) );
         uint32_t fsqVertexDataOffset = 0;
         uint32_t fsqVertexStride = sizeof( Vertex );
 

@@ -14,16 +14,17 @@
 Engine* Engine::engineInstance = nullptr;
 
 /* LIFE CYCLE */
-Engine::Engine(LV_INSTANCE hInstance )
+Engine::Engine( LV_INSTANCE hInstance )
 {
-	if (hInstance != nullptr) {
-		this->hInstance = hInstance;
-		Engine::engineInstance = this;
-		windowWidth = 1280;
-		windowHeight = 720;
-		windowTitle = "STRUGGLE BUS";
-		hWindow = 0;
-	}
+    if ( hInstance != nullptr )
+    {
+        this->hInstance = hInstance;
+        Engine::engineInstance = this;
+        windowWidth = 1280;
+        windowHeight = 720;
+        windowTitle = "STRUGGLE BUS";
+        hWindow = 0;
+    }
 }
 
 Engine::~Engine()
@@ -97,7 +98,7 @@ LV_RESULT Engine::InitWindow()
         return HRESULT_FROM_WIN32( GetLastError() );
 
     ShowWindow( hWindow, SW_SHOW );
-	return S_OK;
+    return S_OK;
 }
 
 #endif
@@ -105,9 +106,9 @@ LV_RESULT Engine::InitWindow()
 LV_RESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new Graphics::GraphicsCore( hWindow, static_cast<uint32_t>( windowWidth ), static_cast<uint32_t>( windowHeight ) );
-	debugRenderer = Graphics::DebugRenderer::GetInstance();
-	camera = new Graphics::Camera();
+    graphics = new Graphics::GraphicsCore(hWindow, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
+    debugRenderer = Graphics::DebugRenderer::GetInstance();
+    camera = new Graphics::Camera();
 
     physics = new Physics::Solver();
     rigidBody = new Physics::Rigidbody();
@@ -121,37 +122,34 @@ LV_RESULT Engine::InitSystems()
     inputManager = Input::InputManager::GetInstance();
 
     // Bind an axis to the input man
-    inputManager->BindAxis( Input::InputType::Fire, this, &Engine::UsingInputFunc );
+    inputManager->BindAxis(Input::InputType::Fire, this, &Engine::UsingInputFunc);
 
-    ThrowIfFailed( graphics->Init() );
+    ThrowIfFailed(graphics->Init());
     time->Init();
     entityManager->Init();
 
-    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
         entityManager->Create_Entity();
     }
 
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
-    static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
-    static float rotation = 0.001f;
     {
-
-        float x = static_cast <float>( -count );
-        float y = static_cast <float>( -count );
+        static int count = static_cast<int>(sqrtf(static_cast<float>(LV_MAX_INSTANCE_COUNT)));
+        float x = static_cast <float>(-count);
+        float y = static_cast <float>(-count);
+        float rotation = 0.0001f;
         float z = 0;
-        for ( int i = 0; i < count; ++i )
+        for (int i = 0; i < count; ++i)
         {
-            for ( int j = 0; j < count; ++j )
+            for (int j = 0; j < count; ++j)
             {
                 int index = i * count + j;
+
                 UINT entityID = entityManager->Get_Entity(index).index;
-                rigidBody->Pos(glm::vec3(x + 1.0f, y, z), entityID);
+                rigidBody->Pos(glm::vec3(x + 10.0f, y, z), entityID);
                 rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
-                if(j % 2 == 0)
-                    rigidBody->Velocity(glm::vec3(1.0f, 0.0f, 0.0f), entityID);
-                else
-                    rigidBody->Velocity(glm::vec3(-1.0f, 0.0f, 0.0f), entityID);
+                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
 
                 //calc. moment of inertia 
                 float& mass = componentManager->bodyProperties[entityID].mass;
@@ -166,19 +164,15 @@ LV_RESULT Engine::InitSystems()
             }
 
             y += 2;
-            x = static_cast <float>( -count );
+            x = static_cast <float>(-count);
         }
-        //platform
-       // size_t platformID = entityManager->Get_Entity(LV_MAX_INSTANCE_COUNT - 1).index;
-       // rigidBody->Pos(glm::vec3(0.0f, -count - 2, z), platformID);
-       // rigidBody->Velocity(glm::vec3(0.0f, 0.0f, 0.0f), platformID);
-       // rigidBody->Mass(1000.0f, platformID);
-       // rigidBody->BoxColliderSize(glm::vec3(10.0f, 1.0f, 10.0f), platformID);
-      /* ///* float inertia = ((10.0f * 0.4f) * 0.4f) / 6.0f;
-        glm::mat3& inertiaTensor = componentManager->bodyProperties[platformID].inertiaTensor;
-        inertiaTensor[0][0] = inertia;
-        inertiaTensor[1][1] = inertia;
-        inertiaTensor[2][2] = inertia;*/
+
+        for (size_t i = count * count; i < LV_MAX_INSTANCE_COUNT; ++i)
+        {
+            x += 10;
+            size_t entityID = entityManager->Get_Entity(i).index;
+            rigidBody->Pos(glm::vec3(x, y, z), entityID);
+        }
     }
 
     return S_OK;
@@ -224,7 +218,7 @@ LRESULT Engine::HandleEvents( LV_HANDLE hWindow, uint32_t message, WPARAM wParam
     {
         //handle mouse down/up
         case WM_MOUSEMOVE:
-            //OnMouseMove( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            inputManager->OnMouseMove( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
@@ -234,7 +228,7 @@ LRESULT Engine::HandleEvents( LV_HANDLE hWindow, uint32_t message, WPARAM wParam
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
-            //OnMouseUp( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+            inputManager->OnMouseUp( wParam, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
             return 0;
 
             //handle resizing
@@ -277,25 +271,31 @@ void Engine::OnResize( uint32_t width, uint32_t height )
 void Engine::UsingInputFunc()
 {
     DEBUG_PRINT( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
-    printf( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
 }
 
 inline void Engine::Update()
 {
+    float dtfloat = time->GetDeltaFloatTime();
+    const static float speed = 2.f;
+    if ( inputManager->IsKeyDown( VK_LEFT ) ) // A
+        camera->MoveSideways( dtfloat * speed );
+    else if ( inputManager->IsKeyDown( VK_RIGHT ) ) // d
+        camera->MoveSideways( -dtfloat * speed );
+
+    if ( inputManager->IsKeyDown( VK_UP ) ) // W
+        camera->MoveForward( dtfloat * speed );
+    else if ( inputManager->IsKeyDown( VK_DOWN ) ) // S
+        camera->MoveForward( -dtfloat * speed );
 
     //DEBUG collision code 
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
         //componentManager->transform[i].pos.x += x;
         if (componentManager->transform[i].pos.x > 5.0f)
-            componentManager->bodyProperties[i].velocity.x = -1.0f;
+            componentManager->bodyProperties[i].velocity.x = -10.0f;
 
         else if (componentManager->transform[i].pos.x < -5.0f)
-            componentManager->bodyProperties[i].velocity.x = 1.0f;
-
-        //add torque
-        //componentManager->transform[i].rot = glm::vec3(0.f, 0.0f, 0.0f);
-
+            componentManager->bodyProperties[i].velocity.x = 10.0f;
     }
 
     //DEBUG CODE for debug wireframe renderer
@@ -309,17 +309,9 @@ inline void Engine::Update()
     debugRenderer->AddCube( transform, scale, color );
 
     //DEBUG CODE for basic camera update
-    glm::vec3 pos = glm::vec3( 0.f, 0.f, -5.f );
-    glm::vec3 forward = glm::vec3( 0.f, 0.f, 1.f );
-    glm::vec3 up = glm::vec3( 0.f, 1.f, 0.f );
-    camera->SetTransform( pos, forward, up );
-
-    if (!inputManager->IsKeyDown(VK_SPACE))
-    {
-        physics->Update(time->GetDeltaFloatTime());
-        graphics->Update(reinterpret_cast<glm::mat4x4_packed *>(componentManager->transformMatrix), camera);
-        graphics->Render();
-    }
+    physics->Update( time->GetDeltaFloatTime() );
+    graphics->Update(reinterpret_cast<glm::mat4x4_packed *>(componentManager->transformMatrix), camera);
+    graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();
 }

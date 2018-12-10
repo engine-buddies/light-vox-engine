@@ -25,23 +25,23 @@ namespace Physics
         /// <param name="dt"> the number iterations through the resolution algorithm</param>
         void ResolveContacts(
             Contacts* contacts,
-            uint32_t numContacts,
+            size_t numContacts,
             float dt);
         /// <summary>
         /// Iterations the solver goes through for each contact
         /// </summary>
         /// <param name="iterations"></param>
-        void SetIterations(uint16_t iterations);
+        void SetIterations(size_t iterations);
     private:
         ECS::ComponentManager* componentManager;
 
         float velocityEpsilon;
         float positionEpsilon;
 
-        uint16_t positionIterations = 0;
-        uint16_t velocityIterations = 0;
-        uint16_t velocityIterationsUsed = 0;
-        uint16_t positionIterationsUsed = 0;
+        size_t positionIterations = 0;
+        size_t velocityIterations = 0;
+        size_t velocityIterationsUsed = 0;
+        size_t positionIterationsUsed = 0;
 
         struct ContactBodies
         {
@@ -109,7 +109,7 @@ namespace Physics
         /// <param name="dt"></param>
         void PrepareContacts(
             Contacts* contacts,
-            uint32_t numContacts,
+            size_t numContacts,
             float dt);
         /// <summary>
         /// Resolves velocity issues with the given array of constraints
@@ -119,7 +119,7 @@ namespace Physics
         /// <param name="duration"></param>
         void AdjustVelocities(
             Contacts* contacts,
-            uint32_t numContacts,
+            size_t numContacts,
             float dt);
         /// <summary>
         /// Resolves the potential issues with the given array of constraints
@@ -129,7 +129,7 @@ namespace Physics
         /// <param name="dt"></param>
         void AdjustPositions(
             Contacts* contacts,
-            uint32_t numContacts,
+            size_t numContacts,
             float dt);
     };
 }

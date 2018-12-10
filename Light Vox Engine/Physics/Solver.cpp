@@ -12,10 +12,10 @@ Solver::Solver()
 
     a_argument = new PhysicsArguments();
     a_argument->StartElem = 0;
-    a_argument->EndElm = ( LV_MAX_INSTANCE_COUNT  / 2 );
+    a_argument->EndElm = (LV_MAX_INSTANCE_COUNT / 2);
 
     b_argument = new PhysicsArguments();
-    b_argument->StartElem = ( LV_MAX_INSTANCE_COUNT / 2 );
+    b_argument->StartElem = (LV_MAX_INSTANCE_COUNT / 2);
     b_argument->EndElm = LV_MAX_INSTANCE_COUNT;
 
 }
@@ -37,20 +37,20 @@ Solver::~Solver()
         contactSolver = nullptr;
     }
 
-    if ( a_argument != nullptr )
+    if (a_argument != nullptr)
     {
         delete a_argument;
         a_argument = nullptr;
     }
 
-    if ( b_argument != nullptr )
+    if (b_argument != nullptr)
     {
         delete b_argument;
         b_argument = nullptr;
     }
 }
 
-void Solver::Update( float dt )
+void Solver::Update(float dt)
 {
     a_argument->DeltaTime = dt;
     b_argument->DeltaTime = dt;
@@ -63,8 +63,8 @@ void Solver::Update( float dt )
     std::future<void> bFuture = bPromise.get_future();
     b_argument->jobPromise = &bPromise;
 
-    jobManager->AddJob( this, &Physics::Solver::AccumlateForces, ( void* ) ( a_argument ), 0 );
-    jobManager->AddJob( this, &Physics::Solver::AccumlateForces, ( void* ) ( b_argument ), 0 );
+    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, (void*)(a_argument), 0);
+    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, (void*)(b_argument), 0);
 
     aFuture.wait();
     bFuture.wait();
@@ -198,19 +198,20 @@ void Physics::Solver::ResolveCollision(void * args, int index)
 
     float dt = myArgs->DeltaTime;
 
-    contactSolver->SetIterations(componentManager->contactsFound * 4);
-    contactSolver->ResolveContacts(componentManager->contacts, componentManager->contactsFound, dt);
-    componentManager->contactsFound = 0;
+    size_t contactsFound = componentManager->GetContactsFound();
+    contactSolver->SetIterations(contactsFound * 4);
+    contactSolver->ResolveContacts(componentManager->contacts, contactsFound, dt);
+    componentManager->ClearContactsFound();
 
     jobManager->AddJob(this, &Physics::Solver::ModelToWorld, args, 0);
 }
 
-void Solver::ModelToWorld( void* args, int index )
+void Solver::ModelToWorld(void* args, int index)
 {
-    PhysicsArguments* myArgs = static_cast< PhysicsArguments* >( args );
-    assert( myArgs != nullptr );
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
 
-    for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
         glm::mat4& transformMatrix = componentManager->transformMatrix[i].transformMatrix;
         glm::vec3& pos = componentManager->transform[i].pos;
@@ -221,11 +222,7 @@ void Solver::ModelToWorld( void* args, int index )
         transformMatrix = glm::transpose(transformMatrix);
     }
 
-    assert( myArgs->jobPromise != nullptr );
+    assert(myArgs->jobPromise != nullptr);
 
     myArgs->jobPromise->set_value();
 }
-
-
-
-

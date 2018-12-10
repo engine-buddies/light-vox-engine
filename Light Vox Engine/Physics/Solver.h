@@ -31,9 +31,9 @@ namespace Physics
 
     private:
 
-       /// <summary>
-        /// Solves Collision (aabb to aabb) 
-        /// </summary>
+        /// <summary>
+         /// Solves Collision (aabb to aabb) 
+         /// </summary>
         void Collide(void* args, int index);
         /// <summary>
         /// Semi Implicit euler intergration for position

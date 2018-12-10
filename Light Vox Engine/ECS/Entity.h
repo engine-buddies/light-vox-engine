@@ -11,14 +11,14 @@ namespace ECS {
         /// <summary>
         /// Creates an entity 
         /// </summary>
-        Entity() : index(0), counter(0) {}
+        Entity() : index( 0 ), counter( 0 ) {}
         /// <summary>
         /// Creates en Entity with given index and counter
         /// </summary>
         /// <param name="a_index"></param>
         /// <param name="a_counter"></param>
-        Entity(unsigned int a_index, unsigned int a_counter) :
-            index(a_index), counter(a_counter)
+        Entity( unsigned int a_index, unsigned int a_counter ) :
+            index( a_index ), counter( a_counter )
         {
         }
 
@@ -27,7 +27,7 @@ namespace ECS {
         /// </summary>
         /// <param name="rhs"></param>
         /// <returns></returns>
-        inline bool operator==(const Entity& rhs) const
+        inline bool operator==( const Entity& rhs ) const
         {
             return index == rhs.index && counter == rhs.counter;
         }
@@ -37,15 +37,15 @@ namespace ECS {
         /// </summary>
         /// <param name="rhs"></param>
         /// <returns></returns>
-        inline bool operator!=(const Entity& rhs) const
+        inline bool operator!=( const Entity& rhs ) const
         {
-            return !(*this == rhs);
+            return !( *this == rhs );
         }
         /// <summary>
         /// Checks for a valid entity
         /// </summary>
         /// <returns></returns>
-        bool Is_Valid() const { return !(index == 0 && counter == 0); }
+        bool Is_Valid() const { return !( index == 0 && counter == 0 ); }
         /// <summary>
         /// Checks for a valid entity
         /// </summary>
