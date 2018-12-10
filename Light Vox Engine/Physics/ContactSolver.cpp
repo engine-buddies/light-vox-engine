@@ -60,14 +60,14 @@ namespace
 
     inline void MatchAwakeState(BodyProperties* a, BodyProperties* b)
     {
-        if(!b) return;
+        if (!b) return;
 
         bool body0Awake = &a->isAwake;
         bool body1Awake = &b->isAwake;
 
-        if(body0Awake ^ body1Awake)
+        if (body0Awake ^ body1Awake)
         {
-            if(body0Awake) 
+            if (body0Awake)
                 body0Awake = true;
             else if (body1Awake)
                 body1Awake = true;
@@ -113,11 +113,11 @@ namespace
     }
 }
 
-Physics::ContactSolver::ContactSolver(uint16_t itertations, float velEpsilon, float posEpsilon)
+Physics::ContactSolver::ContactSolver(uint16_t iterations, float velEpsilon, float posEpsilon)
 {
     componentManager = ECS::ComponentManager::GetInstance();
-    positionIterations = itertations;
-    velocityIterations = itertations;
+    positionIterations = iterations;
+    velocityIterations = iterations;
     positionEpsilon = posEpsilon;
     velocityEpsilon = velEpsilon;
 }
@@ -141,6 +141,12 @@ void Physics::ContactSolver::ResolveContacts(Contacts * contacts, uint32_t numCo
 
     // Resolve velocity 
     AdjustVelocities(contacts, numContacts, dt);
+}
+
+void Physics::ContactSolver::SetIterations(uint16_t iterations)
+{
+    positionIterations = iterations;
+    velocityIterations = iterations;
 }
 
 bool Physics::ContactSolver::isValid()
@@ -187,13 +193,13 @@ void Physics::ContactSolver::CalculateDesiredDeltaVelocity(float dt, Contacts* c
 
     if (bodyA->isAwake)
     {
-        velocityFromAcc += 
+        velocityFromAcc +=
             glm::dot((bodyA->acceleration * dt), c->contactNormal);
     }
 
     if (bodyB->isAwake)
     {
-        velocityFromAcc -= 
+        velocityFromAcc -=
             glm::dot((bodyB->acceleration * dt), c->contactNormal);
     }
 
@@ -227,12 +233,12 @@ void Physics::ContactSolver::CalculateInternals(float dt, Contacts* c)
 }
 
 void Physics::ContactSolver::ApplyVelocityChange(
-    glm::vec3 velocityChange[2], 
+    glm::vec3 velocityChange[2],
     glm::vec3 rotationChange[2],
     Contacts* c)
 {
     //Body A
-    BodyProperties* a  = &componentManager->bodyProperties[c->bodyPair.a];
+    BodyProperties* a = &componentManager->bodyProperties[c->bodyPair.a];
     Transform* aTransform = &componentManager->transform[c->bodyPair.a];
     //Body B
     BodyProperties* b = &componentManager->bodyProperties[c->bodyPair.b];
@@ -266,7 +272,7 @@ void Physics::ContactSolver::ApplyVelocityChange(
     //apply changes
     b->velocity += velocityChange[1];
     bTransform->rot += rotationChange[1];
-    
+
 }
 
 void Physics::ContactSolver::ApplyPositionChange(
@@ -274,7 +280,7 @@ void Physics::ContactSolver::ApplyPositionChange(
     glm::vec3 angularChange[2],
     Contacts* c,
     float penetration)
-{   
+{
     ContactBodies contactBodies[2];
     contactBodies[0].bodyProps = &componentManager->bodyProperties[c->bodyPair.a];
     contactBodies[0].transform = &componentManager->transform[c->bodyPair.a];
@@ -284,15 +290,15 @@ void Physics::ContactSolver::ApplyPositionChange(
     const float angularLimit = (float)2.0f;
     float angularMove[2];
     float linearMove[2];
-    
-    float totalInertia= 0;
+
+    float totalInertia = 0;
     float linearInertia[2];
     float angularInertia[2];
 
     //work out the inertia of each object in the direction
     //of the contact normal, due to angular inertia only.
     //calc. total intertia before moving on
-    for (size_t i = 0; i < 2; ++i) 
+    for (size_t i = 0; i < 2; ++i)
     {
         glm::mat3x3 inverseInertiaTensor = contactBodies[i].bodyProps->inertiaTensor;
         glm::vec3 angularInertiaWorld = glm::cross(c->relativeContactPosition[i], c->contactNormal);
@@ -309,8 +315,8 @@ void Physics::ContactSolver::ApplyPositionChange(
     {
         //the linear and angular movements required are in proportion to the 
         //inverse inertias
-        float sign = (i == 0) ? -1 : 1;
-        angularMove[i] = 
+        float sign = (i == 0) ? -1.0f : 1.0f;
+        angularMove[i] =
             sign * penetration * (angularInertia[i] / totalInertia);
         linearMove[i] =
             sign * penetration * (linearInertia[i] / totalInertia);
@@ -395,8 +401,8 @@ void Physics::ContactSolver::PrepareContacts(Contacts * contacts, uint32_t numCo
 }
 
 void Physics::ContactSolver::AdjustVelocities(
-    Contacts * contacts, 
-    uint32_t numContacts, 
+    Contacts * contacts,
+    uint32_t numContacts,
     float dt)
 {
     glm::vec3 velocityChange[2], rotationChange[2];
@@ -404,20 +410,20 @@ void Physics::ContactSolver::AdjustVelocities(
 
     // iteratively handle impacts in order of severity.
     velocityIterationsUsed = 0;
-    while(velocityIterationsUsed < velocityIterations)
+    while (velocityIterationsUsed < velocityIterations)
     {
         float max = velocityEpsilon;
-        uint32_t index = numContacts;
-        for(size_t i = 0; i < numContacts; ++i)
+        size_t index = numContacts;
+        for (size_t i = 0; i < numContacts; ++i)
         {
-            if(contacts[i].desiredVelocity > max)
+            if (contacts[i].desiredVelocity > max)
             {
                 max = contacts[i].desiredVelocity;
                 index = i;
             }
         }
 
-        if(index == numContacts) break;
+        if (index == numContacts) break;
 
         BodyProperties* bodyA = &componentManager->bodyProperties[contacts[index].bodyPair.a];
         BodyProperties* bodyB = &componentManager->bodyProperties[contacts[index].bodyPair.b];
@@ -427,12 +433,12 @@ void Physics::ContactSolver::AdjustVelocities(
         //do the resolution on the contact that came out top
         ApplyVelocityChange(velocityChange, rotationChange, &contacts[index]);
 
-        for(size_t i = 0; i < numContacts; ++i)
+        for (size_t i = 0; i < numContacts; ++i)
         {
-            for(size_t j = 0; j < 2; ++j)
+            for (size_t j = 0; j < 2; ++j)
             {
                 //check for a match with each body
-                for(size_t k = 0; k < 2; ++k)
+                for (size_t k = 0; k < 2; ++k)
                 {
                     uint32_t a = (j == 0) ? contacts[i].bodyPair.a : contacts[i].bodyPair.b;
                     uint32_t b = (k == 0) ? contacts[index].bodyPair.a : contacts[index].bodyPair.b;
@@ -458,31 +464,31 @@ void Physics::ContactSolver::AdjustVelocities(
 }
 
 void Physics::ContactSolver::AdjustPositions(
-    Contacts * contacts, 
-    uint32_t numContacts, 
+    Contacts * contacts,
+    uint32_t numContacts,
     float dt)
 {
-    unsigned i, index;
+    size_t index;
     glm::vec3 linearChange[2], angularChange[2];
     float max;
     glm::vec3 deltaPosition;
 
     positionIterationsUsed = 0;
 
-    while(positionIterationsUsed < positionIterations)
+    while (positionIterationsUsed < positionIterations)
     {
         max = positionEpsilon;
         index = numContacts;
-        for(size_t i = 0; i < numContacts; ++i)
+        for (size_t i = 0; i < numContacts; ++i)
         {
-            if(contacts[i].penetration > max)
+            if (contacts[i].penetration > max)
             {
                 max = contacts[i].penetration;
                 index = i;
             }
         }
 
-        if(index == numContacts) break;
+        if (index == numContacts) break;
 
         BodyProperties* bodyA = &componentManager->bodyProperties[contacts[index].bodyPair.a];
         BodyProperties* bodyB = &componentManager->bodyProperties[contacts[index].bodyPair.b];
@@ -495,12 +501,12 @@ void Physics::ContactSolver::AdjustPositions(
 
         // Again this action may have changed the penetration of other
         // bodies, so we update contacts.
-        for(size_t i = 0; i < numContacts; ++i)
+        for (size_t i = 0; i < numContacts; ++i)
         {
-            for(size_t j = 0; j < 2; ++j) 
+            for (size_t j = 0; j < 2; ++j)
             {
                 //check for a match with each body
-                for(size_t k = 0; k < 2; ++k)
+                for (size_t k = 0; k < 2; ++k)
                 {
                     uint32_t a = (j == 0) ? contacts[i].bodyPair.a : contacts[i].bodyPair.b;
                     uint32_t b = (k == 0) ? contacts[index].bodyPair.a : contacts[index].bodyPair.b;

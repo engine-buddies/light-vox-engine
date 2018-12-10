@@ -13,11 +13,10 @@ namespace Physics
     class ContactSolver
     {
     public:
-        ContactSolver(uint16_t itertations,
-            float velEpsilon = (0.01f), 
+        ContactSolver(uint16_t iterations,
+            float velEpsilon = (0.01f),
             float posEpsilon = (0.01f));
         ~ContactSolver();
-        
         /// <summary>
         /// Resolved a set of contacts for both penetration and velocity
         /// </summary>
@@ -28,8 +27,11 @@ namespace Physics
             Contacts* contacts,
             uint32_t numContacts,
             float dt);
-
-       
+        /// <summary>
+        /// Iterations the solver goes through for each contact
+        /// </summary>
+        /// <param name="iterations"></param>
+        void SetIterations(uint16_t iterations);
     private:
         ECS::ComponentManager* componentManager;
 
@@ -52,22 +54,46 @@ namespace Physics
         /// </summary>
         /// <returns></returns>
         bool isValid();
-
+        /// <summary>
+        /// Calcs velocity in local  space
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="bodyIndex"></param>
+        /// <param name="bodyPair"></param>
+        /// <param name="dt"></param>
+        /// <returns></returns>
         glm::vec3 CalculateLocalVelocity(Contacts* c,
-            uint32_t bodyIndex, 
-            uint16_t bodyPair, 
+            uint32_t bodyIndex,
+            uint16_t bodyPair,
             float dt);
+        /// <summary>
+        /// Solves microcollision
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <param name="c"></param>
         void CalculateDesiredDeltaVelocity(float dt, Contacts* c);
+        /// <summary>
+        /// Solves angular and linear momentum
+        /// </summary>
+        /// <param name="velocityChange"></param>
+        /// <param name="rotationChange"></param>
+        /// <param name="c"></param>
         void ApplyVelocityChange(
-            glm::vec3 velocityChange[2], 
-            glm::vec3 rotationChange[2], 
+            glm::vec3 velocityChange[2],
+            glm::vec3 rotationChange[2],
             Contacts* c);
+        /// <summary>
+        /// Solves interpenetration
+        /// </summary>
+        /// <param name="linearChange"></param>
+        /// <param name="angularChange"></param>
+        /// <param name="c"></param>
+        /// <param name="penetration"></param>
         void ApplyPositionChange(
-            glm::vec3 linearChange[2], 
+            glm::vec3 linearChange[2],
             glm::vec3 angularChange[2],
             Contacts* c,
             float penetration);
-
         /// <summary>
         /// Calc. internal data from state data
         /// </summary>
@@ -82,8 +108,8 @@ namespace Physics
         /// <param name="numContacts"></param>
         /// <param name="dt"></param>
         void PrepareContacts(
-            Contacts* contacts, 
-            uint32_t numContacts, 
+            Contacts* contacts,
+            uint32_t numContacts,
             float dt);
         /// <summary>
         /// Resolves velocity issues with the given array of constraints
