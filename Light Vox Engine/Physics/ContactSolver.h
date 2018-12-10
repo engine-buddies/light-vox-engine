@@ -13,7 +13,7 @@ namespace Physics
     class ContactSolver
     {
     public:
-        ContactSolver(uint16_t itertations,
+        ContactSolver(uint16_t iterations,
             float velEpsilon = (0.01f), 
             float posEpsilon = (0.01f));
         ~ContactSolver();
@@ -28,6 +28,12 @@ namespace Physics
             Contacts* contacts,
             uint32_t numContacts,
             float dt);
+
+        /// <summary>
+        /// Iterations the solver goes through for each contact
+        /// </summary>
+        /// <param name="iterations"></param>
+        void SetIterations(uint16_t iterations);
 
        
     private:

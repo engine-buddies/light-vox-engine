@@ -113,11 +113,11 @@ namespace
     }
 }
 
-Physics::ContactSolver::ContactSolver(uint16_t itertations, float velEpsilon, float posEpsilon)
+Physics::ContactSolver::ContactSolver(uint16_t iterations, float velEpsilon, float posEpsilon)
 {
     componentManager = ECS::ComponentManager::GetInstance();
-    positionIterations = itertations;
-    velocityIterations = itertations;
+    positionIterations = iterations;
+    velocityIterations = iterations;
     positionEpsilon = posEpsilon;
     velocityEpsilon = velEpsilon;
 }
@@ -141,6 +141,12 @@ void Physics::ContactSolver::ResolveContacts(Contacts * contacts, uint32_t numCo
 
     // Resolve velocity 
     AdjustVelocities(contacts, numContacts, dt);
+}
+
+void Physics::ContactSolver::SetIterations(uint16_t iterations)
+{
+    positionIterations = iterations;
+    velocityIterations = iterations;
 }
 
 bool Physics::ContactSolver::isValid()
@@ -309,7 +315,7 @@ void Physics::ContactSolver::ApplyPositionChange(
     {
         //the linear and angular movements required are in proportion to the 
         //inverse inertias
-        float sign = (i == 0) ? -1 : 1;
+        float sign = (i == 0) ? -1.0f : 1.0f;
         angularMove[i] = 
             sign * penetration * (angularInertia[i] / totalInertia);
         linearMove[i] =
@@ -407,7 +413,7 @@ void Physics::ContactSolver::AdjustVelocities(
     while(velocityIterationsUsed < velocityIterations)
     {
         float max = velocityEpsilon;
-        uint32_t index = numContacts;
+        size_t index = numContacts;
         for(size_t i = 0; i < numContacts; ++i)
         {
             if(contacts[i].desiredVelocity > max)
@@ -462,7 +468,7 @@ void Physics::ContactSolver::AdjustPositions(
     uint32_t numContacts, 
     float dt)
 {
-    unsigned i, index;
+    size_t index;
     glm::vec3 linearChange[2], angularChange[2];
     float max;
     glm::vec3 deltaPosition;

@@ -168,17 +168,6 @@ LV_RESULT Engine::InitSystems()
             y += 2;
             x = static_cast <float>( -count );
         }
-        //platform
-       // size_t platformID = entityManager->Get_Entity(LV_MAX_INSTANCE_COUNT - 1).index;
-       // rigidBody->Pos(glm::vec3(0.0f, -count - 2, z), platformID);
-       // rigidBody->Velocity(glm::vec3(0.0f, 0.0f, 0.0f), platformID);
-       // rigidBody->Mass(1000.0f, platformID);
-       // rigidBody->BoxColliderSize(glm::vec3(10.0f, 1.0f, 10.0f), platformID);
-      /* ///* float inertia = ((10.0f * 0.4f) * 0.4f) / 6.0f;
-        glm::mat3& inertiaTensor = componentManager->bodyProperties[platformID].inertiaTensor;
-        inertiaTensor[0][0] = inertia;
-        inertiaTensor[1][1] = inertia;
-        inertiaTensor[2][2] = inertia;*/
     }
 
     return S_OK;
@@ -292,9 +281,6 @@ inline void Engine::Update()
 
         else if (componentManager->transform[i].pos.x < -5.0f)
             componentManager->bodyProperties[i].velocity.x = 1.0f;
-
-        //add torque
-        //componentManager->transform[i].rot = glm::vec3(0.f, 0.0f, 0.0f);
 
     }
 
