@@ -275,6 +275,9 @@ void Engine::UsingInputFunc()
 
 inline void Engine::Update()
 {
+    if ( inputManager->IsKeyDown( VK_ESCAPE ) ) // A
+        Quit();
+
     float dtfloat = time->GetDeltaFloatTime();
     const static float speed = 2.f;
     if ( inputManager->IsKeyDown( VK_LEFT ) ) // A
