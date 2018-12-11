@@ -6,7 +6,9 @@
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
 #include "../JobSystem/JobManager.h"
+#include "ContactSolver.h"
 #include "RigidBody.h"
+#include "../Graphics/DebugRenderer.h"
 
 namespace Physics
 {
@@ -30,8 +32,8 @@ namespace Physics
     private:
 
         /// <summary>
-        /// Solves Collision (aabb to aabb) 
-        /// </summary>
+         /// Solves Collision (aabb to aabb) 
+         /// </summary>
         void Collide(void* args, int index);
         /// <summary>
         /// Semi Implicit euler intergration for position
@@ -55,12 +57,18 @@ namespace Physics
          /// and transform the bounding box vertices from local to world space
         /// </summary>
         void SetColliderData(void* args, int index);
+        /// <summary>
+        /// Solves angular momentum, linear momentum, and interpenetration
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="index"></param>
+        void ResolveCollision(void* args, int index);
 
-        glm::vec3 gravity;
         ECS::ComponentManager* componentManager;
         Jobs::JobManager* jobManager = nullptr;
         Rigidbody* rigidbody = nullptr;
-
+        ContactSolver* contactSolver = nullptr;
+        Graphics::DebugRenderer* debugRenderer = nullptr;
 
         struct PhysicsArguments
         {

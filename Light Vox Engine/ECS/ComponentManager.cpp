@@ -28,13 +28,28 @@ void ComponentManager::ReleaseInstance()
     }
 }
 
+void ECS::ComponentManager::AddContactsFound()
+{
+    ++contactsFound;
+}
+
+void ECS::ComponentManager::ClearContactsFound()
+{
+    contactsFound = 0;
+}
+
+size_t ECS::ComponentManager::GetContactsFound()
+{
+    return contactsFound;
+}
+
 ComponentManager::ComponentManager()
 {
     transformMatrix = new TransformMatrix[ LV_MAX_INSTANCE_COUNT ];
     transform = new Transform[ LV_MAX_INSTANCE_COUNT ];
     boxCollider = new BoxCollider[ LV_MAX_INSTANCE_COUNT ];
     bodyProperties = new BodyProperties[ LV_MAX_INSTANCE_COUNT ];
-    contacts = new Contacts[ LV_MAX_INSTANCE_COUNT ];
+    contacts = new Contacts[ LV_MAX_INSTANCE_COUNT * 4];
 
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {

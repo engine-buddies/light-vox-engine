@@ -106,7 +106,7 @@ LV_RESULT Engine::InitWindow()
 LV_RESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new Graphics::GraphicsCore( hWindow, static_cast<uint32_t>( windowWidth ), static_cast<uint32_t>( windowHeight ) );
+    graphics = new Graphics::GraphicsCore(hWindow, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
     debugRenderer = Graphics::DebugRenderer::GetInstance();
     camera = new Graphics::Camera();
 
@@ -122,32 +122,32 @@ LV_RESULT Engine::InitSystems()
     inputManager = Input::InputManager::GetInstance();
 
     // Bind an axis to the input man
-    inputManager->BindAxis( Input::InputType::Fire, this, &Engine::UsingInputFunc );
+    inputManager->BindAxis(Input::InputType::Fire, this, &Engine::UsingInputFunc);
 
-    ThrowIfFailed( graphics->Init() );
+    ThrowIfFailed(graphics->Init());
     time->Init();
     entityManager->Init();
 
-    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
+    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
         entityManager->Create_Entity();
     }
 
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
     {
-        static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
-        float x = static_cast <float>( -count );
-        float y = static_cast <float>( -count );
-		float rotation = 0.0001f;
+        static int count = static_cast<int>(sqrtf(static_cast<float>(LV_MAX_INSTANCE_COUNT)));
+        float x = static_cast <float>(-count);
+        float y = static_cast <float>(-count);
+        float rotation = 0.0001f;
         float z = 0;
-        for ( int i = 0; i < count; ++i )
+        for (int i = 0; i < count; ++i)
         {
-            for ( int j = 0; j < count; ++j )
+            for (int j = 0; j < count; ++j)
             {
                 int index = i * count + j;
 
                 UINT entityID = entityManager->Get_Entity(index).index;
-                rigidBody->Pos(glm::vec3(x + 1.0f, y, z), entityID);
+                rigidBody->Pos(glm::vec3(x + 10.0f, y, z), entityID);
                 rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
                 rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
 
@@ -158,22 +158,20 @@ LV_RESULT Engine::InitSystems()
                 inertiaTensor[0][0] = inertia;
                 inertiaTensor[1][1] = inertia;
                 inertiaTensor[2][2] = inertia;
-                componentManager->boxCollider->tag = entityID;
-                componentManager->bodyProperties[entityID].torque = glm::vec3(0.0f, 100.0f, 0.0f);
-                //componentManager->transform[entityID].rot = glm::vec3(0.0f, 0.0f, 10.0f);
+                componentManager->boxCollider[entityID].tag = entityID;
 
                 x += 2;
             }
 
             y += 2;
-            x = static_cast <float>( -count );
+            x = static_cast <float>(-count);
         }
 
-        for ( size_t i = count * count; i < LV_MAX_INSTANCE_COUNT; ++i )
+        for (size_t i = count * count; i < LV_MAX_INSTANCE_COUNT; ++i)
         {
-            x += 2;
-            size_t entityID = entityManager->Get_Entity( i ).index;
-            rigidBody->Pos( glm::vec3( x, y, z ), entityID );
+            x += 10;
+            size_t entityID = entityManager->Get_Entity(i).index;
+            rigidBody->Pos(glm::vec3(x, y, z), entityID);
         }
     }
 
@@ -290,7 +288,6 @@ inline void Engine::Update()
         camera->MoveForward( -dtfloat * speed );
 
     //DEBUG collision code 
-    float x = sinf( time->GetTotalFloatTime() ) / 100.0f;
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
         //componentManager->transform[i].pos.x += x;
@@ -299,11 +296,6 @@ inline void Engine::Update()
 
         else if (componentManager->transform[i].pos.x < -5.0f)
             componentManager->bodyProperties[i].velocity.x = 10.0f;
-
-        //add torque
-        //componentManager->transform[i].rot = glm::vec3(1.f, 0.0f, 1.0f);
-
-        glm::vec3 color = glm::vec3(1, 0, 0);
     }
 
     //DEBUG CODE for debug wireframe renderer
@@ -317,10 +309,8 @@ inline void Engine::Update()
     debugRenderer->AddCube( transform, scale, color );
 
     //DEBUG CODE for basic camera update
-
-
     physics->Update( time->GetDeltaFloatTime() );
-    graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
+    graphics->Update(reinterpret_cast<glm::mat4x4_packed *>(componentManager->transformMatrix), camera);
     graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();

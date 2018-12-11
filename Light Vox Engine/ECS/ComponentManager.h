@@ -20,7 +20,12 @@ namespace ECS {
         ComponentManager( ComponentManager const& ) = delete;
         void operator=( ComponentManager const& ) = delete;
 
+        void AddContactsFound();
+        void ClearContactsFound();
+        size_t GetContactsFound();
     private:
+        size_t contactsFound = 0;
+
         ComponentManager();
         ~ComponentManager();
 

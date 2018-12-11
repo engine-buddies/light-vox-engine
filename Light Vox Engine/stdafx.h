@@ -26,8 +26,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
-//typedef glm::m
 namespace glm
 {
     typedef mat<4, 4, float, highp>		mat4x4_packed;

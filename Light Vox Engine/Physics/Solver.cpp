@@ -4,10 +4,11 @@ using namespace Physics;
 
 Solver::Solver()
 {
-    gravity = { .0f, .0f, .0f };
     componentManager = ECS::ComponentManager::GetInstance();
     jobManager = Jobs::JobManager::GetInstance();
     rigidbody = new Rigidbody();
+    contactSolver = new ContactSolver(1);
+    debugRenderer = Graphics::DebugRenderer::GetInstance();
 
     a_argument = new PhysicsArguments();
     a_argument->StartElem = 0;
@@ -28,6 +29,12 @@ Solver::~Solver()
     {
         delete rigidbody;
         rigidbody = nullptr;
+    }
+
+    if (contactSolver != nullptr)
+    {
+        delete contactSolver;
+        contactSolver = nullptr;
     }
 
     if (a_argument != nullptr)
@@ -56,33 +63,11 @@ void Solver::Update(float dt)
     std::future<void> bFuture = bPromise.get_future();
     b_argument->jobPromise = &bPromise;
 
-    jobManager->AddJob(this, &Physics::Solver::SetColliderData, (void*)(a_argument), 0);
-    jobManager->AddJob(this, &Physics::Solver::SetColliderData, (void*)(b_argument), 0);
+    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, (void*)(a_argument), 0);
+    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, (void*)(b_argument), 0);
 
     aFuture.wait();
     bFuture.wait();
-}
-
-void Solver::Collide(void* args, int index)
-{
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
-    assert(myArgs != nullptr);
-    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
-    {
-        for (size_t j = myArgs->StartElem; j < myArgs->EndElm; ++j)
-        {
-            if (i == j)
-                continue;
-
-            //rigidbody->CollideBoxBox(i, j) ? printf("hit\n") : printf("\n");
-            rigidbody->IntersectBoxBox(i, j);
-        }
-    }
-
-    //reset contacts
-    componentManager->contacts->contactsFound = 0;
-
-    jobManager->AddJob(this, &Physics::Solver::AccumlateForces, args, 0);
 }
 
 void Solver::AccumlateForces(void* args, int index)
@@ -113,8 +98,6 @@ void Physics::Solver::AccumlateTorque(void * args, int index)
     }
     jobManager->AddJob(this, &Physics::Solver::Integrate, args, 0);
 }
-
-
 
 void Solver::Integrate(void* args, int index)
 {
@@ -170,6 +153,56 @@ void Solver::Integrate(void* args, int index)
         torque = { .0f, .0f, .0f };
     }
 
+    jobManager->AddJob(this, &Physics::Solver::SetColliderData, args, 0);
+}
+
+void Physics::Solver::SetColliderData(void * args, int index)
+{
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
+
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
+    {
+        rigidbody->CalcHalfSize(i);
+    }
+    assert(myArgs->jobPromise != nullptr);
+
+    jobManager->AddJob(this, &Physics::Solver::Collide, args, 0);
+}
+
+void Solver::Collide(void* args, int index)
+{
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
+
+    float dt = myArgs->DeltaTime;
+
+    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
+    {
+        for (size_t j = myArgs->StartElem; j < myArgs->EndElm; ++j)
+        {
+            if (i == j)
+                continue;
+
+            rigidbody->CollideBoxBox(i, j);
+        }
+    }
+    jobManager->AddJob(this, &Physics::Solver::ResolveCollision, args, 0);
+}
+
+
+void Physics::Solver::ResolveCollision(void * args, int index)
+{
+    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
+    assert(myArgs != nullptr);
+
+    float dt = myArgs->DeltaTime;
+
+    size_t contactsFound = componentManager->GetContactsFound();
+    contactSolver->SetIterations(contactsFound * 4);
+    contactSolver->ResolveContacts(componentManager->contacts, contactsFound, dt);
+    componentManager->ClearContactsFound();
+
     jobManager->AddJob(this, &Physics::Solver::ModelToWorld, args, 0);
 }
 
@@ -192,18 +225,4 @@ void Solver::ModelToWorld(void* args, int index)
     assert(myArgs->jobPromise != nullptr);
 
     myArgs->jobPromise->set_value();
-}
-
-void Physics::Solver::SetColliderData(void * args, int index)
-{
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>(args);
-    assert(myArgs != nullptr);
-
-    for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
-    {
-        rigidbody->CalcHalfSize(i);
-    }
-    assert(myArgs->jobPromise != nullptr);
-
-    jobManager->AddJob(this, &Physics::Solver::Collide, args, 0);
 }
