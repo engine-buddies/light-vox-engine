@@ -27,8 +27,7 @@ namespace Input
         Look,
         Fire,
         StartLook,
-        StopLook,
-        Exit
+        StopLook
     };
 
     /// <summary>
