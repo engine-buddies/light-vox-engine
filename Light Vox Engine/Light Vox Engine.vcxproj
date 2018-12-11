@@ -95,7 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
@@ -129,7 +129,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
@@ -165,7 +165,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -203,7 +203,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -234,6 +234,33 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD.cpp" />
+    <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_avx2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_avx512.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_internal.cpp" />
+    <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_neon.cpp" />
+    <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_sse2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="ECS\ComponentManager.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="Engine.cpp" />
@@ -254,6 +281,8 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="Physics\RigidBody.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD.h" />
+    <ClInclude Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_internal.h" />
     <ClInclude Include="ECS\ComponentManager.h" />
     <ClInclude Include="ECS\Entity.h" />
     <ClInclude Include="ECS\EntityComponents.h" />

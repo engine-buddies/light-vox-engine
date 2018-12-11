@@ -10,4 +10,12 @@
 #define LV_RTV_CLEAR_BG_COLOR { 0.392f, 0.584f, 0.929f, 1.0f }
 
 //maximum instance count
-#define LV_MAX_INSTANCE_COUNT 9
+
+//recommended count & size
+// count: 256    size: 8
+// count: 2048   size: 16
+// count: 16384  size: 32
+// count: 131072 size: 64
+
+#define LV_MAX_INSTANCE_COUNT 256
+#define LV_MAX_WORLD_SIZE 8

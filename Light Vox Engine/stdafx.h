@@ -29,6 +29,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+//perlin noise
+#include <FastNoiseSIMD.h>
+
 namespace glm
 {
     typedef mat<4, 4, float, highp>		mat4x4_packed;
