@@ -79,7 +79,9 @@ HRESULT GraphicsCore::InitFrameResources()
     return S_OK;
 }
 
-void GraphicsCore::Update( glm::mat4x4_packed transforms[], Camera* camera )
+void GraphicsCore::Update( glm::mat4x4_packed( &transforms )[],
+    glm::vec3_packed( &pointLightPositions )[],
+    Camera* camera )
 {
     PIXSetMarker( commandQueue.Get(), 0, L"Getting last completed fence" );
 
@@ -102,7 +104,12 @@ void GraphicsCore::Update( glm::mat4x4_packed transforms[], Camera* camera )
         CloseHandle( eventHandle );
     }
 
-    currentFrameResource->WriteConstantBuffers( transforms, &viewport, camera );
+    currentFrameResource->WriteConstantBuffers( 
+        transforms, 
+        pointLightPositions,
+        &viewport, 
+        camera 
+    );
 
 #ifdef _DEBUG
     currentFrameResource->WriteDebugInstanceBuffers(

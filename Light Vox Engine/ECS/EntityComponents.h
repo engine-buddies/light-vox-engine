@@ -10,14 +10,14 @@ namespace EntityComponents
 {
     struct TransformMatrix
     {
-        glm::mat4 transformMatrix;
+        glm::packed_mat4 transformMatrix;
     };
 
     struct Transform
     {
         glm::quat orientation = glm::quat();
-        glm::vec3 rot = { .0f, .0f, .0f };
-        glm::vec3 pos = { .0f, .0f, .0f };
+        glm::aligned_vec3 rot = { .0f, .0f, .0f };
+        glm::aligned_vec3 pos = { .0f, .0f, .0f };
 
         ////transformation matricies 
         //glm::mat4 posMatrix = glm::mat4(1.0f);
@@ -28,14 +28,14 @@ namespace EntityComponents
 
     struct BoxCollider
     {
-        glm::vec3 vertices[8];
-        glm::mat4 offset = glm::mat4(1.0f);
-        glm::mat4 transformMatrix;
-        glm::vec3 contactPoint;
-        glm::vec3 maxVertex;
-        glm::vec3 minVertex;
+        glm::aligned_vec3 vertices[8];
+        glm::aligned_mat4 offset = glm::aligned_mat4(1.0f);
+        glm::aligned_mat4 transformMatrix;
+        glm::aligned_vec3 contactPoint;
+        glm::aligned_vec3 maxVertex;
+        glm::aligned_vec3 minVertex;
         //half size (the extent of the box along each axis)
-        glm::vec3 size = { .50f, .50f, .50f };
+        glm::aligned_vec3 size = { .50f, .50f, .50f };
         //holds collision tolerance 
         float tolerance;
         float friction;
@@ -51,11 +51,11 @@ namespace EntityComponents
 
     struct Contacts
     {
-        glm::mat3x3 contactWorld;
-        glm::vec3 relativeContactPosition[2];
-        glm::vec3 contactPoint;
-        glm::vec3 contactNormal;
-        glm::vec3 contactVelocity;
+        glm::aligned_mat3 contactWorld;
+        glm::aligned_vec3 relativeContactPosition[2];
+        glm::aligned_vec3 contactPoint;
+        glm::aligned_vec3 contactNormal;
+        glm::aligned_vec3 contactVelocity;
         //entites colliding 
         BodyPair bodyPair;
         float desiredVelocity;
@@ -68,13 +68,13 @@ namespace EntityComponents
 
     struct BodyProperties
     {
-        glm::mat3 inertiaTensor = glm::mat3(1.0f);
-        glm::vec3 velocity = { .0f, .0f, .0f };
-        glm::vec3 force = { .0f, .0f, .0f };
-        glm::vec3 acceleration = { .0f, .0f, .0f };
+        glm::aligned_mat3 inertiaTensor = glm::aligned_mat3(1.0f);
+        glm::aligned_vec3 velocity = { .0f, .0f, .0f };
+        glm::aligned_vec3 force = { .0f, .0f, .0f };
+        glm::aligned_vec3 acceleration = { .0f, .0f, .0f };
         //rotation
-        glm::vec3 angularAcceleration = { .0f, .0f, .0f };
-        glm::vec3 torque = { .0f, .0f, .0f };
+        glm::aligned_vec3 angularAcceleration = { .0f, .0f, .0f };
+        glm::aligned_vec3 torque = { .0f, .0f, .0f };
 
         float linearDamping = 0.0f;
         float invMass = 1.0f;

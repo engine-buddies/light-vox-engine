@@ -288,10 +288,14 @@ inline void FrameResource::InitCBV(
     const uint32_t constantBufferSize = ( sizeof( SceneConstantBuffer )
         + ( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ) )
         & ~( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ); // must be a multiple 256 bytes
+
+    const uint32_t lightBufferSize = ( sizeof( LightingSceneConstantBuffer )
+        + ( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ) )
+        & ~( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ); // must be a multiple 256 bytes
     ThrowIfFailed( device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer( constantBufferSize ),
+        &CD3DX12_RESOURCE_DESC::Buffer( glm::max( constantBufferSize, lightBufferSize ) ),
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS( &sceneConstantBuffer ) )
@@ -393,6 +397,9 @@ void FrameResource::BindDeferred(
     D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
 )
 {
+    //copy light pos and color data over
+    memcpy( sceneConstantBufferWO, pointLightPositions, sizeof( glm::vec3_packed ) * LV_POINT_LIGHT_COUNT * 2 );
+
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_GBUFFER_SRV, gBufferSrvHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_CBV, sceneCbvHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_SAMPLER, samplerHandle );
@@ -432,8 +439,8 @@ void FrameResource::Cleanup()
 
 #pragma region Update
 
-void FrameResource::WriteConstantBuffers(
-    glm::mat4x4_packed transforms[],
+void FrameResource::WriteConstantBuffers( glm::mat4x4_packed( &transforms )[],
+    glm::vec3_packed( &pointLightPositions )[],
     D3D12_VIEWPORT * viewport,
     Camera * camera )
 {
@@ -449,7 +456,7 @@ void FrameResource::WriteConstantBuffers(
     //copy over
     memcpy( sceneConstantBufferWO, &sceneConsts, sizeof( SceneConstantBuffer ) );
     memcpy( instanceBufferWO, transforms, sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
-    //memcpy(lightConstantBufferWO, &lightConsts, sizeof(LightConstantBuffer));
+    memcpy( this->pointLightPositions, pointLightPositions, sizeof( glm::vec3_packed ) * LV_POINT_LIGHT_COUNT );
 }
 
 #ifdef _DEBUG

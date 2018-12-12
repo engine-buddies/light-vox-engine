@@ -14,7 +14,7 @@ namespace Graphics
 #define LV_NUM_RTV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1)
 #define LV_NUM_CBVSRV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1)
 
-//indices to the per-frame command list
+    //indices to the per-frame command list
 #define LV_COMMAND_LIST_COUNT 2
 #define LV_COMMAND_LIST_INIT 0
 #define LV_COMMAND_LIST_LIGHTING_PASS 1
@@ -36,7 +36,7 @@ namespace Graphics
     public:
         static inline void SetGeometryPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
         static inline void SetLightingPassInputLayout( D3D12_INPUT_ELEMENT_DESC* inputLayout );
-        
+
         static const DXGI_FORMAT GeometryBufferFormat( size_t index ) {
             static const DXGI_FORMAT GEOMETRY_BUFFER_FORMAT[] = {
                 DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -69,32 +69,11 @@ namespace Graphics
 }
 #endif
 
-// ----------------- CONSTANT BUFFER (PER-SCENE) -----------------
-#if defined _VSHADER_GEOMETRY_PASS || defined _PSHADER_LIGHTING_PASS || defined _VSHADER_DEBUG
-cbuffer SceneConstantBuffer : register( b0 )
-{
-    float4x4 cView;
-    float4x4 cProjection;
-    float3 cCameraPosition;
-};
-#endif
-#ifndef _SHADER
-/// <summary>
-/// Buffer of data needed for a per-scene basis
-/// </summary>
-namespace Graphics
-{
-    struct SceneConstantBuffer
-    {
-        glm::mat4x4_packed view;
-        glm::mat4x4_packed projection;
-        glm::vec3_packed cameraPosition;
-    };
-}
-#endif
-
 // ----------------- LIGHTING CONSTANTS -----------------
 #ifdef _PSHADER_LIGHTING_PASS
+
+#define LV_POINT_LIGHT_COUNT 64
+
 struct DirectionalLight
 {
     float3 diffuseColor;
@@ -106,6 +85,45 @@ struct PointLight
     float3 diffuseColor;
     float3 position;
 };
+
+cbuffer SceneConstantBuffer : register( b0 )
+{
+    float3 cDiffuseColor[ LV_POINT_LIGHT_COUNT ];
+    float3 cPosition[ LV_POINT_LIGHT_COUNT ];
+};
+#endif
+
+// ----------------- CONSTANT BUFFER (PER-SCENE) -----------------
+#if defined _VSHADER_GEOMETRY_PASS || defined _PSHADER_LIGHTING_PASS || defined _VSHADER_DEBUG
+cbuffer SceneConstantBuffer : register( b0 )
+{
+    float4x4 cView;
+    float4x4 cProjection;
+    float3 cCameraPosition;
+};
+#endif
+
+#ifndef _SHADER
+/// <summary>
+/// Buffer of data needed for a per-scene basis
+/// </summary>
+namespace Graphics
+{
+#define LV_POINT_LIGHT_COUNT 64
+
+    struct SceneConstantBuffer
+    {
+        glm::mat4x4_packed view;
+        glm::mat4x4_packed projection;
+        glm::vec3_packed cameraPosition;
+    };
+
+    struct LightingSceneConstantBuffer
+    {
+        glm::vec3_packed pointLightColors[ LV_POINT_LIGHT_COUNT ];
+        glm::vec3_packed pointLightPositions[ LV_POINT_LIGHT_COUNT ];
+    };
+}
 #endif
 
 // ----------------- INPUT ASSEMBLER (GEOMETRY) -----------------

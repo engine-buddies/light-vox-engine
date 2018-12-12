@@ -68,7 +68,8 @@ namespace Graphics
         /// <param name="viewport">The viewport</param>
         /// <param name="camera">The camera of the scene</param>
         void WriteConstantBuffers(
-            glm::mat4x4_packed transforms[],
+            glm::mat4x4_packed (&transforms)[],
+            glm::vec3_packed (&pointLightPositions)[],
             D3D12_VIEWPORT* viewport,
             Camera* camera
         );
@@ -115,7 +116,10 @@ namespace Graphics
         //write-only buffer for scene-level cbuffer stuff
         SceneConstantBuffer* sceneConstantBufferWO;
         InstanceBuffer* instanceBufferWO;
-        //LightConstantBuffer* lightConstantBufferWO;
+
+        //lighting variables (uses the same buffer as scene cBuffer)
+        glm::vec3_packed pointLightPositions[ LV_POINT_LIGHT_COUNT ];
+        glm::vec3_packed pointLightColors[ LV_POINT_LIGHT_COUNT ];
 
         //handle to cbv required for the scene
         D3D12_GPU_DESCRIPTOR_HANDLE nullHandle;
