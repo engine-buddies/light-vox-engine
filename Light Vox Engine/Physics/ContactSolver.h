@@ -43,8 +43,8 @@ namespace Physics
 
         struct ContactBodies
         {
-			EntityComponents::BodyProperties* bodyProps;
-			EntityComponents::Transform* transform;
+			EntityComponents::BodyProperties bodyProps;
+			EntityComponents::Transform transform;
         };
 
         /// <summary>

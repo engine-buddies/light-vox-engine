@@ -280,113 +280,114 @@ void Physics::ContactSolver::ApplyPositionChange(
     Contacts* c,
     float penetration)
 {
-    ContactBodies contactBodies[2];
-    contactBodies[0].bodyProps = &componentManager->bodyProperties[c->bodyPair.a];
-    contactBodies[0].transform = &componentManager->transform[c->bodyPair.a];
-    contactBodies[1].bodyProps = &componentManager->bodyProperties[c->bodyPair.b];
-    contactBodies[1].transform = &componentManager->transform[c->bodyPair.b];
+	ContactBodies contactBodies[2];
+	contactBodies[0].bodyProps = componentManager->bodyProperties[c->bodyPair.a];
+	contactBodies[0].transform = componentManager->transform[c->bodyPair.a];
+	contactBodies[1].bodyProps = componentManager->bodyProperties[c->bodyPair.b];
+	contactBodies[1].transform = componentManager->transform[c->bodyPair.b];
 
-    const float angularLimit = (float)2.0f;
-    float angularMove[2];
-    float linearMove[2];
+	const float angularLimit = (float)2.0f;
+	float angularMove[2];
+	float linearMove[2];
 
-    float totalInertia = 0;
-    float linearInertia[2];
-    float angularInertia[2];
+	float totalInertia = 0;
+	float linearInertia[2];
+	float angularInertia[2];
 
-    //work out the inertia of each object in the direction
-    //of the contact normal, due to angular inertia only.
-    //calc. total intertia before moving on
-    for (size_t i = 0; i < 2; ++i)
-    {
-        glm::mat3x3 inverseInertiaTensor = contactBodies[i].bodyProps->inertiaTensor;
-        glm::vec3 angularInertiaWorld = glm::cross(c->relativeContactPosition[i], c->contactNormal);
-        angularInertiaWorld = inverseInertiaTensor * angularInertiaWorld;
-        angularInertiaWorld = glm::cross(angularInertiaWorld, c->relativeContactPosition[i]);
-        angularInertia[i] = glm::dot(angularInertiaWorld, c->contactNormal);
+	//work out the inertia of each object in the direction
+	//of the contact normal, due to angular inertia only.
+	//calc. total intertia before moving on
+	for (size_t i = 0; i < 2; ++i)
+	{
+		glm::mat3x3 inverseInertiaTensor = contactBodies[i].bodyProps.inertiaTensor;
+		glm::vec3 angularInertiaWorld = glm::cross(c->relativeContactPosition[i], c->contactNormal);
+		angularInertiaWorld = inverseInertiaTensor * angularInertiaWorld;
+		angularInertiaWorld = glm::cross(angularInertiaWorld, c->relativeContactPosition[i]);
+		angularInertia[i] = glm::dot(angularInertiaWorld, c->contactNormal);
 
-        linearInertia[i] = contactBodies[i].bodyProps->invMass;
-        totalInertia += linearInertia[i] + angularInertia[i];
-    }
-
-
-    for (size_t i = 0; i < 2; ++i)
-    {
-        //the linear and angular movements required are in proportion to the 
-        //inverse inertias
-        float sign = (i == 0) ? -1.0f : 1.0f;
-        angularMove[i] =
-            sign * penetration * (angularInertia[i] / totalInertia);
-        linearMove[i] =
-            sign * penetration * (linearInertia[i] / totalInertia);
-
-        //avoid angular projection that are too great (when mass is large
-        //but inertia tensor is small) limit the angular move
-        glm::vec3 projection = c->relativeContactPosition[i];
-        projection +=
-            (c->contactNormal * (-glm::dot(c->relativeContactPosition[i], c->contactNormal)));
-
-        //use small angle aprox. for sin of the angle
-        float maxMagnitude = angularLimit * glm::length(projection);
-
-        if (angularMove[i] < -maxMagnitude)
-        {
-            float totalMove = angularMove[i] + linearMove[i];
-            angularMove[i] = -maxMagnitude;
-            linearMove[i] = totalMove - angularMove[i];
-        }
-        else if (angularMove[i] > maxMagnitude)
-        {
-            float totalMove = angularMove[i] + linearMove[i];
-            angularMove[i] = maxMagnitude;
-            linearMove[i] = totalMove - angularMove[i];
-        }
-
-        //we have linear amount of movement required by turning 
-        //rigid body. we now need to calc. desired rotation
-        if (angularMove[i] == 0)
-        {
-            angularChange[i] = glm::vec3(0);
-        }
-        else
-        {
-            // Work out the direction we'd like to rotate in.
-            glm::vec3 targetAngularDirection =
-                glm::cross(c->relativeContactPosition[i], c->contactNormal);
-
-            glm::mat3 inverseInertiaTensor;
-            inverseInertiaTensor = contactBodies[i].bodyProps->inertiaTensor;
-
-            // Work out the direction we'd need to rotate to achieve that
-            angularChange[i] =
-                (inverseInertiaTensor * targetAngularDirection) *
-                (angularMove[i] / angularInertia[i]);
-        }
-
-        // Velocity change is easier - it is just the linear movement
-        // along the contact normal.
-        linearChange[i] = c->contactNormal * linearMove[i];
-
-        // Now we can start to apply the values we've calculated.
-        // Apply the linear movement
-        glm::vec3 pos;
-        pos = contactBodies[i].transform->pos;
-        pos += c->contactNormal * linearMove[i];
-        contactBodies[i].transform->pos = pos;
-
-        // And the change in orientation
-        glm::quat q;
-        glm::quat rot;
-        rot = glm::quat(
-            0,
-            angularChange[i].x,
-            angularChange[i].y,
-            angularChange[i].z);
+		linearInertia[i] = contactBodies[i].bodyProps.invMass;
+		totalInertia += linearInertia[i] + angularInertia[i];
+	}
 
 
-        q = contactBodies[i].transform->orientation;
-        q += (rot * .5f);
-        contactBodies[i].transform->orientation += q;
+	for (size_t i = 0; i < 2; ++i)
+	{
+		uint32_t bodyIndex = (i == 0) ? c->bodyPair.a : c->bodyPair.b;
+
+		//the linear and angular movements required are in proportion to the 
+		//inverse inertias
+		float sign = (i == 0) ? -1.0f : 1.0f;
+		angularMove[i] =
+			sign * penetration * (angularInertia[i] / totalInertia);
+		linearMove[i] =
+			sign * penetration * (linearInertia[i] / totalInertia);
+
+		//avoid angular projection that are too great (when mass is large
+		//but inertia tensor is small) limit the angular move
+		glm::vec3 projection = c->relativeContactPosition[i];
+		projection +=
+			(c->contactNormal * (-glm::dot(c->relativeContactPosition[i], c->contactNormal)));
+
+		//use small angle aprox. for sin of the angle
+		float maxMagnitude = angularLimit * glm::length(projection);
+
+		if (angularMove[i] < -maxMagnitude)
+		{
+			float totalMove = angularMove[i] + linearMove[i];
+			angularMove[i] = -maxMagnitude;
+			linearMove[i] = totalMove - angularMove[i];
+		}
+		else if (angularMove[i] > maxMagnitude)
+		{
+			float totalMove = angularMove[i] + linearMove[i];
+			angularMove[i] = maxMagnitude;
+			linearMove[i] = totalMove - angularMove[i];
+		}
+
+		//we have linear amount of movement required by turning 
+		//rigid body. we now need to calc. desired rotation
+		if (angularMove[i] == 0)
+		{
+			angularChange[i] = glm::vec3(0);
+		}
+		else
+		{
+			// Work out the direction we'd like to rotate in.
+			glm::vec3 targetAngularDirection =
+				glm::cross(c->relativeContactPosition[i], c->contactNormal);
+
+			glm::mat3 inverseInertiaTensor;
+			inverseInertiaTensor = contactBodies[i].bodyProps.inertiaTensor;
+
+			// Work out the direction we'd need to rotate to achieve that
+			angularChange[i] =
+				(inverseInertiaTensor * targetAngularDirection) *
+				(angularMove[i] / angularInertia[i]);
+		}
+
+		// Velocity change is easier - it is just the linear movement
+		// along the contact normal.
+		linearChange[i] = c->contactNormal * linearMove[i];
+
+		// Now we can start to apply the values we've calculated.
+		// Apply the linear movement
+		glm::vec3 pos;
+		pos = contactBodies[i].transform.pos;
+		pos += c->contactNormal * linearMove[i];
+		componentManager->transform[bodyIndex].pos = pos;
+
+		// And the change in orientation
+		glm::quat q;
+		glm::quat rot;
+		rot = glm::quat(
+			0,
+			angularChange[i].x,
+			angularChange[i].y,
+			angularChange[i].z);
+
+
+		q = (rot * .5f);
+		componentManager->transform[bodyIndex].orientation += q;
     }
 }
 
@@ -426,8 +427,6 @@ void Physics::ContactSolver::AdjustVelocities(
 
         BodyProperties* bodyA = &componentManager->bodyProperties[contacts[index].bodyPair.a];
         BodyProperties* bodyB = &componentManager->bodyProperties[contacts[index].bodyPair.b];
-        //match the awake state at the contact
-        MatchAwakeState(bodyA, bodyB);
 
         //do the resolution on the contact that came out top
         ApplyVelocityChange(velocityChange, rotationChange, &contacts[index]);
@@ -491,8 +490,6 @@ void Physics::ContactSolver::AdjustPositions(
 
         BodyProperties* bodyA = &componentManager->bodyProperties[contacts[index].bodyPair.a];
         BodyProperties* bodyB = &componentManager->bodyProperties[contacts[index].bodyPair.b];
-        //match the awake state at the contact
-        MatchAwakeState(bodyA, bodyB);
 
         //Resolve the penetration 
         //do the resolution on the contact that came out top
