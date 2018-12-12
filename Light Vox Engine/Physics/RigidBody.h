@@ -108,6 +108,7 @@ namespace Physics
             const EntityComponents::BoxCollider& two,
             const glm::vec3& toCenter,
             EntityComponents::Contacts* contactData,
+			int contactsFound,
             unsigned best,
             float penetration);
 

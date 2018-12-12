@@ -266,6 +266,7 @@ bool Physics::Rigidbody::IntersectBoxBox(const size_t& entityA, const size_t& en
     const EntityComponents::BoxCollider& two,
     const glm::vec3& toCenter,
     EntityComponents::Contacts* contactData,
+	int contactsFound,
     unsigned best,
     float penetration
 )
@@ -289,10 +290,10 @@ bool Physics::Rigidbody::IntersectBoxBox(const size_t& entityA, const size_t& en
         vertex.z = -vertex.z;
 
     //create the contact data 
-    contactData[componentManager->contactsFound].contactNormal = normal;
-    contactData[componentManager->contactsFound].penetration = penetration;
-    contactData[componentManager->contactsFound].contactPoint = two.transformMatrix * glm::vec4(vertex, 1.0f);
-    contactData[componentManager->contactsFound].bodyPair = { one.tag, two.tag };
+    contactData[contactsFound].contactNormal = normal;
+    contactData[contactsFound].penetration = penetration;
+    contactData[contactsFound].contactPoint = two.transformMatrix * glm::vec4(vertex, 1.0f);
+    contactData[contactsFound].bodyPair = { one.tag, two.tag };
 }
 
 // preprocessor definition is only used as a convenience
@@ -348,14 +349,14 @@ int Physics::Rigidbody::CollideBoxBox(const size_t& entityA, const size_t& entit
     if (best < 3)
     {
         //vertex of box two on a face of box one 
-        FillPointFaceBoxBox(one, two, toCenter, contacts, best, pen);
+        FillPointFaceBoxBox(one, two, toCenter, contacts, componentManager->contactsFound, best, pen);
         ++componentManager->contactsFound;
         return 1;
     }
     else if (best < 6)
     {
         // We've got a vertex of box one on a face of box two
-        FillPointFaceBoxBox(two, one, toCenter*-1.0f, contacts, best - 3, pen);
+        FillPointFaceBoxBox(two, one, toCenter*-1.0f, contacts, componentManager->contactsFound, best - 3, pen);
         ++componentManager->contactsFound;
         return 1;
     }

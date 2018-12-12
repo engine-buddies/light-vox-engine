@@ -49,8 +49,8 @@ namespace Physics
 
         struct ContactBodies
         {
-            BodyProperties* bodyProps;
-            Transform* transform;
+            BodyProperties bodyProps;
+            Transform transform;
         };
 
         /// <summary>
