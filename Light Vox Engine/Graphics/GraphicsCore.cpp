@@ -45,6 +45,7 @@ HRESULT GraphicsCore::Init()
     ThrowIfFailed( InitDeviceCommandQueueSwapChain() );
     ThrowIfFailed( InitRootSignature() );
     ThrowIfFailed( InitGeometryPSO() );
+    ThrowIfFailed( InitSkyboxPSO() );
 #ifdef _DEBUG
     ThrowIfFailed( InitDebugPSO() );
 #endif
@@ -121,6 +122,7 @@ void GraphicsCore::Render()
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle( rtvHeap->GetCPUDescriptorHandleForHeapStart(),
         LV_NUM_RTV_PER_FRAME * currentFrameResourceIndex,
         rtvDescriptorSize );
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrvGpuHandle(cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
 
     //reset for current frame
     currentFrameResource->ResetCommandListsAndAllocators();
@@ -210,6 +212,12 @@ void GraphicsCore::Render()
         deferredCommandList->DrawIndexedInstanced( verticesCount, debugRenderer->GetCubeInstanceDataCount(), 0, 0, 0 );
 #endif
 
+        //Render Skybox after all opaque Geometry:
+        SetSkyboxPSO(deferredCommandList);
+        cbvSrvGpuHandle.Offset(LV_NUM_GBUFFER_RTV + LV_NUM_NULL_SRV + currentFrameResourceIndex * LV_NUM_CBVSRV_PER_FRAME);
+        currentFrameResource->BindSkybox(&rtvHandle, samplerHeap->GetGPUDescriptorHandleForHeapStart(), cbvSrvGpuHandle);
+        deferredCommandList->DrawIndexedInstanced(skyboxVerticesCount, 1, 0, 0, 0);
+
         deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
             renderTargets[ currentFrameResourceIndex ].Get(),
             D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -261,7 +269,7 @@ HRESULT GraphicsCore::InitRootSignature()
     //G-Buffer: Albedo + Normal + Position
     descriptorRanges[ LV_ROOT_SIGNATURE_GBUFFER_SRV ].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SRV,            //type of descriptor
-        LV_NUM_GBUFFER_RTV,                         //number of descriptors
+        LV_NUM_GBUFFER_RTV + LV_NUM_TEXTURES,       //number of descriptors
         0,                                          //base shader register
         0                                           //space in register
     );
@@ -501,10 +509,11 @@ HRESULT GraphicsCore::InitSkyboxPSO()
 	inputLayoutDescription.NumElements = _countof(vertexInputDescription);
 
 	//build out our depth stencil description
-	CD3DX12_DEPTH_STENCIL_DESC1 depthStencilDesc(D3D12_DEFAULT);
-	depthStencilDesc.DepthEnable = TRUE;
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+    CD3DX12_DEPTH_STENCIL_DESC1 depthStencilDesc(D3D12_DEFAULT);
+    depthStencilDesc.DepthEnable = TRUE;
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+    depthStencilDesc.StencilEnable = TRUE;
 
 	//Rasterizer Description
 	D3D12_RASTERIZER_DESC rsDesc = {};
@@ -515,8 +524,7 @@ HRESULT GraphicsCore::InitSkyboxPSO()
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC skyboxPsoDesc{};
 	skyboxPsoDesc.VS = CD3DX12_SHADER_BYTECODE(vs.Get());
 	skyboxPsoDesc.PS = CD3DX12_SHADER_BYTECODE(ps.Get());
-	skyboxPsoDesc.InputLayout.pInputElementDescs = vertexInputDescription;
-	skyboxPsoDesc.InputLayout.NumElements = _countof(vertexInputDescription);
+    skyboxPsoDesc.InputLayout = inputLayoutDescription;
 	skyboxPsoDesc.pRootSignature = rootSignature.Get();
 	skyboxPsoDesc.DepthStencilState = depthStencilDesc;
 	skyboxPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -525,6 +533,7 @@ HRESULT GraphicsCore::InitSkyboxPSO()
 	skyboxPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	skyboxPsoDesc.NumRenderTargets = 1;
 	skyboxPsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    skyboxPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	skyboxPsoDesc.SampleDesc.Count = 1;
 
 	//create our PSO
@@ -547,7 +556,7 @@ HRESULT GraphicsCore::InitRtvHeap()
 
     //create actual heap
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_CBVSRV_PER_FRAME;
+    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * (LV_NUM_GBUFFER_RTV + 1);
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     ThrowIfFailed( device->CreateDescriptorHeap(
@@ -673,7 +682,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
 	std::vector<uint16_t>* skyboxIndices = new std::vector<uint16_t>();
 	
     ObjLoader::LoadObj( vertices, indices, "Assets/Models/voxel.obj" );
-	ObjLoader::LoadObj(skyboxVertices, skyboxIndices, "Assets/Models/sphere.obj");
+	ObjLoader::LoadObj(skyboxVertices, skyboxIndices, "Assets/Models/voxel.obj");
 
     //make vertex buffer for 'n' floats
     uint32_t vertexDataSize = static_cast<uint32_t>( vertices->size() * sizeof( Vertex ) );
@@ -682,6 +691,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     uint32_t indexDataSize = static_cast<uint32_t>( indices->size() * sizeof( uint16_t ) );
     uint32_t indexDataOffset = 0;
 
+    skyboxVerticesCount = static_cast<uint32_t>(skyboxIndices->size());
     verticesCount = static_cast<uint32_t>( indices->size() );
 
     //vertex buffer(s)
@@ -1004,7 +1014,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
 
     for ( uint32_t i = 0; i < LV_NUM_NULL_SRV; ++i )
     {
-        // Describe and create 2 null SRVs. Null descriptors are needed in order 
+        // Describe and create 3 null SRVs. Null descriptors are needed in order 
         // to achieve the effect of an "unbound" resource.
         D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
         nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -1020,19 +1030,17 @@ HRESULT GraphicsCore::InitInputShaderResources()
 
 	//Skybox SRV
 	{
-		ComPtr<ID3D12Resource> skyboxTex;
 
 		std::unique_ptr<uint8_t[]> ddsData;
 		std::vector<D3D12_SUBRESOURCE_DATA> subresources;
 		ThrowIfFailed(
-			DirectX::LoadDDSTextureFromFile(device.Get(), L"Assets/Textures/SunnyCubeMap.dds", skyboxTex.GetAddressOf(),
+			DirectX::LoadDDSTextureFromFile(device.Get(), L"Assets/Textures/SunnyCubeMap.dds", skyboxTexture.GetAddressOf(),
 				ddsData, subresources));
 
-		const UINT64 uploadBufferSize = GetRequiredIntermediateSize(skyboxTex.Get(), 0,
+		const UINT64 uploadBufferSize = GetRequiredIntermediateSize(skyboxTexture.Get(), 0,
 			static_cast<UINT>(subresources.size()));
 
 		// Create the GPU upload buffer.
-		ComPtr<ID3D12Resource> uploadHeap;
 		ThrowIfFailed(
 			device->CreateCommittedResource(
 				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -1040,37 +1048,43 @@ HRESULT GraphicsCore::InitInputShaderResources()
 				&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
-				IID_PPV_ARGS(uploadHeap.GetAddressOf()))
+				IID_PPV_ARGS(skyboxTextureUpload.GetAddressOf()))
 		);
 
 		PIXBeginEvent(commandList.Get(), 0, L"Copy DDS Subtextures");
 		UpdateSubresources<1>(
 			commandList.Get(), 
-			skyboxTex.Get(), 
-			uploadHeap.Get(),
+            skyboxTexture.Get(),
+            skyboxTextureUpload.Get(),
 			0, 
 			0, 
-			static_cast<UINT>(subresources.size()), 
+			1, 
 			subresources.data());
 		commandList->ResourceBarrier(
 			1, 
 			&CD3DX12_RESOURCE_BARRIER::Transition(
-				skyboxTex.Get(),
+                skyboxTexture.Get(),
 				D3D12_RESOURCE_STATE_COPY_DEST, 
 				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
 		);
 		PIXEndEvent(commandList.Get());
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC skyboxSrvDesc = {};
-		skyboxSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+		skyboxSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		skyboxSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		skyboxSrvDesc.Format = DXGI_FORMAT_BC3_UNORM;
+		skyboxSrvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 		skyboxSrvDesc.Texture2D.MipLevels = 1;
 		skyboxSrvDesc.Texture2D.MostDetailedMip = 0;
 		skyboxSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-		device->CreateShaderResourceView(skyboxTex.Get(), &skyboxSrvDesc, cbvSrvHandle);
-		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+        //Offset to after the gbuffer srv's
+        cbvSrvHandle.Offset(LV_NUM_GBUFFER_RTV, cbvSrvDescriptorSize);
+        for (uint32_t i = 0; i < LV_NUM_TEXTURES * LV_FRAME_COUNT; ++i)
+        {
+            device->CreateShaderResourceView(skyboxTexture.Get(), &skyboxSrvDesc, cbvSrvHandle);
+            cbvSrvHandle.Offset(LV_NUM_CBVSRV_PER_FRAME, cbvSrvDescriptorSize);
+        }
+        ddsData.release();
 	}
 
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};

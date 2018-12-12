@@ -10,10 +10,11 @@
 namespace Graphics
 {
 #define LV_NUM_GBUFFER_RTV 3
+#define LV_NUM_TEXTURES 1
 #define LV_NUM_NULL_SRV LV_NUM_GBUFFER_RTV
 #define LV_NUM_RTV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1)
-#define LV_NUM_CBVSRV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1)
-#define LV_NUM_TEXTURES 1
+#define LV_NUM_CBVSRV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1 + LV_NUM_TEXTURES)
+
 
 //indices to the per-frame command list
 #define LV_COMMAND_LIST_COUNT 2
@@ -71,7 +72,7 @@ namespace Graphics
 #endif
 
 // ----------------- CONSTANT BUFFER (PER-SCENE) -----------------
-#if defined _VSHADER_GEOMETRY_PASS || defined _PSHADER_LIGHTING_PASS || defined _VSHADER_DEBUG
+#if defined _VSHADER_GEOMETRY_PASS || defined _PSHADER_LIGHTING_PASS || defined _VSHADER_DEBUG || defined _VSHADER_SKYBOX
 cbuffer SceneConstantBuffer : register( b0 )
 {
     float4x4 cView;
@@ -110,7 +111,7 @@ struct PointLight
 #endif
 
 // ----------------- INPUT ASSEMBLER (GEOMETRY) -----------------
-#ifdef _VSHADER_GEOMETRY_PASS
+#if defined _VSHADER_GEOMETRY_PASS || defined _VSHADER_SKYBOX
 struct VSInput
 {
     float3 position : POSITION;
@@ -155,8 +156,17 @@ struct VStoPS
 };
 #endif
 
+// ----------------- VS TO PS (SKYBOX) -----------------
+#if defined _VSHADER_SKYBOX || defined _PSHADER_SKYBOX
+struct VStoPS
+{
+    float4 position : SV_POSITION;
+    float3 sampleDir : TEXCOORD0;
+};
+#endif
+
 // ----------------- PS Output (GEOMETRY) -----------------
-#ifdef _PSHADER_GEOMETRY_PASS
+#if defined _PSHADER_GEOMETRY_PASS || defined _PSHADER_SKYBOX
 struct PSOutput
 {
     float4 albedo : SV_TARGET0;

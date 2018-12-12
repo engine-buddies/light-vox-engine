@@ -104,7 +104,7 @@ inline void FrameResource::InitDescriptorHandles(
     gBufferSrvHandle = cbvSrvGpuHandle;
 
     //offset to where the CBV's are
-    cbvSrvGpuHandle.Offset( LV_NUM_GBUFFER_RTV, cbvSrvDescriptorSize );
+    cbvSrvGpuHandle.Offset( LV_NUM_GBUFFER_RTV + LV_NUM_TEXTURES, cbvSrvDescriptorSize );
     sceneCbvHandle = cbvSrvGpuHandle;
 
     //cache the handles to the G-buffers
@@ -244,7 +244,7 @@ inline void FrameResource::InitCBV(
 
     //Get CPU handle to the start of the frame's SRVs (g-buffers)
     CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvCpuHandle( cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(),
-        LV_NUM_NULL_SRV + frameResourceIndex * LV_NUM_CBVSRV_PER_FRAME + LV_NUM_GBUFFER_RTV,
+        LV_NUM_NULL_SRV + frameResourceIndex * LV_NUM_CBVSRV_PER_FRAME + LV_NUM_GBUFFER_RTV + LV_NUM_TEXTURES,
         cbvSrvDescriptorSize
     );
 
@@ -397,6 +397,18 @@ void FrameResource::BindDeferred(
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_CBV, sceneCbvHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_SAMPLER, samplerHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->OMSetRenderTargets( 1, rtvHandle, FALSE, &dsvHandle );
+}
+
+void FrameResource::BindSkybox(
+    D3D12_CPU_DESCRIPTOR_HANDLE * rtvHandle,
+    D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle,
+    D3D12_GPU_DESCRIPTOR_HANDLE srvHandle
+)
+{
+    commandLists[LV_COMMAND_LIST_LIGHTING_PASS]->SetGraphicsRootDescriptorTable(LV_ROOT_SIGNATURE_GBUFFER_SRV, gBufferSrvHandle);
+    commandLists[LV_COMMAND_LIST_LIGHTING_PASS]->SetGraphicsRootDescriptorTable(LV_ROOT_SIGNATURE_CBV, sceneCbvHandle);
+    commandLists[LV_COMMAND_LIST_LIGHTING_PASS]->SetGraphicsRootDescriptorTable(LV_ROOT_SIGNATURE_SAMPLER, samplerHandle);
+    commandLists[LV_COMMAND_LIST_LIGHTING_PASS]->OMSetRenderTargets(1, rtvHandle, FALSE, &dsvHandle);
 }
 
 void FrameResource::SwapBarriers()

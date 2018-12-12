@@ -50,6 +50,12 @@ namespace Graphics
             D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle
         );
 
+        void BindSkybox(
+            D3D12_CPU_DESCRIPTOR_HANDLE* rtvHandle,
+            D3D12_GPU_DESCRIPTOR_HANDLE samplerHandle,
+            D3D12_GPU_DESCRIPTOR_HANDLE srvHandle
+        );
+
         void ResetCommandListsAndAllocators();
 
         /// <summary>

@@ -181,9 +181,12 @@ namespace Graphics
 		Microsoft::WRL::ComPtr<ID3D12Resource> skyboxIndexBufferUpload;
 		Microsoft::WRL::ComPtr<ID3D12Resource> skyboxVertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D12Resource> skyboxVertexBufferUpload;
+        Microsoft::WRL::ComPtr<ID3D12Resource> skyboxTexture;
+        Microsoft::WRL::ComPtr<ID3D12Resource> skyboxTextureUpload;
         //Microsoft::WRL::ComPtr<ID3D12Resource> textures[1];           
         //Microsoft::WRL::ComPtr<ID3D12Resource> texturesUploads[1];
         uint32_t verticesCount;
+        uint32_t skyboxVerticesCount;
 
         //fence & synch related vars
         uint32_t fenceFrameIndex;
