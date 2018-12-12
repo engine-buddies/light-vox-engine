@@ -56,34 +56,16 @@ namespace
         c->contactWorld = contactToWorld;
     }
 
-
-    inline void MatchAwakeState(BodyProperties* a, BodyProperties* b)
-    {
-        if (!b) return;
-
-        bool body0Awake = &a->isAwake;
-        bool body1Awake = &b->isAwake;
-
-        if (body0Awake ^ body1Awake)
-        {
-            if (body0Awake)
-                body0Awake = true;
-            else if (body1Awake)
-                body1Awake = true;
-        }
-    }
-
     inline glm::vec3 calcFrictionlessImpulse(
         glm::mat3* inverseInertiaTensor,
         float invMassA,
         float invMassB,
         Contacts* c)
     {
-        glm::vec3 impulseContact;
+        glm::vec3 impulseContact = glm::vec3(.0f);
 
         //Build a vector that shows the change in velocity in 
         //world space 
-
         glm::vec3 deltaVelWorld =
             glm::cross(c->relativeContactPosition[0], c->contactNormal);
         deltaVelWorld = inverseInertiaTensor[0] * deltaVelWorld;
@@ -129,7 +111,7 @@ Physics::ContactSolver::~ContactSolver()
 void Physics::ContactSolver::ResolveContacts(Contacts * contacts, size_t numContacts, float dt)
 {
     //make sure we have something to do 
-    if (numContacts == 0 || numContacts > 0xfffff) return;
+    if (numContacts == 0 || numContacts > LV_MAX_INSTANCE_COUNT * 9) return;
     if (!isValid()) return;
 
     // Prepare the contacts for processing
@@ -139,7 +121,7 @@ void Physics::ContactSolver::ResolveContacts(Contacts * contacts, size_t numCont
     AdjustPositions(contacts, numContacts, dt);
 
     // Resolve velocity 
-    AdjustVelocities(contacts, numContacts, dt);
+    //AdjustVelocities(contacts, numContacts, dt);
 }
 
 void Physics::ContactSolver::SetIterations(size_t iterations)
@@ -383,9 +365,7 @@ void Physics::ContactSolver::ApplyPositionChange(
             angularChange[i].y,
             angularChange[i].z);
 
-
-        q = contactBodies[i].transform->orientation;
-        q += (rot * .5f);
+        q = (rot * .5f);
         contactBodies[i].transform->orientation += q;
     }
 }
@@ -426,8 +406,6 @@ void Physics::ContactSolver::AdjustVelocities(
 
         BodyProperties* bodyA = &componentManager->bodyProperties[contacts[index].bodyPair.a];
         BodyProperties* bodyB = &componentManager->bodyProperties[contacts[index].bodyPair.b];
-        //match the awake state at the contact
-        MatchAwakeState(bodyA, bodyB);
 
         //do the resolution on the contact that came out top
         ApplyVelocityChange(velocityChange, rotationChange, &contacts[index]);
@@ -491,8 +469,6 @@ void Physics::ContactSolver::AdjustPositions(
 
         BodyProperties* bodyA = &componentManager->bodyProperties[contacts[index].bodyPair.a];
         BodyProperties* bodyB = &componentManager->bodyProperties[contacts[index].bodyPair.b];
-        //match the awake state at the contact
-        MatchAwakeState(bodyA, bodyB);
 
         //Resolve the penetration 
         //do the resolution on the contact that came out top
