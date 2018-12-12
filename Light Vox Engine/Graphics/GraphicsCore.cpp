@@ -79,7 +79,8 @@ HRESULT GraphicsCore::InitFrameResources()
     return S_OK;
 }
 
-void GraphicsCore::Update( glm::mat4x4_packed transforms[], Camera* camera )
+void GraphicsCore::Update( glm::mat4x4_packed* transforms[],
+    Camera* camera )
 {
     PIXSetMarker( commandQueue.Get(), 0, L"Getting last completed fence" );
 
@@ -102,7 +103,11 @@ void GraphicsCore::Update( glm::mat4x4_packed transforms[], Camera* camera )
         CloseHandle( eventHandle );
     }
 
-    currentFrameResource->WriteConstantBuffers( transforms, &viewport, camera );
+    currentFrameResource->WriteConstantBuffers( 
+        transforms, 
+        &viewport, 
+        camera 
+    );
 
 #ifdef _DEBUG
     currentFrameResource->WriteDebugInstanceBuffers(
@@ -492,7 +497,7 @@ HRESULT GraphicsCore::InitRtvHeap()
 
     //create actual heap
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_CBVSRV_PER_FRAME;
+    rtvHeapDesc.NumDescriptors = LV_FRAME_COUNT * LV_NUM_RTV_PER_FRAME;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     ThrowIfFailed( device->CreateDescriptorHeap(
@@ -810,7 +815,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     // buffer view (CBV) descriptor heap.  Heap layout: null views, 
     // frame 1's constant buffer, frame 2's constant buffers, etc...
     const uint32_t nullSrvCount = LV_NUM_GBUFFER_RTV;		// Null descriptors are needed for out of bounds behavior reads.
-    const uint32_t cbvCount = LV_FRAME_COUNT * 1; //Frame Count * Number of CBVs
+    const uint32_t cbvCount = LV_FRAME_COUNT * 2; //Frame Count * Number of CBVs
     const uint32_t srvCount = LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV; // _countof(SampleAssets::Textures) + (FrameCount * 1);
     D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
     cbvSrvHeapDesc.NumDescriptors = nullSrvCount + cbvCount + srvCount;

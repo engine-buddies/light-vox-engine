@@ -270,6 +270,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClCompile Include="Graphics\FrameResource.cpp" />
     <ClCompile Include="Graphics\GraphicsBase.cpp" />
     <ClCompile Include="Graphics\GraphicsCore.cpp" />
+    <ClCompile Include="Graphics\LightingManager.cpp" />
     <ClCompile Include="Graphics\ObjLoader.cpp" />
     <ClCompile Include="Input\InputManager.cpp" />
     <ClCompile Include="JobSystem\JobManager.cpp" />
@@ -292,6 +293,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="Graphics\DebugRenderer.h" />
     <ClInclude Include="Graphics\FrameResource.h" />
     <ClInclude Include="Graphics\GraphicsCore.h" />
+    <ClInclude Include="Graphics\LightingManager.h" />
     <ClInclude Include="Graphics\ObjLoader.h" />
     <ClInclude Include="Graphics\ShaderDefinitions.h" />
     <ClInclude Include="Input\InputManager.h" />

@@ -40,6 +40,7 @@ Engine::~Engine()
     componentManager->ReleaseInstance();
     Jobs::JobManager::ReleaseInstance();
     Graphics::DebugRenderer::ReleaseInstance();
+    Graphics::LightingManager::ReleaseInstance();
     Input::InputManager::ReleaseInstance();
 }
 
@@ -109,6 +110,7 @@ LV_RESULT Engine::InitSystems()
     graphics = new Graphics::GraphicsCore( hWindow, static_cast<uint32_t>( windowWidth ), static_cast<uint32_t>( windowHeight ) );
     debugRenderer = Graphics::DebugRenderer::GetInstance();
     camera = new Graphics::Camera();
+    lightingManager = Graphics::LightingManager::GetInstance();
 
     physics = new Physics::Solver();
     rigidBody = new Physics::Rigidbody();
@@ -154,7 +156,7 @@ LV_RESULT Engine::InitSystems()
         int size = LV_MAX_WORLD_SIZE;
         float* noiseSet = noiseLib->GetPerlinSet( 0, 0, 0, size, size, size );
 
-        int start = LV_MAX_WORLD_SIZE * increment / -2;
+        int start = LV_MAX_WORLD_SIZE * static_cast<int>( increment ) / -2;
         glm::vec3 position = glm::vec3( static_cast<float>( start ) );
         int noiseIndex = 0;
         int entityIndex = 0;
@@ -174,6 +176,7 @@ LV_RESULT Engine::InitSystems()
                     {
                         uint32_t entityID = entityManager->Get_Entity( entityIndex ).index;
                         rigidBody->Pos( position, entityID );
+                        rigidBody->Velocity( glm::linearRand( glm::vec3( -0.2f ), glm::vec3( 0.2f ) ), entityID );
 
                         ++entityIndex;
                     }
@@ -193,7 +196,7 @@ LV_RESULT Engine::InitSystems()
         }
         else
         {
-            DEBUG_PRINT( "%d noise indices left", (size * size * size) - noiseIndex );
+            DEBUG_PRINT( "%d noise indices left", ( size * size * size ) - noiseIndex );
 
         }
 
@@ -339,7 +342,8 @@ inline void Engine::Update()
 
     //DEBUG CODE for basic camera update
     physics->Update( time->GetDeltaFloatTime() );
-    graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
+    graphics->Update( reinterpret_cast<glm::mat4x4_packed **>( &componentManager->transformMatrix ), camera );
+    lightingManager->Update( time->GetDeltaFloatTime() );
     graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();

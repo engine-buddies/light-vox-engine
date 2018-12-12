@@ -28,24 +28,18 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/random.hpp>
+
+namespace glm
+{
+    typedef mat<4, 4, float, packed_highp>		mat4x4_packed;
+    typedef vec<4, float, packed_highp>		vec4_packed;
+    typedef vec<3, float, packed_highp>		vec3_packed;
+    typedef vec<2, float, packed_highp>		vec2_packed;
+}
 
 //perlin noise
 #include <FastNoiseSIMD.h>
-
-namespace glm
-{
-    typedef mat<4, 4, float, highp>		mat4x4_packed;
-    typedef vec<3, float, highp>		vec3_packed;
-    typedef vec<2, float, highp>		vec2_packed;
-}
-
-//typedef glm::m
-namespace glm
-{
-    typedef mat<4, 4, float, highp>		mat4x4_packed;
-    typedef vec<3, float, highp>		vec3_packed;
-    typedef vec<2, float, highp>		vec2_packed;
-}
 
 //Debug
 #if defined(_WIN32) || defined(_WIN64)

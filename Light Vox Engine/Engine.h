@@ -11,6 +11,7 @@
 #include "JobSystem/JobManager.h"
 //#include "JobSystem/ConcurrentQueue.h"
 #include "Input/InputManager.h"
+#include "Graphics/LightingManager.h"
 
 /*
 It's basically our entire engine (handles life cycle and windows related stuff)
@@ -61,6 +62,7 @@ private:
     Jobs::JobManager* jobManager = nullptr;
 
     Graphics::DebugRenderer* debugRenderer = nullptr;
+    Graphics::LightingManager* lightingManager = nullptr;
 
     //Physics 
     Physics::Solver* physics = nullptr;

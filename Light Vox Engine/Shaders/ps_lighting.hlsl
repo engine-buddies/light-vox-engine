@@ -23,11 +23,29 @@ float3 dirLightDiffuse( DirectionalLight dirLight, float3 normal ) {
 /// <summary>
 /// Helper to calculate diffuse for point light
 /// </summary>
-float3 pointLightDiffuse( PointLight pointLight, float3 normal, float3 worldPos ) {
-    float3 posToPointLight = pointLight.position - worldPos;
+//float3 pointLightDiffuse( PointLight pointLight, float3 normal, float3 worldPos ) {
+//    float3 posToPointLight = pointLight.position - worldPos;
+//    float3 dirToPointLight = normalize( posToPointLight );
+//    float pointLightAmount = saturate( dot( normal, dirToPointLight ) );
+//    return pointLight.diffuseColor * pointLightAmount / length( posToPointLight );
+//};
+
+float3 pointLightDiffuse( float3 lightColor, float3 lightPos, float3 normal, float3 worldPos ) {
+    float3 posToPointLight = lightPos - worldPos;
     float3 dirToPointLight = normalize( posToPointLight );
     float pointLightAmount = saturate( dot( normal, dirToPointLight ) );
-    return pointLight.diffuseColor * pointLightAmount / length( posToPointLight );
+    float3 finalColor = lightColor * pointLightAmount;
+
+    float constant = 0.0;
+    float lin = 7.5;
+    float exp = 8.2;
+
+    float distance = length( posToPointLight );
+    float attenuation = constant +
+        lin * distance +
+        exp * distance * distance;
+
+    return finalColor / attenuation;
 };
 
 
@@ -40,23 +58,15 @@ float4 main( VStoPS input ) : SV_TARGET
     //ambient
     float3 color = float3( 0.1, 0.1, 0.1 );
 
-    PointLight pointLights[ 5 ];
-    pointLights[ 0 ].diffuseColor = float3( 1, 0, 0);
-    pointLights[ 0 ].position = float3( 2, 0, 2 );
-    pointLights[ 1 ].diffuseColor = float3( 0, 1, 0);
-    pointLights[ 1 ].position = float3( -5, 0, -1 );
-    pointLights[ 2 ].diffuseColor = float3( 0, 0, 1);
-    pointLights[ 2 ].position = float3( 1, 2, 1 );
-    pointLights[ 3 ].diffuseColor = float3( 1, 1, 0);
-    pointLights[ 3 ].position = float3( -2, -3, 3 );
-    pointLights[ 4 ].diffuseColor = float3( 0, 1, 1 );
-    pointLights[ 4 ].position = float3( -5, 2, 1 );
-
     //diffuse
     float3 diffuse = float3( 0, 0, 0 );
-    [unroll]
-    for ( int i = 0; i < 5; ++i )
-        diffuse += pointLightDiffuse( pointLights[i], normal, worldPos );
+
+    [unroll( LV_POINT_LIGHT_COUNT )]
+    for ( int i = 0; i < LV_POINT_LIGHT_COUNT; ++i )
+    {
+        diffuse += pointLightDiffuse( cDiffuseColor[ i ].rgb, cPosition[ i ].xyz, normal, worldPos );
+    }
+
     color += diffuse * albedo;
 
     return float4(color, 1.0);

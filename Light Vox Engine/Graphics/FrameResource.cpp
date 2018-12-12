@@ -1,5 +1,6 @@
 #include "FrameResource.h"
 #include "Camera.h"
+#include "LightingManager.h"
 
 using namespace Graphics;
 
@@ -24,6 +25,8 @@ FrameResource::FrameResource(
     InitDescriptorHandles( device, dsvHeap, rtvHeap, cbvSrvHeap, frameResourceIndex );
     InitGraphicsResources( device, dsvHeap, rtvHeap, cbvSrvHeap, viewport, frameResourceIndex );
     InitCBV( device, cbvSrvHeap, frameResourceIndex );
+
+    lightingManager = LightingManager::GetInstance();
 
     //combine all of our command lists
     batchedCommandList[ 0 ] = commandLists[ LV_COMMAND_LIST_INIT ].Get();
@@ -107,10 +110,14 @@ inline void FrameResource::InitDescriptorHandles(
     cbvSrvGpuHandle.Offset( LV_NUM_GBUFFER_RTV, cbvSrvDescriptorSize );
     sceneCbvHandle = cbvSrvGpuHandle;
 
+    //offset to where the CBV's are
+    cbvSrvGpuHandle.Offset( cbvSrvDescriptorSize );
+    lightingCbvHandle = cbvSrvGpuHandle;
+
     //cache the handles to the G-buffers
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
         rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-        frameResourceIndex * LV_NUM_CBVSRV_PER_FRAME,
+        frameResourceIndex * LV_NUM_RTV_PER_FRAME,
         rtvDescriptorSize
     );
     for ( uint32_t i = 0; i < LV_NUM_GBUFFER_RTV; ++i )
@@ -283,35 +290,72 @@ inline void FrameResource::InitCBV(
 
 #endif
 
+    {
 
-    // Create the constant buffers.
-    const uint32_t constantBufferSize = ( sizeof( SceneConstantBuffer )
-        + ( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ) )
-        & ~( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ); // must be a multiple 256 bytes
-    ThrowIfFailed( device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer( constantBufferSize ),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS( &sceneConstantBuffer ) )
-    );
-    NAME_D3D12_OBJECT_WITH_NAME( sceneConstantBuffer, "frame#%d", frameResourceIndex );
+        // Create the constant buffers.
+        const uint32_t constantBufferSize = ( sizeof( SceneConstantBuffer )
+            + ( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ) )
+            & ~( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ); // must be a multiple 256 bytes
 
-    // Map the constant buffers and cache their heap pointers.
-    ThrowIfFailed( sceneConstantBuffer->Map( 0,
-        &zeroReadRange,
-        reinterpret_cast<void**>( &sceneConstantBufferWO )
-    ) );
+        ThrowIfFailed( device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer( constantBufferSize ),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS( &sceneConstantBuffer ) )
+        );
+        NAME_D3D12_OBJECT_WITH_NAME( sceneConstantBuffer, "frame#%d", frameResourceIndex );
 
-    // Create the constant buffer view for scene pass
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-    cbvDesc.SizeInBytes = constantBufferSize;
+        // Map the constant buffers and cache their heap pointers.
+        ThrowIfFailed( sceneConstantBuffer->Map( 0,
+            &zeroReadRange,
+            reinterpret_cast<void**>( &sceneConstantBufferWO )
+        ) );
 
-    // Describe and create the scene constant buffer view (CBV) and 
-    // cache the GPU descriptor handle.
-    cbvDesc.BufferLocation = sceneConstantBuffer->GetGPUVirtualAddress();
-    device->CreateConstantBufferView( &cbvDesc, cbvSrvCpuHandle );
+        // Create the constant buffer view for scene pass
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.SizeInBytes = constantBufferSize;
+
+        // Describe and create the scene constant buffer view (CBV) and 
+        // cache the GPU descriptor handle.
+        cbvDesc.BufferLocation = sceneConstantBuffer->GetGPUVirtualAddress();
+        device->CreateConstantBufferView( &cbvDesc, cbvSrvCpuHandle );
+    }
+
+    cbvSrvCpuHandle.Offset( cbvSrvDescriptorSize );
+
+    {
+        // Create the constant buffers.
+        const uint32_t lightingBufferSize = ( sizeof( LightingSceneConstantBuffer )
+            + ( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ) )
+            & ~( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1 ); // must be a multiple 256 bytes
+
+        ThrowIfFailed( device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer( lightingBufferSize ),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS( &lightConstantBuffer ) )
+        );
+        NAME_D3D12_OBJECT_WITH_NAME( lightConstantBuffer, "frame#%d", frameResourceIndex );
+
+        // Map the constant buffers and cache their heap pointers.
+        ThrowIfFailed( lightConstantBuffer->Map( 0,
+            &zeroReadRange,
+            reinterpret_cast<void**>( &lightingConstantBufferWO )
+        ) );
+
+        // Create the constant buffer view for scene pass
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.SizeInBytes = lightingBufferSize;
+
+        // Describe and create the scene constant buffer view (CBV) and 
+        // cache the GPU descriptor handle.
+        cbvDesc.BufferLocation = lightConstantBuffer->GetGPUVirtualAddress();
+        device->CreateConstantBufferView( &cbvDesc, cbvSrvCpuHandle );
+    }
 }
 
 FrameResource::~FrameResource()
@@ -394,7 +438,7 @@ void FrameResource::BindDeferred(
 )
 {
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_GBUFFER_SRV, gBufferSrvHandle );
-    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_CBV, sceneCbvHandle );
+    commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_CBV, lightingCbvHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->SetGraphicsRootDescriptorTable( LV_ROOT_SIGNATURE_SAMPLER, samplerHandle );
     commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ]->OMSetRenderTargets( 1, rtvHandle, FALSE, &dsvHandle );
 }
@@ -432,8 +476,7 @@ void FrameResource::Cleanup()
 
 #pragma region Update
 
-void FrameResource::WriteConstantBuffers(
-    glm::mat4x4_packed transforms[],
+void FrameResource::WriteConstantBuffers( glm::mat4x4_packed* transforms[],
     D3D12_VIEWPORT * viewport,
     Camera * camera )
 {
@@ -448,8 +491,8 @@ void FrameResource::WriteConstantBuffers(
 
     //copy over
     memcpy( sceneConstantBufferWO, &sceneConsts, sizeof( SceneConstantBuffer ) );
-    memcpy( instanceBufferWO, transforms, sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
-    //memcpy(lightConstantBufferWO, &lightConsts, sizeof(LightConstantBuffer));
+    memcpy( instanceBufferWO, *transforms, sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
+    memcpy( lightingConstantBufferWO, lightingManager->GetLightingBufferAddress(), sizeof( LightingSceneConstantBuffer ) );
 }
 
 #ifdef _DEBUG

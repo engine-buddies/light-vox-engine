@@ -36,7 +36,10 @@ namespace Graphics
         /// Handles our event fences and makes sure we're not writing to a frame
         /// that the GPU is still processing
         /// </summary>
-        void Update( glm::mat4x4_packed transforms[], Camera* camera );
+        void Update( 
+            glm::mat4x4_packed* transforms[],
+            Camera* camera 
+        );
 
         /// <summary>
         /// Where all the render logic lives
