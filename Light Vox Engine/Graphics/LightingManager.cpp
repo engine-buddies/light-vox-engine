@@ -11,7 +11,7 @@ LightingManager::LightingManager()
     lightingBuffer = { };
     for ( size_t i = 0; i < LV_POINT_LIGHT_COUNT; ++i )
     {
-        glm::vec4_packed randomColor = glm::linearRand( glm::vec4_packed( 1.0f ), glm::vec4_packed( 0.0f ) ) * 10.0f;
+        glm::vec4_packed randomColor = glm::linearRand( glm::vec4_packed( 1.0f ), glm::vec4_packed( 0.0f ) ) * 50.0f;
         glm::vec4_packed randomPos = glm::linearRand(
             glm::vec4_packed( static_cast<float>( -LV_MAX_WORLD_SIZE ) ),
             glm::vec4_packed( static_cast<float>( LV_MAX_WORLD_SIZE ) )

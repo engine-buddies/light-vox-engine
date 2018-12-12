@@ -17,5 +17,8 @@
 // count: 16384  size: 32
 // count: 131072 size: 64
 
-#define LV_MAX_INSTANCE_COUNT 256
-#define LV_MAX_WORLD_SIZE 8
+//#define LV_MAX_INSTANCE_COUNT 2048
+//#define LV_MAX_WORLD_SIZE 16
+
+#define LV_MAX_INSTANCE_COUNT 1024
+#define LV_MAX_WORLD_SIZE 13

@@ -27,42 +27,42 @@ namespace Physics
         /// integrating position, and calc. model to world matrix
         /// </summary>
         /// <param name="dt"></param>
-        void Update(float dt);
+        void Update( float dt );
 
     private:
 
         /// <summary>
          /// Solves Collision (aabb to aabb) 
          /// </summary>
-        void Collide(void* args, int index);
+        void Collide( void* args, int index );
         /// <summary>
         /// Semi Implicit euler intergration for position
         /// </summary>
         /// <param name="dt"></param>
-        void Integrate(void* args, int index);
+        void Integrate( void* args, int index );
         /// <summary>
         /// Calc. total force
         /// </summary>
-        void AccumlateForces(void* args, int index);
+        void AccumlateForces( void* args, int index );
         /// <summary>
         /// Calc. total torque
         /// </summary>
-        void AccumlateTorque(void* args, int index);
+        void AccumlateTorque( void* args, int index );
         /// <summary>
         /// Calc model to world matrix
         /// </summary>
-        void ModelToWorld(void* args, int index);
+        void ModelToWorld( void* args, int index );
         /// <summary>
         /// Calcs the transformation matrix based on the given offset
          /// and transform the bounding box vertices from local to world space
         /// </summary>
-        void SetColliderData(void* args, int index);
+        void SetColliderData( void* args, int index );
         /// <summary>
         /// Solves angular momentum, linear momentum, and interpenetration
         /// </summary>
         /// <param name="args"></param>
         /// <param name="index"></param>
-        void ResolveCollision(void* args, int index);
+        void ResolveCollision( void* args, int index );
 
         ECS::ComponentManager* componentManager;
         Jobs::JobManager* jobManager = nullptr;
@@ -80,7 +80,9 @@ namespace Physics
             std::promise<void>* jobPromise;
         };
 
-        PhysicsArguments* a_argument = nullptr;
-        PhysicsArguments* b_argument = nullptr;
+        std::vector< PhysicsArguments*> physicsJobsArgs;
+
+        std::vector<std::promise<void>> promises;
+        std::vector<std::future<void>> futures;
     };
 };

@@ -77,6 +77,8 @@ namespace Jobs
 
         inline const size_t GetThreadCount() const;
 
+        int GetAmountOfSupportedThreads();
+
     private:
 
         JobManager();
