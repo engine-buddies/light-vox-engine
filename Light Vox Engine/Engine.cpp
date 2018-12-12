@@ -176,6 +176,7 @@ LV_RESULT Engine::InitSystems()
                     {
                         uint32_t entityID = entityManager->Get_Entity( entityIndex ).index;
                         rigidBody->Pos( position, entityID );
+                        rigidBody->Velocity( glm::linearRand( glm::vec3( -0.2f ), glm::vec3( 0.2f ) ), entityID );
 
                         ++entityIndex;
                     }
