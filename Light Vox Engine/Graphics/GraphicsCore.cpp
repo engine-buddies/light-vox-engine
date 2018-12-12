@@ -79,8 +79,8 @@ HRESULT GraphicsCore::InitFrameResources()
     return S_OK;
 }
 
-void GraphicsCore::Update( glm::mat4x4_packed( &transforms )[],
-    glm::vec3_packed( &pointLightPositions )[],
+void GraphicsCore::Update( glm::mat4x4_packed* transforms[],
+    glm::vec3_packed* pointLightPositions[],
     Camera* camera )
 {
     PIXSetMarker( commandQueue.Get(), 0, L"Getting last completed fence" );

@@ -37,8 +37,8 @@ namespace Graphics
         /// that the GPU is still processing
         /// </summary>
         void Update( 
-            glm::mat4x4_packed( &transforms )[],
-            glm::vec3_packed (&pointLightPositions)[],
+            glm::mat4x4_packed* transforms[],
+            glm::vec3_packed* pointLightPositions[],
             Camera* camera 
         );
 

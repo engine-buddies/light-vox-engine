@@ -154,7 +154,7 @@ LV_RESULT Engine::InitSystems()
         int size = LV_MAX_WORLD_SIZE;
         float* noiseSet = noiseLib->GetPerlinSet( 0, 0, 0, size, size, size );
 
-        int start = LV_MAX_WORLD_SIZE * increment / -2;
+        int start = LV_MAX_WORLD_SIZE * static_cast<int>(increment) / -2;
         glm::vec3 position = glm::vec3( static_cast<float>( start ) );
         int noiseIndex = 0;
         int entityIndex = 0;
@@ -339,7 +339,7 @@ inline void Engine::Update()
 
     //DEBUG CODE for basic camera update
     physics->Update( time->GetDeltaFloatTime() );
-    graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
+    graphics->Update( reinterpret_cast<glm::mat4x4_packed **>( &componentManager->transformMatrix), reinterpret_cast<glm::vec3_packed **>( &componentManager->transformMatrix ), camera );
     graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();

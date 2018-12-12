@@ -76,8 +76,8 @@ void Solver::AccumlateForces(void* args, int index)
     assert(myArgs != nullptr);
     for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
-        glm::aligned_vec3& acceleration = componentManager->bodyProperties[i].acceleration;
-        glm::aligned_vec3& force = componentManager->bodyProperties[i].force;
+        glm::vec3& acceleration = componentManager->bodyProperties[i].acceleration;
+        glm::vec3& force = componentManager->bodyProperties[i].force;
         float& mass = componentManager->bodyProperties[i].mass;
         acceleration += force / mass;
     }
@@ -91,9 +91,9 @@ void Physics::Solver::AccumlateTorque(void * args, int index)
     assert(myArgs != nullptr);
     for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
-        glm::aligned_vec3& angularAccel = componentManager->bodyProperties[i].angularAcceleration;
-        glm::aligned_vec3& torque = componentManager->bodyProperties[i].torque;
-        glm::aligned_mat3& invInertiaTensor = componentManager->bodyProperties[i].inertiaTensor;
+        glm::vec3& angularAccel = componentManager->bodyProperties[i].angularAcceleration;
+        glm::vec3& torque = componentManager->bodyProperties[i].torque;
+        glm::mat3& invInertiaTensor = componentManager->bodyProperties[i].inertiaTensor;
         angularAccel += invInertiaTensor * torque;
     }
     jobManager->AddJob(this, &Physics::Solver::Integrate, args, 0);
@@ -113,15 +113,15 @@ void Solver::Integrate(void* args, int index)
             continue;
 
         //movement
-        glm::aligned_vec3& acceleration = componentManager->bodyProperties[i].acceleration;
-        glm::aligned_vec3& velocity = componentManager->bodyProperties[i].velocity;
-        glm::aligned_vec3& position = componentManager->transform[i].pos;
-        glm::aligned_vec3& force = componentManager->bodyProperties[i].force;
+        glm::vec3& acceleration = componentManager->bodyProperties[i].acceleration;
+        glm::vec3& velocity = componentManager->bodyProperties[i].velocity;
+        glm::vec3& position = componentManager->transform[i].pos;
+        glm::vec3& force = componentManager->bodyProperties[i].force;
         //rotation
-        glm::aligned_vec3& angularAccel = componentManager->bodyProperties[i].angularAcceleration;
-        glm::aligned_vec3& rot = componentManager->transform[i].rot;
+        glm::vec3& angularAccel = componentManager->bodyProperties[i].angularAcceleration;
+        glm::vec3& rot = componentManager->transform[i].rot;
         glm::quat& orientation = componentManager->transform[i].orientation;
-        glm::aligned_vec3& torque = componentManager->bodyProperties[i].torque;
+        glm::vec3& torque = componentManager->bodyProperties[i].torque;
 
         //euler integration for movement and rotation 
         velocity += acceleration * dt;
@@ -213,7 +213,7 @@ void Solver::ModelToWorld(void* args, int index)
 
     for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
-        glm::mat4& transformMatrix = componentManager->transformMatrix[i].transformMatrix;
+        glm::mat4& transformMatrix = glm::mat4(componentManager->transformMatrix[i].transformMatrix);
         glm::vec3& pos = componentManager->transform[i].pos;
         glm::quat& orientation = componentManager->transform[i].orientation;
         orientation = glm::normalize(orientation);

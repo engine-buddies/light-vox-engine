@@ -439,8 +439,8 @@ void FrameResource::Cleanup()
 
 #pragma region Update
 
-void FrameResource::WriteConstantBuffers( glm::mat4x4_packed( &transforms )[],
-    glm::vec3_packed( &pointLightPositions )[],
+void FrameResource::WriteConstantBuffers( glm::mat4x4_packed* transforms[],
+    glm::vec3_packed* pointLightPositions[],
     D3D12_VIEWPORT * viewport,
     Camera * camera )
 {
@@ -455,8 +455,9 @@ void FrameResource::WriteConstantBuffers( glm::mat4x4_packed( &transforms )[],
 
     //copy over
     memcpy( sceneConstantBufferWO, &sceneConsts, sizeof( SceneConstantBuffer ) );
-    memcpy( instanceBufferWO, transforms, sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
-    memcpy( this->pointLightPositions, pointLightPositions, sizeof( glm::vec3_packed ) * LV_POINT_LIGHT_COUNT );
+    memcpy( instanceBufferWO, *transforms, sizeof( InstanceBuffer ) * LV_MAX_INSTANCE_COUNT );
+
+    memcpy( this->pointLightPositions, *pointLightPositions, sizeof( glm::vec3_packed ) * LV_POINT_LIGHT_COUNT );
 }
 
 #ifdef _DEBUG

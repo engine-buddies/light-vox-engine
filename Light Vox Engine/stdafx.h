@@ -28,7 +28,13 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
-#include <glm/gtc/type_aligned.hpp>
+
+namespace glm
+{
+    typedef mat<4, 4, float, packed_highp>		mat4x4_packed;
+    typedef vec<3, float, packed_highp>		vec3_packed;
+    typedef vec<2, float, packed_highp>		vec2_packed;
+}
 
 //perlin noise
 #include <FastNoiseSIMD.h>
