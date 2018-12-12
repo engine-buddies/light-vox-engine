@@ -95,7 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
@@ -129,7 +129,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
@@ -165,7 +165,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -203,7 +203,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -295,7 +295,6 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
     <ClInclude Include="Graphics\ObjLoader.h" />
     <ClInclude Include="Graphics\ShaderDefinitions.h" />
     <ClInclude Include="Input\InputManager.h" />
-    <ClInclude Include="JobSystem\ConcurrentQueue.h" />
     <ClInclude Include="JobSystem\JobManager.h" />
     <ClInclude Include="JobSystem\JobSequence.h" />
     <ClInclude Include="Physics\ContactSolver.h" />
