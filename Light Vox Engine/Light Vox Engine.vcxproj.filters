@@ -177,6 +177,12 @@
     <FxCompile Include="Shaders\ps_debug.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="ps_sky.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="vs_sky.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

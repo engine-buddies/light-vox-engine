@@ -75,6 +75,11 @@ namespace Graphics
         /// </summary>
         HRESULT InitLightPassPSO();
 
+		/// <summary>
+		/// Loads in our shaders and builds out a PSO for the Second Pass
+		/// </summary>
+		HRESULT InitSkyboxPSO();
+
         /// <summary>
         /// Create the Render Target View Heap and initialize our render
         /// targets for the back buffers we'll need
@@ -143,6 +148,7 @@ namespace Graphics
         Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
         Microsoft::WRL::ComPtr<ID3D12PipelineState> geometryPso;
         Microsoft::WRL::ComPtr<ID3D12PipelineState> lightPso;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> skyboxPso;
 
         //frame resources
         Microsoft::WRL::ComPtr<ID3D12Resource> renderTargets[ LV_FRAME_COUNT ];
@@ -161,6 +167,14 @@ namespace Graphics
         Microsoft::WRL::ComPtr<ID3D12Resource> indexBufferUpload;
         Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
         Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferUpload;
+
+		//Skybox fields
+		D3D12_VERTEX_BUFFER_VIEW skyboxVertexBufferView;
+		D3D12_INDEX_BUFFER_VIEW skyboxIndexBufferView;
+		Microsoft::WRL::ComPtr<ID3D12Resource> skyboxIndexBuffer;
+		Microsoft::WRL::ComPtr<ID3D12Resource> skyboxIndexBufferUpload;
+		Microsoft::WRL::ComPtr<ID3D12Resource> skyboxVertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D12Resource> skyboxVertexBufferUpload;
         //Microsoft::WRL::ComPtr<ID3D12Resource> textures[1];           
         //Microsoft::WRL::ComPtr<ID3D12Resource> texturesUploads[1];
         uint32_t verticesCount;

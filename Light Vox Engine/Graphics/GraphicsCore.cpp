@@ -482,6 +482,56 @@ HRESULT GraphicsCore::InitLightPassPSO()
     return S_OK;
 }
 
+HRESULT GraphicsCore::InitSkyboxPSO()
+{
+	ComPtr<ID3DBlob> vs;
+	ComPtr<ID3DBlob> ps;
+
+	D3DReadFileToBlob(L"Assets/Shaders/vs_sky.cso", &vs);
+	D3DReadFileToBlob(L"Assets/Shaders/ps_sky.cso", &ps);
+
+	//build the input layout
+	D3D12_INPUT_ELEMENT_DESC vertexInputDescription[LV_NUM_VS_INPUT_COUNT];
+	ShaderDefinitions::SetGeometryPassInputLayout(vertexInputDescription);
+
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
+	inputLayoutDescription.pInputElementDescs = vertexInputDescription;
+	inputLayoutDescription.NumElements = _countof(vertexInputDescription);
+
+	//build out our depth stencil description
+	CD3DX12_DEPTH_STENCIL_DESC1 depthStencilDesc(D3D12_DEFAULT);
+	depthStencilDesc.DepthEnable = TRUE;
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	depthStencilDesc.StencilEnable = TRUE;
+
+	//describe the PSO
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC skyboxPsoDesc{};
+	skyboxPsoDesc.VS = CD3DX12_SHADER_BYTECODE(vs.Get());
+	skyboxPsoDesc.PS = CD3DX12_SHADER_BYTECODE(ps.Get());
+	skyboxPsoDesc.InputLayout.pInputElementDescs = vertexInputDescription;
+	skyboxPsoDesc.InputLayout.NumElements = _countof(vertexInputDescription);
+	skyboxPsoDesc.pRootSignature = rootSignature.Get();
+	skyboxPsoDesc.DepthStencilState = depthStencilDesc;
+	skyboxPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	skyboxPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	skyboxPsoDesc.RasterizerState.DepthClipEnable = false;
+	skyboxPsoDesc.SampleMask = UINT_MAX;
+	skyboxPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	skyboxPsoDesc.NumRenderTargets = 1;
+	skyboxPsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	skyboxPsoDesc.SampleDesc.Count = 1;
+
+	//create our PSO
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&skyboxPsoDesc,
+		IID_PPV_ARGS(&skyboxPso)
+	));
+	NAME_D3D12_OBJECT_WITH_NAME(skyboxPso, "%s", "First pass");
+
+	return S_OK;
+}
+
 HRESULT GraphicsCore::InitRtvHeap()
 {
     // Create heap of render target descriptors
@@ -614,7 +664,11 @@ HRESULT GraphicsCore::InitInputShaderResources()
 
     std::vector<Vertex>* vertices = new std::vector<Vertex>();
     std::vector<uint16_t>* indices = new std::vector<uint16_t>();
+	std::vector<Vertex>* skyboxVertices = new std::vector<Vertex>();
+	std::vector<uint16_t>* skyboxIndices = new std::vector<uint16_t>();
+	
     ObjLoader::LoadObj( vertices, indices, "Assets/Models/voxel.obj" );
+	ObjLoader::LoadObj(skyboxVertices, skyboxIndices, "Assets/Models/sphere.obj");
 
     //make vertex buffer for 'n' floats
     uint32_t vertexDataSize = static_cast<uint32_t>( vertices->size() * sizeof( Vertex ) );
@@ -719,7 +773,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
 
 
         //this looks like it's pre-emptively loading all the static geometry 
-        PIXBeginEvent( commandList.Get(), 0, L"Copy vertex buffer to default resource" );
+        PIXBeginEvent( commandList.Get(), 0, L"Copy screenquad vertex buffer to default resource" );
         UpdateSubresources<1>(
             commandList.Get(),
             fsqVertexBuffer.Get(),
@@ -745,10 +799,71 @@ HRESULT GraphicsCore::InitInputShaderResources()
         fsqVertexBufferView.SizeInBytes = fsqVertexDataSize;
         fsqVertexBufferView.StrideInBytes = fsqVertexStride;
 #pragma endregion
+#pragma region SkyboxVertexBufferInit
 
+		//make vertex buffer for 'n' floats
+		uint32_t skyboxVertexDataSize = static_cast<uint32_t>(skyboxVertices->size() * sizeof(Vertex));
+		uint32_t skyboxVertexDataOffset = 0;
+		uint32_t skyboxVertexStride = sizeof(Vertex);
+
+		//create vertex buffer
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(skyboxVertexDataSize),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS(&skyboxVertexBuffer)
+		));
+		NAME_D3D12_OBJECT(skyboxVertexBuffer);
+
+		//create vertex upload buffer
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(skyboxVertexDataSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&skyboxVertexBufferUpload)
+		));
+
+		D3D12_SUBRESOURCE_DATA skyboxVertexData = {};
+		skyboxVertexData.pData = &((*vertices)[0]) + skyboxVertexDataOffset;
+		skyboxVertexData.RowPitch = skyboxVertexDataSize;
+		skyboxVertexData.SlicePitch = skyboxVertexData.RowPitch;
+
+
+		//this looks like it's pre-emptively loading all the static geometry 
+		PIXBeginEvent(commandList.Get(), 0, L"Copy skybox vertex buffer to default resource");
+		UpdateSubresources<1>(
+			commandList.Get(),
+			skyboxVertexBuffer.Get(),
+			skyboxVertexBufferUpload.Get(),
+			0,
+			0,
+			1,
+			&skyboxVertexData
+			);
+		commandList->ResourceBarrier(
+			1,
+			&CD3DX12_RESOURCE_BARRIER::Transition(
+				skyboxVertexBuffer.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+			)
+		);
+		PIXEndEvent(commandList.Get());
+
+
+		skyboxVertexBufferView = {};
+		skyboxVertexBufferView.BufferLocation = skyboxVertexBuffer->GetGPUVirtualAddress();
+		skyboxVertexBufferView.SizeInBytes = skyboxVertexDataSize;
+		skyboxVertexBufferView.StrideInBytes = skyboxVertexStride;
+
+#pragma endregion
     }
 
-    //index buffer
+    //index buffer(s)
     {
         //create index buffer
         ThrowIfFailed( device->CreateCommittedResource(
@@ -761,7 +876,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         ) );
         NAME_D3D12_OBJECT( indexBuffer );
 
-        //create vertex upload buffer
+        //create index upload buffer
         ThrowIfFailed( device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
             D3D12_HEAP_FLAG_NONE,
@@ -801,10 +916,70 @@ HRESULT GraphicsCore::InitInputShaderResources()
         indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
         indexBufferView.SizeInBytes = indexDataSize;
         indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+
+#pragma region SkyboxIndexBufferInit
+
+		uint32_t skyboxIndexDataSize = static_cast<uint32_t>(skyboxIndices->size() * sizeof(uint16_t));
+		uint32_t skyboxIndexDataOffset = 0;
+
+		//create index buffer
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(skyboxIndexDataSize),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS(&skyboxIndexBuffer)
+		));
+		NAME_D3D12_OBJECT(skyboxIndexBuffer);
+
+		//create index upload buffer
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(skyboxIndexDataSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&skyboxIndexBufferUpload)
+		));
+
+		D3D12_SUBRESOURCE_DATA skyboxIndexData = {};
+		skyboxIndexData.pData = &((*indices)[0]) + skyboxIndexDataOffset;
+		skyboxIndexData.RowPitch = skyboxIndexDataSize;
+		skyboxIndexData.SlicePitch = skyboxIndexData.RowPitch;
+
+		//this looks like it's pre-emptively loading all the static geometry 
+		PIXBeginEvent(commandList.Get(), 0, L"Copy skybox index buffer to default resource");
+		UpdateSubresources<1>(
+			commandList.Get(),
+			skyboxIndexBuffer.Get(),
+			skyboxIndexBufferUpload.Get(),
+			0,
+			0,
+			1,
+			&skyboxIndexData
+			);
+		commandList->ResourceBarrier(
+			1,
+			&CD3DX12_RESOURCE_BARRIER::Transition(
+				skyboxIndexBuffer.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+			)
+		);
+		PIXEndEvent(commandList.Get());
+
+		skyboxIndexBufferView = {};
+		skyboxIndexBufferView.BufferLocation = skyboxIndexBuffer->GetGPUVirtualAddress();
+		skyboxIndexBufferView.SizeInBytes = skyboxIndexDataSize;
+		skyboxIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
+#pragma endregion
     }
 
     delete vertices;
+	delete skyboxVertices;
     delete indices;
+	delete skyboxIndices;
 
     // Describe and create a shader resource view (SRV) and constant 
     // buffer view (CBV) descriptor heap.  Heap layout: null views, 
