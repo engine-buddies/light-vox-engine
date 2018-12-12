@@ -121,9 +121,6 @@
     <ClInclude Include="JobSystem\JobManager.h">
       <Filter>Source Files\JobSystem</Filter>
     </ClInclude>
-    <ClInclude Include="JobSystem\ConcurrentQueue.h">
-      <Filter>Source Files\JobSystem</Filter>
-    </ClInclude>
     <ClInclude Include="ECS\ComponentManager.h">
       <Filter>Source Files\ECS</Filter>
     </ClInclude>

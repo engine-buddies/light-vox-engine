@@ -63,7 +63,7 @@ void JobManager::AddJob( void( *func_ptr )( void *, int ), void * args, int Inde
     IJob* jobPtr = new JobFunc( func_ptr );
     aJob.jobPtr = jobPtr;
 
-    readyQueue.emplace_back( aJob );
+    locklessReadyQueue.enqueue( aJob );
     jobAvailableCondition.notify_one();
 }
 
@@ -79,8 +79,26 @@ void JobManager::WorkerThread()
         // Make sure that we don't need to be done now!
         if ( isDone ) return;
 
+        CpuJob CurJob;
+        bool found = locklessReadyQueue.try_dequeue( CurJob );
+
+        if ( found )
+        {
+            if ( CurJob.jobPtr )
+            {
+                CurJob.jobPtr->invoke( CurJob.jobArgs, CurJob.index );
+                // #TODO
+                // make this a pooled resource
+                delete CurJob.jobPtr;
+            }
+
+            // Notify other threads that a job has been taken and we should probably
+            // check to make sure that there isn;t more
+            jobAvailableCondition.notify_one();
+        }
+
         // If there is a job available, than work on it
-        if ( !readyQueue.empty() )
+        /*if ( !readyQueue.empty() )
         {
             CpuJob CurJob;
             readyQueue.pop_front( CurJob );
@@ -96,7 +114,7 @@ void JobManager::WorkerThread()
             // Notify other threads that a job has been taken and we should probably
             // check to make sure that there isn;t more
             jobAvailableCondition.notify_one();
-        }
+        }*/
     }
 }
 
