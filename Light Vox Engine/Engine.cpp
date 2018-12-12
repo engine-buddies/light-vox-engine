@@ -106,7 +106,7 @@ LV_RESULT Engine::InitWindow()
 LV_RESULT Engine::InitSystems()
 {
     InitWindow();
-    graphics = new Graphics::GraphicsCore(hWindow, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
+    graphics = new Graphics::GraphicsCore( hWindow, static_cast<uint32_t>( windowWidth ), static_cast<uint32_t>( windowHeight ) );
     debugRenderer = Graphics::DebugRenderer::GetInstance();
     camera = new Graphics::Camera();
 
@@ -122,57 +122,83 @@ LV_RESULT Engine::InitSystems()
     inputManager = Input::InputManager::GetInstance();
 
     // Bind an axis to the input man
-    inputManager->BindAxis(Input::InputType::Fire, this, &Engine::UsingInputFunc);
+    inputManager->BindAxis( Input::InputType::Fire, this, &Engine::UsingInputFunc );
 
-    ThrowIfFailed(graphics->Init());
+    ThrowIfFailed( graphics->Init() );
     time->Init();
     entityManager->Init();
 
-    for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
         entityManager->Create_Entity();
+        uint32_t entityID = entityManager->Get_Entity( i ).index;
+
+        //calc. moment of inertia 
+        float& mass = componentManager->bodyProperties[ entityID ].mass;
+        float inertia = ( ( mass * 0.4f ) * 0.4f ) / 6.0f;
+        glm::mat3& inertiaTensor = componentManager->bodyProperties[ entityID ].inertiaTensor;
+        inertiaTensor[ 0 ][ 0 ] = inertia;
+        inertiaTensor[ 1 ][ 1 ] = inertia;
+        inertiaTensor[ 2 ][ 2 ] = inertia;
+        componentManager->boxCollider[ entityID ].tag = entityID;
     }
 
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
     {
-        static int count = static_cast<int>(sqrtf(static_cast<float>(LV_MAX_INSTANCE_COUNT)));
-        float x = static_cast <float>(-count);
-        float y = static_cast <float>(-count);
-        float rotation = 0.0001f;
-        float z = 0;
-        for (int i = 0; i < count; ++i)
+        FastNoiseSIMD* noiseLib = FastNoiseSIMD::NewFastNoiseSIMD();
+        noiseLib->SetFrequency( 0.17f );
+        noiseLib->SetNoiseType( FastNoiseSIMD::NoiseType::Simplex );
+
+        float noiseThreshold = 0.18f;
+        float increment = 2.0f;
+        int size = LV_MAX_WORLD_SIZE;
+        float* noiseSet = noiseLib->GetPerlinSet( 0, 0, 0, size, size, size );
+
+        int start = LV_MAX_WORLD_SIZE * increment / -2;
+        glm::vec3 position = glm::vec3( static_cast<float>( start ) );
+        int noiseIndex = 0;
+        int entityIndex = 0;
+
+        for ( int x = 0; x < size && entityIndex < LV_MAX_INSTANCE_COUNT; ++x )
         {
-            for (int j = 0; j < count; ++j)
+            position.y = static_cast<float>( start );
+            for ( int y = 0; y < size && entityIndex < LV_MAX_INSTANCE_COUNT; ++y )
             {
-                int index = i * count + j;
+                position.z = static_cast<float>( start );
+                for ( int z = 0; z < size && entityIndex < LV_MAX_INSTANCE_COUNT; ++z )
+                {
+                    float val = noiseSet[ noiseIndex ];
+                    ++noiseIndex;
 
-                UINT entityID = entityManager->Get_Entity(index).index;
-                rigidBody->Pos(glm::vec3(x + 10.0f, y, z), entityID);
-                rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
-                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
+                    if ( glm::abs( val ) > noiseThreshold )
+                    {
+                        uint32_t entityID = entityManager->Get_Entity( entityIndex ).index;
+                        rigidBody->Pos( position, entityID );
 
-                //calc. moment of inertia 
-                float& mass = componentManager->bodyProperties[entityID].mass;
-                float inertia = ((mass * 0.4f) * 0.4f) / 6.0f;
-                glm::mat3& inertiaTensor = componentManager->bodyProperties[entityID].inertiaTensor;
-                inertiaTensor[0][0] = inertia;
-                inertiaTensor[1][1] = inertia;
-                inertiaTensor[2][2] = inertia;
-                componentManager->boxCollider[entityID].tag = entityID;
+                        ++entityIndex;
+                    }
 
-                x += 2;
+                    position.z += increment;
+                }
+
+                position.y += increment;
             }
 
-            y += 2;
-            x = static_cast <float>(-count);
+            position.x += increment;
         }
 
-        for (size_t i = count * count; i < LV_MAX_INSTANCE_COUNT; ++i)
+        if ( entityIndex < LV_MAX_INSTANCE_COUNT )
         {
-            x += 10;
-            size_t entityID = entityManager->Get_Entity(i).index;
-            rigidBody->Pos(glm::vec3(x, y, z), entityID);
+            DEBUG_PRINT( "%d entities did not initialize -- increase world size or adjust noise settings", LV_MAX_INSTANCE_COUNT - entityIndex );
         }
+        else
+        {
+            DEBUG_PRINT( "%d noise indices left", (size * size * size) - noiseIndex );
+
+        }
+
+        FastNoiseSIMD::FreeNoiseSet( noiseSet );
+        delete noiseLib;
     }
 
     return S_OK;
@@ -270,11 +296,14 @@ void Engine::OnResize( uint32_t width, uint32_t height )
 
 void Engine::UsingInputFunc()
 {
-    DEBUG_PRINT( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
+    printf( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
 }
 
 inline void Engine::Update()
 {
+    if ( inputManager->IsKeyDown( VK_ESCAPE ) ) // A
+        Quit();
+
     float dtfloat = time->GetDeltaFloatTime();
     const static float speed = 2.f;
     if ( inputManager->IsKeyDown( VK_LEFT ) ) // A
@@ -288,15 +317,15 @@ inline void Engine::Update()
         camera->MoveForward( -dtfloat * speed );
 
     //DEBUG collision code 
-    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
-    {
-        //componentManager->transform[i].pos.x += x;
-        if (componentManager->transform[i].pos.x > 5.0f)
-            componentManager->bodyProperties[i].velocity.x = -10.0f;
+    //for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
+    //{
+    //    //componentManager->transform[i].pos.x += x;
+    //    if ( componentManager->transform[ i ].pos.x > 5.0f )
+    //        componentManager->bodyProperties[ i ].velocity.x = -10.0f;
 
-        else if (componentManager->transform[i].pos.x < -5.0f)
-            componentManager->bodyProperties[i].velocity.x = 10.0f;
-    }
+    //    else if ( componentManager->transform[ i ].pos.x < -5.0f )
+    //        componentManager->bodyProperties[ i ].velocity.x = 10.0f;
+    //}
 
     //DEBUG CODE for debug wireframe renderer
     glm::mat4x4 transform = glm::translate( glm::mat4( 1.0f ), glm::vec3( 1.f, 1.f, 0.f ) );
@@ -310,7 +339,7 @@ inline void Engine::Update()
 
     //DEBUG CODE for basic camera update
     physics->Update( time->GetDeltaFloatTime() );
-    graphics->Update(reinterpret_cast<glm::mat4x4_packed *>(componentManager->transformMatrix), camera);
+    graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), camera );
     graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();
