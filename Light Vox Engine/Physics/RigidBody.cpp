@@ -266,7 +266,7 @@ void Physics::Rigidbody::FillPointFaceBoxBox(
 	const EntityComponents::BoxCollider& two,
 	const glm::vec3& toCenter,
 	EntityComponents::Contacts* contactData,
-	int contactsFound,
+	size_t contactsFound,
 	unsigned best,
 	float penetration
 )
