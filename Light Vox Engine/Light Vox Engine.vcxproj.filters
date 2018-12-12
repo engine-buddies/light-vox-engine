@@ -107,6 +107,9 @@
     <ClCompile Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
       <Filter>NoiseLibrary</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\LightingManager.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -186,6 +189,9 @@
     </ClInclude>
     <ClInclude Include="..\additionalLibraries\FastNoiseSIMD\FastNoiseSIMD\FastNoiseSIMD_internal.h">
       <Filter>NoiseLibrary</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\LightingManager.h">
+      <Filter>Source Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

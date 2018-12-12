@@ -6,6 +6,8 @@
 namespace Graphics
 {
     class Camera;
+    class LightingManager;
+    struct LightingSceneConstantBuffer;
 
     class FrameResource
     {
@@ -68,8 +70,7 @@ namespace Graphics
         /// <param name="viewport">The viewport</param>
         /// <param name="camera">The camera of the scene</param>
         void WriteConstantBuffers(
-            glm::mat4x4_packed transforms[],
-            glm::vec3_packed pointLightPositions[],
+            glm::mat4x4_packed* transforms[],
             D3D12_VIEWPORT* viewport,
             Camera* camera
         );
@@ -109,21 +110,20 @@ namespace Graphics
         //the gpu side of the scene constant buffer
         Microsoft::WRL::ComPtr<ID3D12Resource> sceneConstantBuffer;
         Microsoft::WRL::ComPtr<ID3D12Resource> instanceUploadBuffer;
-        //Microsoft::WRL::ComPtr<ID3D12Resource> lightConstantBuffer;
+        Microsoft::WRL::ComPtr<ID3D12Resource> lightConstantBuffer;
 
         Microsoft::WRL::ComPtr<ID3D12Resource> rtvTextures[ LV_NUM_GBUFFER_RTV ];
 
         //write-only buffer for scene-level cbuffer stuff
         SceneConstantBuffer* sceneConstantBufferWO;
         InstanceBuffer* instanceBufferWO;
-
-        //lighting variables (uses the same buffer as scene cBuffer)
-        glm::vec3_packed pointLightPositions[ LV_POINT_LIGHT_COUNT ];
-        glm::vec3_packed pointLightColors[ LV_POINT_LIGHT_COUNT ];
+        LightingSceneConstantBuffer* lightingConstantBufferWO;
+        LightingManager* lightingManager = nullptr;
 
         //handle to cbv required for the scene
         D3D12_GPU_DESCRIPTOR_HANDLE nullHandle;
         D3D12_GPU_DESCRIPTOR_HANDLE sceneCbvHandle;
+        D3D12_GPU_DESCRIPTOR_HANDLE lightingCbvHandle;
         D3D12_GPU_DESCRIPTOR_HANDLE gBufferSrvHandle;
         D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 

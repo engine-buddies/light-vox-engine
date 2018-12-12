@@ -10,7 +10,7 @@ namespace EntityComponents
 {
     struct TransformMatrix
     {
-        glm::mat4x4 transformMatrix;
+        glm::mat4 transformMatrix;
     };
 
     struct Transform
@@ -51,7 +51,7 @@ namespace EntityComponents
 
     struct Contacts
     {
-        glm::mat3 contactWorld;
+        glm::mat3x3 contactWorld;
         glm::vec3 relativeContactPosition[2];
         glm::vec3 contactPoint;
         glm::vec3 contactNormal;
