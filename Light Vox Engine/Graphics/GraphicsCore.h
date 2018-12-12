@@ -127,6 +127,12 @@ namespace Graphics
         /// <param name="commandList">The main rendering command list</param>
         inline void SetLightPassPSO( ID3D12GraphicsCommandList* commandList );
 
+		/// <summary>
+		/// Sets the pipeline with second pass stuff
+		/// </summary>
+		/// <param name="commandList">The main rendering command list</param>
+		inline void SetSkyboxPSO(ID3D12GraphicsCommandList* commandList);
+
         HWND hWindow;		//handle to window
         uint32_t windowWidth;	//width of window
         uint32_t windowHeight;  //height of window

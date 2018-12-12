@@ -5,6 +5,8 @@
 //needed for 'right now'
 #include "ObjLoader.h"
 
+#include <DDSTextureLoader.h>
+
 using namespace Microsoft::WRL;
 using namespace Graphics;
 
@@ -503,7 +505,11 @@ HRESULT GraphicsCore::InitSkyboxPSO()
 	depthStencilDesc.DepthEnable = TRUE;
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	depthStencilDesc.StencilEnable = TRUE;
+
+	//Rasterizer Description
+	D3D12_RASTERIZER_DESC rsDesc = {};
+	rsDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	rsDesc.CullMode = D3D12_CULL_MODE_FRONT;
 
 	//describe the PSO
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC skyboxPsoDesc{};
@@ -514,8 +520,7 @@ HRESULT GraphicsCore::InitSkyboxPSO()
 	skyboxPsoDesc.pRootSignature = rootSignature.Get();
 	skyboxPsoDesc.DepthStencilState = depthStencilDesc;
 	skyboxPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	skyboxPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	skyboxPsoDesc.RasterizerState.DepthClipEnable = false;
+	skyboxPsoDesc.RasterizerState = rsDesc;
 	skyboxPsoDesc.SampleMask = UINT_MAX;
 	skyboxPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	skyboxPsoDesc.NumRenderTargets = 1;
@@ -527,7 +532,7 @@ HRESULT GraphicsCore::InitSkyboxPSO()
 		&skyboxPsoDesc,
 		IID_PPV_ARGS(&skyboxPso)
 	));
-	NAME_D3D12_OBJECT_WITH_NAME(skyboxPso, "%s", "First pass");
+	NAME_D3D12_OBJECT_WITH_NAME(skyboxPso, "%s", "Skybox");
 
 	return S_OK;
 }
@@ -828,7 +833,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
 		));
 
 		D3D12_SUBRESOURCE_DATA skyboxVertexData = {};
-		skyboxVertexData.pData = &((*vertices)[0]) + skyboxVertexDataOffset;
+		skyboxVertexData.pData = &((*skyboxVertices)[0]) + skyboxVertexDataOffset;
 		skyboxVertexData.RowPitch = skyboxVertexDataSize;
 		skyboxVertexData.SlicePitch = skyboxVertexData.RowPitch;
 
@@ -944,7 +949,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
 		));
 
 		D3D12_SUBRESOURCE_DATA skyboxIndexData = {};
-		skyboxIndexData.pData = &((*indices)[0]) + skyboxIndexDataOffset;
+		skyboxIndexData.pData = &((*skyboxIndices)[0]) + skyboxIndexDataOffset;
 		skyboxIndexData.RowPitch = skyboxIndexDataSize;
 		skyboxIndexData.SlicePitch = skyboxIndexData.RowPitch;
 
@@ -986,7 +991,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     // frame 1's constant buffer, frame 2's constant buffers, etc...
     const uint32_t nullSrvCount = LV_NUM_GBUFFER_RTV;		// Null descriptors are needed for out of bounds behavior reads.
     const uint32_t cbvCount = LV_FRAME_COUNT * 1; //Frame Count * Number of CBVs
-    const uint32_t srvCount = LV_FRAME_COUNT * LV_NUM_GBUFFER_RTV; // _countof(SampleAssets::Textures) + (FrameCount * 1);
+    const uint32_t srvCount = LV_FRAME_COUNT * (LV_NUM_GBUFFER_RTV + LV_NUM_TEXTURES); // _countof(SampleAssets::Textures) + (FrameCount * 1);
     D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
     cbvSrvHeapDesc.NumDescriptors = nullSrvCount + cbvCount + srvCount;
     cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -1013,11 +1018,69 @@ HRESULT GraphicsCore::InitInputShaderResources()
         cbvSrvHandle.Offset( cbvSrvDescriptorSize );
     }
 
+	//Skybox SRV
+	{
+		ComPtr<ID3D12Resource> skyboxTex;
+
+		std::unique_ptr<uint8_t[]> ddsData;
+		std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+		ThrowIfFailed(
+			DirectX::LoadDDSTextureFromFile(device.Get(), L"Assets/Textures/SunnyCubeMap.dds", skyboxTex.GetAddressOf(),
+				ddsData, subresources));
+
+		const UINT64 uploadBufferSize = GetRequiredIntermediateSize(skyboxTex.Get(), 0,
+			static_cast<UINT>(subresources.size()));
+
+		// Create the GPU upload buffer.
+		ComPtr<ID3D12Resource> uploadHeap;
+		ThrowIfFailed(
+			device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+				D3D12_HEAP_FLAG_NONE,
+				&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(uploadHeap.GetAddressOf()))
+		);
+
+		PIXBeginEvent(commandList.Get(), 0, L"Copy DDS Subtextures");
+		UpdateSubresources<1>(
+			commandList.Get(), 
+			skyboxTex.Get(), 
+			uploadHeap.Get(),
+			0, 
+			0, 
+			static_cast<UINT>(subresources.size()), 
+			subresources.data());
+		commandList->ResourceBarrier(
+			1, 
+			&CD3DX12_RESOURCE_BARRIER::Transition(
+				skyboxTex.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST, 
+				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		);
+		PIXEndEvent(commandList.Get());
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC skyboxSrvDesc = {};
+		skyboxSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+		skyboxSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		skyboxSrvDesc.Format = DXGI_FORMAT_BC3_UNORM;
+		skyboxSrvDesc.Texture2D.MipLevels = 1;
+		skyboxSrvDesc.Texture2D.MostDetailedMip = 0;
+		skyboxSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+		device->CreateShaderResourceView(skyboxTex.Get(), &skyboxSrvDesc, cbvSrvHandle);
+		cbvSrvHandle.Offset(cbvSrvDescriptorSize);
+	}
+
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
     samplerHeapDesc.NumDescriptors = 1;
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed( device->CreateDescriptorHeap( &samplerHeapDesc, IID_PPV_ARGS( &samplerHeap ) ) );
+
+	HRESULT h;
+	h = device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap));
+    ThrowIfFailed( h );
     NAME_D3D12_OBJECT( samplerHeap );
 
     //Create samplers
@@ -1084,6 +1147,20 @@ inline void GraphicsCore::SetLightPassPSO( ID3D12GraphicsCommandList * commandLi
     commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );
     commandList->IASetVertexBuffers( 0, 1, &fsqVertexBufferView );
     commandList->OMSetStencilRef( 0 );
+}
+
+inline void GraphicsCore::SetSkyboxPSO(ID3D12GraphicsCommandList * commandList)
+{
+	commandList->SetGraphicsRootSignature(rootSignature.Get());
+	commandList->SetPipelineState(skyboxPso.Get());
+	ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get(), samplerHeap.Get() };
+	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, &skyboxVertexBufferView);
+	commandList->IASetIndexBuffer(&skyboxIndexBufferView);
+	commandList->OMSetStencilRef(0);
 }
 
 #ifdef _DEBUG

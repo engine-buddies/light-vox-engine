@@ -13,6 +13,7 @@ namespace Graphics
 #define LV_NUM_NULL_SRV LV_NUM_GBUFFER_RTV
 #define LV_NUM_RTV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1)
 #define LV_NUM_CBVSRV_PER_FRAME (LV_NUM_GBUFFER_RTV + 1)
+#define LV_NUM_TEXTURES 1
 
 //indices to the per-frame command list
 #define LV_COMMAND_LIST_COUNT 2
