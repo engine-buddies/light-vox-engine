@@ -131,14 +131,6 @@ LV_RESULT Engine::InitSystems()
     for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
     {
         entityManager->Create_Entity();
-		UINT entityID = entityManager->Get_Entity(i).index;
-		float& mass = componentManager->bodyProperties[entityID].mass;
-		float inertia = ((mass * 0.4f) * 0.4f) / 6.0f;
-		glm::mat3& inertiaTensor = componentManager->bodyProperties[entityID].inertiaTensor;
-		inertiaTensor[0][0] = inertia;
-		inertiaTensor[1][1] = inertia;
-		inertiaTensor[2][2] = inertia;
-		componentManager->boxCollider[entityID].tag = entityID;
     }
 
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
@@ -157,7 +149,16 @@ LV_RESULT Engine::InitSystems()
                 UINT entityID = entityManager->Get_Entity(index).index;
                 rigidBody->Pos(glm::vec3(x + 10.0f, y, z), entityID);
                 rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
-                rigidBody->Velocity(glm::vec3(1.0f, 0.0f, 0.0f), entityID);
+                rigidBody->Velocity(glm::vec3(10.0f, 0.0f, 0.0f), entityID);
+
+                //calc. moment of inertia 
+                float& mass = componentManager->bodyProperties[entityID].mass;
+                float inertia = ((mass * 0.4f) * 0.4f) / 6.0f;
+                glm::mat3& inertiaTensor = componentManager->bodyProperties[entityID].inertiaTensor;
+                inertiaTensor[0][0] = inertia;
+                inertiaTensor[1][1] = inertia;
+                inertiaTensor[2][2] = inertia;
+                componentManager->boxCollider[entityID].tag = entityID;
 
                 x += 2;
             }
