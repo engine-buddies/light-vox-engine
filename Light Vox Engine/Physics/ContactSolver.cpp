@@ -58,7 +58,7 @@ namespace
     }
 
     inline glm::vec3 calcFrictionlessImpulse(
-        glm::mat3* inverseInertiaTensor,
+        glm::mat3 inverseInertiaTensor,
         float invMassA,
         float invMassB,
         Contacts* c)
@@ -70,7 +70,7 @@ namespace
 
         glm::vec3 deltaVelWorld =
             glm::cross(c->relativeContactPosition[0], c->contactNormal);
-        deltaVelWorld = inverseInertiaTensor[0] * deltaVelWorld;
+        deltaVelWorld = inverseInertiaTensor * deltaVelWorld;
         deltaVelWorld = glm::cross(deltaVelWorld, c->relativeContactPosition[0]);
 
         //work out the change in velocity in contact coordinates
@@ -79,7 +79,7 @@ namespace
         deltaVelocity += invMassA;
 
         deltaVelWorld = glm::cross(c->relativeContactPosition[1], c->contactNormal);
-        deltaVelWorld = inverseInertiaTensor[1] * deltaVelWorld;
+        deltaVelWorld = inverseInertiaTensor * deltaVelWorld;
         deltaVelWorld = glm::cross(deltaVelWorld, c->relativeContactPosition[1]);
 
         // Add the change in velocity due to rotation
@@ -233,8 +233,9 @@ void Physics::ContactSolver::ApplyVelocityChange(
     inverseInteriaTensor[0] = a->inertiaTensor;
     inverseInteriaTensor[1] = b->inertiaTensor;
 
+	//glm::vec3 impulseContact = glm::vec3(0.0f);
     glm::vec3 impulseContact;
-    impulseContact = calcFrictionlessImpulse(inverseInteriaTensor, a->invMass, b->invMass, c);
+    impulseContact = calcFrictionlessImpulse(inverseInteriaTensor[0], a->invMass, b->invMass, c);
     glm::vec3 impulse = c->contactWorld * impulseContact;
 
     //split in the impulse into linear and rotational component
@@ -249,7 +250,7 @@ void Physics::ContactSolver::ApplyVelocityChange(
 
     //Apply changes to body B
     impulsiveTorque = glm::cross(c->relativeContactPosition[1], impulse);
-    rotationChange[1] = inverseInteriaTensor[0] * impulsiveTorque;
+    rotationChange[1] = inverseInteriaTensor[1] * impulsiveTorque;
     velocityChange[1] = glm::vec3(0.0f);
     velocityChange[1] += (impulse * -b->invMass);
 

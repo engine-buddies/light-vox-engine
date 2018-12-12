@@ -141,34 +141,38 @@ LV_RESULT Engine::InitSystems()
     }
 
     //DEBUG:: INTIALIZE ENTITY POSSITIONS
-    static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
+    //static int count = static_cast<int>( sqrtf( static_cast<float>( LV_MAX_INSTANCE_COUNT ) ) );
+	//static int count = static_cast<int>(glm::pow(static_cast<float>(LV_MAX_INSTANCE_COUNT), 1/3));
+	float count = 5;
     static float rotation = 0.001f;
     {
 
         float x = static_cast <float>( -count );
         float y = static_cast <float>( -count );
-        float z = 0;
+        float z = static_cast <float>( -count );
         for ( int i = 0; i < count; ++i )
         {
             for ( int j = 0; j < count; ++j )
             {
-                int index = i * count + j;
-                UINT entityID = entityManager->Get_Entity(index).index;
-                rigidBody->Pos(glm::vec3(x + 1.0f, y, z), entityID);
-                rigidBody->RotateAxisAngle(glm::vec3(.0f, 1.0f, .0f), rotation, entityID);
-                if(j % 2 == 0)
-                    rigidBody->Velocity(glm::vec3(1.0f, 0.0f, 0.0f), entityID);
-                else
-                    rigidBody->Velocity(glm::vec3(-1.0f, 0.0f, 0.0f), entityID);
-
-
-                x += 2;
+				for (int k = 0; k < count; ++k)
+				{
+					int index = k + count * (j + count * i);
+					UINT entityID = entityManager->Get_Entity(index).index;
+					rigidBody->Pos(glm::vec3(x, y, z), entityID);
+					//rigidBody->RotateAxisAngle(glm::vec3(.0f, .0f, .0f), rotation, entityID
+					//rigidBody->Velocity(glm::vec3(1.0f, 0.0f, 0.0f), entityID);
+					z += 1.1;
+				}
+				x += 1;
+				z = static_cast <float>(-count);
             }
-
-            y += 2;
-            x = static_cast <float>( -count );
+			y += 1;
+			x = static_cast <float>(-count);
         }
     }
+
+	rigidBody->Pos(glm::vec3(-2.5f, -2.5f, 10.0f), 125);
+	rigidBody->Velocity(glm::vec3(0.0f, 0.0f, -5.0f), 125);
 
     return S_OK;
 }
@@ -271,18 +275,29 @@ void Engine::UsingInputFunc()
 
 inline void Engine::Update()
 {
+	float dtfloat = time->GetDeltaFloatTime();
+	const static float speed = 2.f;
+	if (inputManager->IsKeyDown(VK_LEFT)) // A
+		camera->MoveSideways(dtfloat * speed);
+	else if (inputManager->IsKeyDown(VK_RIGHT)) // d
+		camera->MoveSideways(-dtfloat * speed);
 
-    //DEBUG collision code 
-    for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
-    {
-        //componentManager->transform[i].pos.x += x;
-        if (componentManager->transform[i].pos.x > 5.0f)
-            componentManager->bodyProperties[i].velocity.x = -1.0f;
+	if (inputManager->IsKeyDown(VK_UP)) // W
+		camera->MoveForward(dtfloat * speed);
+	else if (inputManager->IsKeyDown(VK_DOWN)) // S
+		camera->MoveForward(-dtfloat * speed);
 
-        else if (componentManager->transform[i].pos.x < -5.0f)
-            componentManager->bodyProperties[i].velocity.x = 1.0f;
+	//DEBUG collision code 
+	//for (size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i)
+	//{
+	//	//componentManager->transform[i].pos.x += x;
+	//	if (componentManager->transform[i].pos.x > 5.0f)
+	//		componentManager->bodyProperties[i].velocity.x = -1.0f;
 
-    }
+	//	else if (componentManager->transform[i].pos.x < -5.0f)
+	//		componentManager->bodyProperties[i].velocity.x = 1.0f;
+
+	//}
 
     //DEBUG CODE for debug wireframe renderer
     glm::mat4x4 transform = glm::translate( glm::mat4( 1.0f ), glm::vec3( 1.f, 1.f, 0.f ) );
@@ -295,17 +310,17 @@ inline void Engine::Update()
     debugRenderer->AddCube( transform, scale, color );
 
     //DEBUG CODE for basic camera update
-    glm::vec3 pos = glm::vec3( 0.f, 0.f, -5.f );
+    /*glm::vec3 pos = glm::vec3( 0.f, 0.f, -5.f );
     glm::vec3 forward = glm::vec3( 0.f, 0.f, 1.f );
     glm::vec3 up = glm::vec3( 0.f, 1.f, 0.f );
-    camera->SetTransform( pos, forward, up );
+    camera->SetTransform( pos, forward, up );*/
 
     if (!inputManager->IsKeyDown(VK_SPACE))
     {
         physics->Update(time->GetDeltaFloatTime());
-        graphics->Update(reinterpret_cast<glm::mat4x4_packed *>(componentManager->transformMatrix), camera);
-        graphics->Render();
     }
+	graphics->Update(reinterpret_cast<glm::mat4x4_packed *>(componentManager->transformMatrix), camera);
+	graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();
 }

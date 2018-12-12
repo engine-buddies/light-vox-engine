@@ -14,120 +14,134 @@
 namespace Input
 {
 
-    enum InputType
-    {
-        Horizontal,
-        Vertical,
-        Fire,
-        Use
-    };
+	struct Point
+	{
+		int x;
+		int y;
+	};
 
-    /// <summary>
-    /// Input Manager that will be in charge of handling input events and 
-    /// action mappings
-    /// </summary>
-    /// <author>Ben Hoffman</author>
-    class InputManager
-    {
+	enum InputType
+	{
+		Horizontal,
+		Vertical,
+		Look,
+		Fire,
+		StartLook,
+		StopLook
+	};
 
-        typedef void( *input_action_func )( );
+	/// <summary>
+	/// Input Manager that will be in charge of handling input events and 
+	/// action mappings
+	/// </summary>
+	/// <author>Ben Hoffman</author>
+	class InputManager
+	{
 
-    public:
+		typedef void(*input_action_func)();
 
-        /// <summary>
-        /// Gets a staticinstance of the input manager, if it is null 
-        /// then it will be created. 
-        /// </summary>
-        /// <returns>Pointer to the current input manager instance</returns>
-        static InputManager* GetInstance();
+	public:
 
-        /// <summary>
-        /// Destroy the input manager instance
-        /// </summary>
-        static void ReleaseInstance();
+		/// <summary>
+		/// Gets a staticinstance of the input manager, if it is null 
+		/// then it will be created. 
+		/// </summary>
+		/// <returns>Pointer to the current input manager instance</returns>
+		static InputManager* GetInstance();
 
-        void BindAxis( InputType type, input_action_func inputListenerFunc );
+		/// <summary>
+		/// Destroy the input manager instance
+		/// </summary>
+		static void ReleaseInstance();
 
-        template<class T>
-        void BindAxis( InputType type, T* parentObj, void ( T::*inputListenerFunc )( ) )
-        {
-            IListener* newListener = new ListenerMember<T>( parentObj, inputListenerFunc );
+		void BindAxis(InputType type, input_action_func inputListenerFunc);
 
-            actionListeners[ type ].push_back( newListener );
-        }
+		template<class T>
+		void BindAxis(InputType type, T* parentObj, void (T::*inputListenerFunc)())
+		{
+			IListener* newListener = new ListenerMember<T>(parentObj, inputListenerFunc);
 
-        bool IsKeyDown( int vKey );
+			actionListeners[type].push_back(newListener);
+		}
 
-        // Windows specific input callbacks
+		bool IsKeyDown(int vKey);
+
+		// Windows specific input callbacks
 #if defined(_WIN32) || defined(_WIN64)
 
-        void OnMouseDown( WPARAM buttonState, int x, int y );
-        void OnMouseUp( WPARAM buttonState, int x, int y );
-        void OnMouseMove( WPARAM buttonState, int x, int y );
+		void OnMouseDown(WPARAM buttonState, int x, int y);
+		void OnMouseUp(WPARAM buttonState, int x, int y);
+		void OnMouseMove(WPARAM buttonState, int x, int y);
 
+		const Point GetCurrentMousePos() { return CurMousePos; }
+		const Point GetPrevMousePos() { return PrevMousePos; }
 #endif
 
-    private:
+	private:
 
-        InputManager();
+		InputManager();
 
-        ~InputManager();
+		~InputManager();
 
-        /** The instance of the input manager */
-        static InputManager* instance;
+		/** The instance of the input manager */
+		static InputManager* instance;
 
-        void SignalInput( InputType type );
+		void SignalInput(InputType type);
 
-        ///////////////////////////////////////////////////////
-        // Listener definitions 
+		Point CurMousePos;
 
-        struct IListener
-        {
-            virtual ~IListener() {}
-            virtual void operator () () = 0;
-        };
+		Point PrevMousePos;
 
-        struct ListenerFunc : IListener
-        {
-            ListenerFunc( input_action_func aFunc_ptr )
-                : func_ptr( aFunc_ptr )
-            {
-            }
+		///////////////////////////////////////////////////////
+		// Listener definitions 
 
-            virtual void operator () () override
-            {
-                return ( func_ptr() );
-            }
+		struct IListener
+		{
+			virtual ~IListener() {}
+			virtual void operator () () = 0;
+		};
 
-            /** The function pointer for this input action to invoke */
-            input_action_func func_ptr;
-        };
+		struct ListenerFunc : IListener
+		{
+			ListenerFunc(input_action_func aFunc_ptr)
+				: func_ptr(aFunc_ptr)
+			{
+			}
 
-        template <class T>
-        struct ListenerMember : IListener
-        {
-            ListenerMember( T* aParent, void ( T::*f )( ) )
-                : parentObj( aParent ), func_ptr( f )
-            {
-            }
+			virtual void operator () () override
+			{
+				return (func_ptr());
+			}
 
-            virtual void operator () () override
-            {
-                assert( parentObj != nullptr );
+			/** The function pointer for this input action to invoke */
+			input_action_func func_ptr;
+		};
 
-                return ( ( parentObj->*func_ptr )( ) );
-            }
+		template <class T>
+		struct ListenerMember : IListener
+		{
+			ListenerMember(T* aParent, void (T::*f)())
+				: parentObj(aParent), func_ptr(f)
+			{
+			}
 
-            /** the object to invoke the function pointer on */
-            T* parentObj;
+			virtual void operator () () override
+			{
+				assert(parentObj != nullptr);
 
-            /** The function pointer to call when we invoke this function */
-            void ( T::*func_ptr )( );
-        };
+				return ((parentObj->*func_ptr)());
+			}
 
-        /** A map of active listeners */
-        std::unordered_map<InputType, std::vector<IListener*>> actionListeners;
+			/** the object to invoke the function pointer on */
+			T* parentObj;
 
-    };  // class InputManager
+			/** The function pointer to call when we invoke this function */
+			void (T::*func_ptr)();
+		};
+
+		/** A map of active listeners */
+		std::unordered_map<InputType, std::vector<IListener*>> actionListeners;
+
+	};  // class InputManager
 
 }   // namespace Input

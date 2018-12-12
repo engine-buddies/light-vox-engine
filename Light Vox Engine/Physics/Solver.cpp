@@ -126,7 +126,7 @@ void Solver::Integrate(float dt)
         rot += angularAccel * dt;
 
         //impose drag
-        //velocity *= glm::pow(.80, dt);
+        velocity *= glm::pow(.80, dt);
         //rot *= glm::pow(.80, dt);
 
         position += velocity * dt;
