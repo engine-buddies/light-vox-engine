@@ -8,7 +8,7 @@
 #include <atomic>               // std::atomic
 #include <future>               // std::future, std::promise
 
-#include "ConcurrentQueue.h"    // Concurrent queue that is NOT LOCKLESS
+#include "concurrentqueue.h"    // lock-less queue
 
 namespace Jobs
 {
@@ -64,7 +64,7 @@ namespace Jobs
             IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
             aJob.jobPtr = jobPtr;
 
-            readyQueue.emplace_back( aJob );
+            locklessReadyQueue.enqueue( aJob );
             jobAvailableCondition.notify_one();
         }
 
@@ -194,8 +194,9 @@ namespace Jobs
             int index = 0;
         };
 
-        // Ready queue for the jobs
-        ConcurrentQueue<CpuJob> readyQueue;
+
+        moodycamel::ConcurrentQueue<CpuJob> locklessReadyQueue;
+
 
     };  // JobManager
 
