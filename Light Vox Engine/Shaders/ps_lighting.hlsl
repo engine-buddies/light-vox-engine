@@ -61,7 +61,7 @@ float4 main( VStoPS input ) : SV_TARGET
     //diffuse
     float3 diffuse = float3( 0, 0, 0 );
 
-    [unroll]
+    [unroll( LV_POINT_LIGHT_COUNT )]
     for ( int i = 0; i < LV_POINT_LIGHT_COUNT; ++i )
     {
         diffuse += pointLightDiffuse( cDiffuseColor[ i ].rgb, cPosition[ i ].xyz, normal, worldPos );
