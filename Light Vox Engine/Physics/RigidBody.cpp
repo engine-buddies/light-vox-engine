@@ -229,7 +229,7 @@ void Physics::Rigidbody::AddForceAtPoint(
     const glm::vec3 & point,
     const size_t& index)
 {
-    glm::mat4& transformMatrix = glm::mat4(componentManager->transformMatrix[index].transformMatrix);
+    glm::mat4& transformMatrix = componentManager->transformMatrix[index].transformMatrix;
     glm::vec3& pos = componentManager->transform[index].pos;
     glm::vec3& _force = componentManager->bodyProperties[index].force;
     glm::vec3& _torque = componentManager->bodyProperties[index].torque;
@@ -427,7 +427,7 @@ void Physics::Rigidbody::CalcHalfSize(const size_t & index)
 
     glm::mat4& collideTransform = componentManager->boxCollider[index].transformMatrix;
     glm::mat4& offset = componentManager->boxCollider[index].offset;
-    glm::mat4& transform = glm::mat4(componentManager->transformMatrix[index].transformMatrix);
+    glm::mat4& transform = componentManager->transformMatrix[index].transformMatrix;
 
     //calc. collide transform matrix 
     collideTransform = transform * offset;

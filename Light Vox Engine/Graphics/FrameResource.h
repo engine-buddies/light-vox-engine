@@ -68,8 +68,8 @@ namespace Graphics
         /// <param name="viewport">The viewport</param>
         /// <param name="camera">The camera of the scene</param>
         void WriteConstantBuffers(
-            glm::mat4x4_packed* transforms[],
-            glm::vec3_packed* pointLightPositions[],
+            glm::mat4x4_packed transforms[],
+            glm::vec3_packed pointLightPositions[],
             D3D12_VIEWPORT* viewport,
             Camera* camera
         );

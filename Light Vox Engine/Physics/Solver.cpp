@@ -213,7 +213,7 @@ void Solver::ModelToWorld(void* args, int index)
 
     for (size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i)
     {
-        glm::mat4& transformMatrix = glm::mat4(componentManager->transformMatrix[i].transformMatrix);
+        glm::mat4& transformMatrix = componentManager->transformMatrix[i].transformMatrix;
         glm::vec3& pos = componentManager->transform[i].pos;
         glm::quat& orientation = componentManager->transform[i].orientation;
         orientation = glm::normalize(orientation);

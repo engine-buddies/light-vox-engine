@@ -64,7 +64,7 @@ namespace Graphics
 {
     struct InstanceBuffer
     {
-        glm::mat4x4_packed model;
+        glm::mat4x4 model;
     };
 }
 #endif

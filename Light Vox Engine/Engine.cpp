@@ -339,7 +339,7 @@ inline void Engine::Update()
 
     //DEBUG CODE for basic camera update
     physics->Update( time->GetDeltaFloatTime() );
-    graphics->Update( reinterpret_cast<glm::mat4x4_packed **>( &componentManager->transformMatrix), reinterpret_cast<glm::vec3_packed **>( &componentManager->transformMatrix ), camera );
+    graphics->Update( reinterpret_cast<glm::mat4x4_packed *>( componentManager->transformMatrix ), reinterpret_cast<glm::vec3_packed *>( componentManager->transformMatrix ), camera );
     graphics->Render();
     time->UpdateTimer();
     debugRenderer->ClearCubes();

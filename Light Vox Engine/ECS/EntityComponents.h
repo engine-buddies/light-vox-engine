@@ -10,7 +10,7 @@ namespace EntityComponents
 {
     struct TransformMatrix
     {
-        glm::mat4x4_packed transformMatrix;
+        glm::mat4x4 transformMatrix;
     };
 
     struct Transform
