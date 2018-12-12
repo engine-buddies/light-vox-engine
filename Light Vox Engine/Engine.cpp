@@ -174,6 +174,10 @@ LV_RESULT Engine::InitSystems()
                     {
                         uint32_t entityID = entityManager->Get_Entity( entityIndex ).index;
                         rigidBody->Pos( position, entityID );
+						if(entityID % 3 == 0) 
+							rigidBody->Velocity(glm::vec3(1.0f, 0.0f, 0.0f), entityID);
+						else
+							rigidBody->Velocity(glm::vec3(-1.0f, 0.0f, 0.0f), entityID);
 
                         ++entityIndex;
                     }
@@ -316,16 +320,6 @@ inline void Engine::Update()
     else if ( inputManager->IsKeyDown( VK_DOWN ) ) // S
         camera->MoveForward( -dtfloat * speed );
 
-    //DEBUG collision code 
-    //for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
-    //{
-    //    //componentManager->transform[i].pos.x += x;
-    //    if ( componentManager->transform[ i ].pos.x > 5.0f )
-    //        componentManager->bodyProperties[ i ].velocity.x = -10.0f;
-
-    //    else if ( componentManager->transform[ i ].pos.x < -5.0f )
-    //        componentManager->bodyProperties[ i ].velocity.x = 10.0f;
-    //}
 
     //DEBUG CODE for debug wireframe renderer
     glm::mat4x4 transform = glm::translate( glm::mat4( 1.0f ), glm::vec3( 1.f, 1.f, 0.f ) );
