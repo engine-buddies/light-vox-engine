@@ -49,7 +49,7 @@ ComponentManager::ComponentManager()
     transform = new Transform[ LV_MAX_INSTANCE_COUNT ];
     boxCollider = new BoxCollider[ LV_MAX_INSTANCE_COUNT ];
     bodyProperties = new BodyProperties[ LV_MAX_INSTANCE_COUNT ];
-    contacts = new Contacts[ LV_MAX_INSTANCE_COUNT * 4];
+    contacts = new Contacts[ LV_MAX_INSTANCE_COUNT * 9];
 
     for ( size_t i = 0; i < LV_MAX_INSTANCE_COUNT; ++i )
     {
