@@ -30,7 +30,7 @@ GraphicsCore::~GraphicsCore()
 
     //deallocate all our frame resources
     for ( size_t i = 0; i < LV_FRAME_COUNT; ++i )
-        delete frameResources[ i ];
+        delete frameResources [ i ];
 }
 
 void GraphicsCore::OnResize( uint32_t width, uint32_t height )
@@ -61,7 +61,7 @@ HRESULT GraphicsCore::InitFrameResources()
 {
     for ( int i = 0; i < LV_FRAME_COUNT; ++i )
     {
-        frameResources[ i ] = new FrameResource(
+        frameResources [ i ] = new FrameResource(
             device.Get(),
             geometryPso.Get(),
             lightPso.Get(),
@@ -74,19 +74,19 @@ HRESULT GraphicsCore::InitFrameResources()
     }
 
     currentFrameResourceIndex = 0;
-    currentFrameResource = frameResources[ currentFrameResourceIndex ];
+    currentFrameResource = frameResources [ currentFrameResourceIndex ];
 
     return S_OK;
 }
 
-void GraphicsCore::Update( glm::mat4x4_packed* transforms[],
+void GraphicsCore::Update( glm::mat4x4_packed* transforms [],
     Camera* camera )
 {
     PIXSetMarker( commandQueue.Get(), 0, L"Getting last completed fence" );
 
     const uint64_t lastCompletedFence = fence->GetCompletedValue();
     fenceFrameIndex = ( fenceFrameIndex + 1 ) % LV_FRAME_COUNT;
-    currentFrameResource = frameResources[ fenceFrameIndex ];
+    currentFrameResource = frameResources [ fenceFrameIndex ];
 
     //make sure the frame we're on isn't currently in use by the GPU
     if ( currentFrameResource->fenceValue > lastCompletedFence )
@@ -103,10 +103,10 @@ void GraphicsCore::Update( glm::mat4x4_packed* transforms[],
         CloseHandle( eventHandle );
     }
 
-    currentFrameResource->WriteConstantBuffers( 
-        transforms, 
-        &viewport, 
-        camera 
+    currentFrameResource->WriteConstantBuffers(
+        transforms,
+        &viewport,
+        camera
     );
 
 #ifdef _DEBUG
@@ -130,10 +130,10 @@ void GraphicsCore::Render()
 
     //clear all RTVs and DSV as part of init
     {
-        ID3D12GraphicsCommandList* initCommandList = currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ].Get();
-        float albedoClear[ 4 ] = LV_RTV_CLEAR_BG_COLOR;
-        float blackClear[ 4 ] = LV_RTV_CLEAR_COLOR;
-        currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ]->ClearRenderTargetView(
+        ID3D12GraphicsCommandList* initCommandList = currentFrameResource->commandLists [ LV_COMMAND_LIST_INIT ].Get();
+        float albedoClear [ 4 ] = LV_RTV_CLEAR_BG_COLOR;
+        float blackClear [ 4 ] = LV_RTV_CLEAR_COLOR;
+        currentFrameResource->commandLists [ LV_COMMAND_LIST_INIT ]->ClearRenderTargetView(
             rtvHandle,
             albedoClear,
             0,
@@ -142,7 +142,7 @@ void GraphicsCore::Render()
         rtvHandle.Offset( rtvDescriptorSize );
         for ( uint32_t i = 1; i < LV_NUM_GBUFFER_RTV; ++i )
         {
-            currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ]->ClearRenderTargetView(
+            currentFrameResource->commandLists [ LV_COMMAND_LIST_INIT ]->ClearRenderTargetView(
                 rtvHandle,
                 blackClear,
                 0,
@@ -153,7 +153,7 @@ void GraphicsCore::Render()
 
         //transition the back-bufffer over and clear it
         initCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets[ currentFrameResourceIndex ].Get(),
+            renderTargets [ currentFrameResourceIndex ].Get(),
             D3D12_RESOURCE_STATE_PRESENT,
             D3D12_RESOURCE_STATE_RENDER_TARGET
         ) );
@@ -165,7 +165,7 @@ void GraphicsCore::Render()
         );
 
         //clear depth-stencil view (dsv)
-        currentFrameResource->commandLists[ LV_COMMAND_LIST_INIT ]->ClearDepthStencilView(
+        currentFrameResource->commandLists [ LV_COMMAND_LIST_INIT ]->ClearDepthStencilView(
             dsvHeap->GetCPUDescriptorHandleForHeapStart(),
             D3D12_CLEAR_FLAG_DEPTH,
             1.0f,
@@ -179,7 +179,7 @@ void GraphicsCore::Render()
 
     //geometry pass
     {
-        ID3D12GraphicsCommandList* geometryBufferCommandList = currentFrameResource->geometryCmdLists[ 0 ].Get();
+        ID3D12GraphicsCommandList* geometryBufferCommandList = currentFrameResource->geometryCmdLists [ 0 ].Get();
         PIXBeginEvent( geometryBufferCommandList, 0, L"Worker drawing scene pass..." );
 
         SetGBufferPSO( geometryBufferCommandList );
@@ -192,7 +192,7 @@ void GraphicsCore::Render()
 
     //lighting pass
     {
-        ID3D12GraphicsCommandList* deferredCommandList = currentFrameResource->commandLists[ LV_COMMAND_LIST_LIGHTING_PASS ].Get();
+        ID3D12GraphicsCommandList* deferredCommandList = currentFrameResource->commandLists [ LV_COMMAND_LIST_LIGHTING_PASS ].Get();
         PIXBeginEvent( deferredCommandList, 0, L"Worker deferred pass..." );
 
         //transition the DSV over and transition the g-buffer textures over
@@ -214,7 +214,7 @@ void GraphicsCore::Render()
 #endif
 
         deferredCommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets[ currentFrameResourceIndex ].Get(),
+            renderTargets [ currentFrameResourceIndex ].Get(),
             D3D12_RESOURCE_STATE_RENDER_TARGET,
             D3D12_RESOURCE_STATE_PRESENT
         ) );
@@ -229,7 +229,8 @@ void GraphicsCore::Render()
     );
 
     PIXBeginEvent( commandQueue.Get(), 0, L"Presenting to screen" );
-    ThrowIfFailed( swapChain->Present( 1, 0 ) );
+    //ThrowIfFailed( swapChain->Present( 1, 0 ) );
+    ThrowIfFailed( swapChain->Present( 0, 0 ) );
     PIXEndEvent( commandQueue.Get() );
     currentFrameResourceIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -252,49 +253,49 @@ HRESULT GraphicsCore::InitRootSignature()
     }
 
     //this should be ordered from most to least frequent
-    CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[ LV_ROOT_SIGNATURE_COUNT ];
-    CD3DX12_ROOT_PARAMETER1		rootParameters[ LV_ROOT_SIGNATURE_COUNT ];
+    CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges [ LV_ROOT_SIGNATURE_COUNT ];
+    CD3DX12_ROOT_PARAMETER1		rootParameters [ LV_ROOT_SIGNATURE_COUNT ];
 
     //Instancing data
-    rootParameters[ LV_ROOT_SIGNATURE_INSTANCED_DATA ].InitAsShaderResourceView(
+    rootParameters [ LV_ROOT_SIGNATURE_INSTANCED_DATA ].InitAsShaderResourceView(
         0,       //register
         1        //space
     );
 
     //G-Buffer: Albedo + Normal + Position
-    descriptorRanges[ LV_ROOT_SIGNATURE_GBUFFER_SRV ].Init(
+    descriptorRanges [ LV_ROOT_SIGNATURE_GBUFFER_SRV ].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SRV,            //type of descriptor
         LV_NUM_GBUFFER_RTV,                         //number of descriptors
         0,                                          //base shader register
         0                                           //space in register
     );
-    rootParameters[ LV_ROOT_SIGNATURE_GBUFFER_SRV ].InitAsDescriptorTable(
+    rootParameters [ LV_ROOT_SIGNATURE_GBUFFER_SRV ].InitAsDescriptorTable(
         1,                                                  //number of descriptor ranges
-        &descriptorRanges[ LV_ROOT_SIGNATURE_GBUFFER_SRV ], //address
+        &descriptorRanges [ LV_ROOT_SIGNATURE_GBUFFER_SRV ], //address
         D3D12_SHADER_VISIBILITY_PIXEL                       //what it's visible to
     );
 
     //constant buffer
-    descriptorRanges[ LV_ROOT_SIGNATURE_CBV ].Init( D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
+    descriptorRanges [ LV_ROOT_SIGNATURE_CBV ].Init( D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
         1,
         0,
         0,
         D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC
     );
-    rootParameters[ LV_ROOT_SIGNATURE_CBV ].InitAsDescriptorTable( 1,
-        &descriptorRanges[ LV_ROOT_SIGNATURE_CBV ],
+    rootParameters [ LV_ROOT_SIGNATURE_CBV ].InitAsDescriptorTable( 1,
+        &descriptorRanges [ LV_ROOT_SIGNATURE_CBV ],
         D3D12_SHADER_VISIBILITY_ALL
     );
 
     //Sampler
-    descriptorRanges[ LV_ROOT_SIGNATURE_SAMPLER ].Init(
+    descriptorRanges [ LV_ROOT_SIGNATURE_SAMPLER ].Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER,
         1,
         0
     );
-    rootParameters[ LV_ROOT_SIGNATURE_SAMPLER ].InitAsDescriptorTable(
+    rootParameters [ LV_ROOT_SIGNATURE_SAMPLER ].InitAsDescriptorTable(
         1,
-        &descriptorRanges[ LV_ROOT_SIGNATURE_SAMPLER ],
+        &descriptorRanges [ LV_ROOT_SIGNATURE_SAMPLER ],
         D3D12_SHADER_VISIBILITY_PIXEL
     );
 
@@ -345,7 +346,7 @@ HRESULT GraphicsCore::InitGeometryPSO()
     D3DReadFileToBlob( L"Assets/Shaders/ps_basic.cso", &ps );
 
     //build the input layout
-    D3D12_INPUT_ELEMENT_DESC vertexInputDescription[ LV_NUM_VS_INPUT_COUNT ];
+    D3D12_INPUT_ELEMENT_DESC vertexInputDescription [ LV_NUM_VS_INPUT_COUNT ];
     ShaderDefinitions::SetGeometryPassInputLayout( vertexInputDescription );
 
     D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
@@ -371,9 +372,9 @@ HRESULT GraphicsCore::InitGeometryPSO()
     geometryPsoDesc.SampleMask = UINT_MAX;
     geometryPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     geometryPsoDesc.NumRenderTargets = LV_NUM_GBUFFER_RTV;
-    geometryPsoDesc.RTVFormats[ 0 ] = ShaderDefinitions::GeometryBufferFormat( 0 );   //albedo
-    geometryPsoDesc.RTVFormats[ 1 ] = ShaderDefinitions::GeometryBufferFormat( 1 );   //normal
-    geometryPsoDesc.RTVFormats[ 2 ] = ShaderDefinitions::GeometryBufferFormat( 2 );   //position
+    geometryPsoDesc.RTVFormats [ 0 ] = ShaderDefinitions::GeometryBufferFormat( 0 );   //albedo
+    geometryPsoDesc.RTVFormats [ 1 ] = ShaderDefinitions::GeometryBufferFormat( 1 );   //normal
+    geometryPsoDesc.RTVFormats [ 2 ] = ShaderDefinitions::GeometryBufferFormat( 2 );   //position
     geometryPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     geometryPsoDesc.SampleDesc.Count = 1;
 
@@ -396,7 +397,7 @@ HRESULT GraphicsCore::InitDebugPSO()
     D3DReadFileToBlob( L"Assets/Shaders/vs_debug.cso", &vs );
     D3DReadFileToBlob( L"Assets/Shaders/ps_debug.cso", &ps );
 
-    D3D12_INPUT_ELEMENT_DESC inputVertexDesc[ LV_NUM_VS_INPUT_COUNT ];
+    D3D12_INPUT_ELEMENT_DESC inputVertexDesc [ LV_NUM_VS_INPUT_COUNT ];
     ShaderDefinitions::SetGeometryPassInputLayout( inputVertexDesc );
 
     D3D12_INPUT_LAYOUT_DESC inputLayoutDescription;
@@ -422,7 +423,7 @@ HRESULT GraphicsCore::InitDebugPSO()
     debugPsoDesc.SampleMask = UINT_MAX;
     debugPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
     debugPsoDesc.NumRenderTargets = 1;
-    debugPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    debugPsoDesc.RTVFormats [ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
     debugPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     debugPsoDesc.SampleDesc.Count = 1;
 
@@ -444,7 +445,7 @@ HRESULT GraphicsCore::InitLightPassPSO()
     D3DReadFileToBlob( L"Assets/Shaders/vs_FSQ.cso", &vs );
     D3DReadFileToBlob( L"Assets/Shaders/ps_lighting.cso", &ps );
 
-    D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc[ LV_NUM_VS_INPUT_COUNT ];
+    D3D12_INPUT_ELEMENT_DESC screenQuadVertexDesc [ LV_NUM_VS_INPUT_COUNT ];
     ShaderDefinitions::SetGeometryPassInputLayout( screenQuadVertexDesc );
 
     //build out our depth stencil description
@@ -471,7 +472,7 @@ HRESULT GraphicsCore::InitLightPassPSO()
     lightPsoDesc.SampleMask = UINT_MAX;
     lightPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     lightPsoDesc.NumRenderTargets = 1;
-    lightPsoDesc.RTVFormats[ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    lightPsoDesc.RTVFormats [ 0 ] = DXGI_FORMAT_R8G8B8A8_UNORM;
     lightPsoDesc.SampleDesc.Count = 1;
 
 #ifdef _DEBUG
@@ -523,12 +524,12 @@ HRESULT GraphicsCore::InitRtvHeap()
     {
         rtvHandle.Offset( LV_NUM_GBUFFER_RTV, rtvDescriptorSize );
 
-        ThrowIfFailed( swapChain->GetBuffer( i, IID_PPV_ARGS( &renderTargets[ i ] ) ) );
+        ThrowIfFailed( swapChain->GetBuffer( i, IID_PPV_ARGS( &renderTargets [ i ] ) ) );
         device->CreateRenderTargetView(
-            renderTargets[ i ].Get(),
+            renderTargets [ i ].Get(),
             &rtvDesc,
             rtvHandle );
-        NAME_D3D12_OBJECT_WITH_NAME( renderTargets[ i ], "%s (%d)", "Back Buffer", i );
+        NAME_D3D12_OBJECT_WITH_NAME( renderTargets [ i ], "%s (%d)", "Back Buffer", i );
 
         rtvHandle.Offset( rtvDescriptorSize );
     }
@@ -622,13 +623,13 @@ HRESULT GraphicsCore::InitInputShaderResources()
     ObjLoader::LoadObj( vertices, indices, "Assets/Models/voxel.obj" );
 
     //make vertex buffer for 'n' floats
-    uint32_t vertexDataSize = static_cast<uint32_t>( vertices->size() * sizeof( Vertex ) );
+    uint32_t vertexDataSize = static_cast< uint32_t >( vertices->size() * sizeof( Vertex ) );
     uint32_t vertexDataOffset = 0;
     uint32_t vertexStride = sizeof( Vertex );
-    uint32_t indexDataSize = static_cast<uint32_t>( indices->size() * sizeof( uint16_t ) );
+    uint32_t indexDataSize = static_cast< uint32_t >( indices->size() * sizeof( uint16_t ) );
     uint32_t indexDataOffset = 0;
 
-    verticesCount = static_cast<uint32_t>( indices->size() );
+    verticesCount = static_cast< uint32_t >( indices->size() );
 
     //vertex buffer(s)
     {
@@ -654,7 +655,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         ) );
 
         D3D12_SUBRESOURCE_DATA vertexData = { };
-        vertexData.pData = &( ( *vertices )[ 0 ] ) + vertexDataOffset;
+        vertexData.pData = &( ( *vertices ) [ 0 ] ) + vertexDataOffset;
         vertexData.RowPitch = vertexDataSize;
         vertexData.SlicePitch = vertexData.RowPitch;
 
@@ -692,7 +693,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         objl.GenerateFullScreenQuad( screenQuad );
 
         //make vertex buffer for 'n' floats
-        uint32_t fsqVertexDataSize = static_cast<uint32_t>( screenQuad.vertices.size() * sizeof( Vertex ) );
+        uint32_t fsqVertexDataSize = static_cast< uint32_t >( screenQuad.vertices.size() * sizeof( Vertex ) );
         uint32_t fsqVertexDataOffset = 0;
         uint32_t fsqVertexStride = sizeof( Vertex );
 
@@ -718,7 +719,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         ) );
 
         D3D12_SUBRESOURCE_DATA fsqVertexData = { };
-        fsqVertexData.pData = &( ( screenQuad.vertices )[ 0 ] ) + fsqVertexDataOffset;
+        fsqVertexData.pData = &( ( screenQuad.vertices ) [ 0 ] ) + fsqVertexDataOffset;
         fsqVertexData.RowPitch = fsqVertexDataSize;
         fsqVertexData.SlicePitch = fsqVertexData.RowPitch;
 
@@ -777,7 +778,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
         ) );
 
         D3D12_SUBRESOURCE_DATA indexData = { };
-        indexData.pData = &( ( *indices )[ 0 ] ) + indexDataOffset;
+        indexData.pData = &( ( *indices ) [ 0 ] ) + indexDataOffset;
         indexData.RowPitch = indexDataSize;
         indexData.SlicePitch = indexData.RowPitch;
 
@@ -874,7 +875,7 @@ HRESULT GraphicsCore::InitInputShaderResources()
     //close the command list and transfer static data
     ThrowIfFailed( commandList->Close() );
 
-    ID3D12CommandList* ppCommandList[] = { commandList.Get() };
+    ID3D12CommandList* ppCommandList [] = { commandList.Get() };
     PIXBeginEvent( commandQueue.Get(), 0, L"Executing commandlist" );
     commandQueue->ExecuteCommandLists( _countof( ppCommandList ), ppCommandList );
     PIXEndEvent( commandQueue.Get() );
@@ -893,7 +894,7 @@ inline void GraphicsCore::SetGBufferPSO( ID3D12GraphicsCommandList * commandList
 {
     commandList->SetGraphicsRootSignature( rootSignature.Get() );
     commandList->SetPipelineState( geometryPso.Get() );
-    ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get() };
+    ID3D12DescriptorHeap* ppHeaps [] = { cbvSrvHeap.Get() };
     commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
     commandList->RSSetViewports( 1, &viewport );
     commandList->RSSetScissorRects( 1, &scissorRect );
@@ -907,7 +908,7 @@ inline void GraphicsCore::SetLightPassPSO( ID3D12GraphicsCommandList * commandLi
 {
     commandList->SetGraphicsRootSignature( rootSignature.Get() );
     commandList->SetPipelineState( lightPso.Get() );
-    ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get(), samplerHeap.Get() };
+    ID3D12DescriptorHeap* ppHeaps [] = { cbvSrvHeap.Get(), samplerHeap.Get() };
     commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
     commandList->RSSetViewports( 1, &viewport );
     commandList->RSSetScissorRects( 1, &scissorRect );
@@ -921,7 +922,7 @@ inline void GraphicsCore::SetDebugPSO( ID3D12GraphicsCommandList * commandList )
 {
     commandList->SetGraphicsRootSignature( rootSignature.Get() );
     commandList->SetPipelineState( debugPso.Get() );
-    ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.Get() };
+    ID3D12DescriptorHeap* ppHeaps [] = { cbvSrvHeap.Get() };
     commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
     commandList->RSSetViewports( 1, &viewport );
     commandList->RSSetScissorRects( 1, &scissorRect );
