@@ -25,7 +25,7 @@ void JobManager::ReleaseInstance()
 
 JobManager::JobManager()
 {
-    const unsigned int supportedThreads = std::thread::hardware_concurrency();
+    const unsigned int supportedThreads = GetAmountOfSupportedThreads();
 
     DEBUG_PRINT( "The number of threads supported on this system is: %d\n", supportedThreads );
 
@@ -124,4 +124,9 @@ void JobManager::WorkerThread()
 inline const size_t JobManager::GetThreadCount() const
 {
     return workerThreads.size();
+}
+
+inline int JobManager::GetAmountOfSupportedThreads()
+{
+    return std::thread::hardware_concurrency();
 }

@@ -23,7 +23,9 @@ namespace {
     //gets a basis vector from the transformation matrix
     inline glm::vec3 GetAxisVector(int i, const glm::mat4& mat)
     {
-        return glm::vec3(mat[0][i], mat[1][i], mat[2][i]);
+        //return glm::vec3( mat[i] );
+        return glm::vec3( (glm::transpose(mat))[i] );
+        //return glm::vec3(mat[0][i], mat[1][i], mat[2][i]);
     }
 
 
@@ -344,7 +346,7 @@ int Physics::Rigidbody::CollideBoxBox(const size_t& entityA, const size_t& entit
     CHECK_OVERLAP(glm::cross(GetAxisVector(2, one.transformMatrix), GetAxisVector(2, two.transformMatrix)), 14);
 
     //make sure we got the right results
-    assert(best != 0xffffff);
+    assert( best != 0xffffff );
 
     //we know there is collision 
     if (best < 3)

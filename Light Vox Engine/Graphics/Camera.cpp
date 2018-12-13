@@ -7,7 +7,7 @@ using namespace Graphics;
 Camera::Camera()
 {
     //default values
-    fov = 90.f * glm::pi<float>() / 180.0f;
+    fov = 60.f * glm::pi<float>() / 180.0f;
     nearZ = 0.01f;
     farZ = 100.f;
 

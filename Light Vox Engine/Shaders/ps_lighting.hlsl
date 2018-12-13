@@ -38,7 +38,7 @@ float3 pointLightDiffuse( float3 lightColor, float3 lightPos, float3 normal, flo
 
     float constant = 0.0;
     float lin = 7.5;
-    float exp = 8.2;
+    float exp = 15.2;
 
     float distance = length( posToPointLight );
     float attenuation = constant +
