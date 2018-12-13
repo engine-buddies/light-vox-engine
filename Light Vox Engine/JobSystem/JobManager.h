@@ -3,10 +3,8 @@
 #include "../stdafx.h"
 
 #include <thread>               // std::thread
-#include <condition_variable>   // std::condition_variable
 #include <vector>               // std::vector
 #include <atomic>               // std::atomic
-#include <future>               // std::future, std::promise
 
 #include "concurrentqueue.h"    // lock-less queue
 
@@ -65,7 +63,7 @@ namespace Jobs
             aJob.jobPtr = jobPtr;
 
             locklessReadyQueue.enqueue( aJob );
-            jobAvailableCondition.notify_one();
+            //jobAvailableCondition.notify_one();
         }
 
         // We don't want anything making copies of this class so delete these operators
@@ -93,16 +91,6 @@ namespace Jobs
         /// them accordingly
         /// </summary>
         void WorkerThread();
-
-        /// <summary>
-        /// A mutex determining if the queue is ready
-        /// </summary>
-        std::mutex readyQueueMutex;
-
-        /// <summary>
-        /// Conditional variable for if a job is available
-        /// </summary>
-        std::condition_variable jobAvailableCondition;
 
         /// <summary>
         /// Worker threads for executing jobs

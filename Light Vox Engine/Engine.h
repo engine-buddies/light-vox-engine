@@ -72,7 +72,7 @@ private:
 
     void UsingInputFunc();
 
-    inline void Update();
+    void Update();
 
     /*Debug function to create a console window*/
     void CreateConsoleWindow( int bufferLines, int bufferColumns, int windowLines, int windowColumns );

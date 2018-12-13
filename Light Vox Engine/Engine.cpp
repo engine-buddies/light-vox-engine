@@ -303,7 +303,7 @@ void Engine::UsingInputFunc()
     printf( "FPS: %f \n", 1.0f / time->GetDeltaFloatTime() );
 }
 
-inline void Engine::Update()
+void Engine::Update()
 {
     if ( inputManager->IsKeyDown( VK_ESCAPE ) ) // A
         Quit();

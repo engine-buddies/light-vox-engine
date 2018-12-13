@@ -3,6 +3,7 @@
 /// </summary>
 #pragma once
 #include "../stdafx.h"
+#include <future>               // std::future, std::promise
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
 #include "../JobSystem/JobManager.h"
