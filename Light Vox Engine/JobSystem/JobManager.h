@@ -3,10 +3,8 @@
 #include "../stdafx.h"
 
 #include <thread>               // std::thread
-#include <condition_variable>   // std::condition_variable
 #include <vector>               // std::vector
 #include <atomic>               // std::atomic
-#include <future>               // std::future, std::promise
 
 #include "concurrentqueue.h"    // lock-less queue
 
