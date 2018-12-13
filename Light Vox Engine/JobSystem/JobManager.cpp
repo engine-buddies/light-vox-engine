@@ -42,16 +42,12 @@ JobManager::~JobManager()
 {
     isDone = true;
 
-    jobAvailableCondition.notify_all();
-
     // Ensure that all jobs are done (by joining the thread, 
     // thus waiting for all its work to be done)
     for ( auto &item : workerThreads )
     {
         item.join();
     }
-
-    printf( "\tJob Manager dtor!\n" );
 }
 
 void JobManager::AddJob( void( *func_ptr )( void *, int ), void * args, int Index )
@@ -64,18 +60,12 @@ void JobManager::AddJob( void( *func_ptr )( void *, int ), void * args, int Inde
     aJob.jobPtr = jobPtr;
 
     locklessReadyQueue.enqueue( aJob );
-    jobAvailableCondition.notify_one();
 }
 
 void JobManager::WorkerThread()
 {
-    std::unique_lock<std::mutex> workerLock( readyQueueMutex );
-
     while ( true )
     {
-        // Wait for a job to become available
-        jobAvailableCondition.wait( workerLock );
-
         // Make sure that we don't need to be done now!
         if ( isDone ) return;
 
@@ -91,30 +81,11 @@ void JobManager::WorkerThread()
                 // make this a pooled resource
                 delete CurJob.jobPtr;
             }
-
-            // Notify other threads that a job has been taken and we should probably
-            // check to make sure that there isn;t more
-            jobAvailableCondition.notify_one();
         }
-
-        // If there is a job available, than work on it
-        /*if ( !readyQueue.empty() )
+        else
         {
-            CpuJob CurJob;
-            readyQueue.pop_front( CurJob );
-
-            if ( CurJob.jobPtr )
-            {
-                CurJob.jobPtr->invoke( CurJob.jobArgs, CurJob.index );
-                // #TODO
-                // make this a pooled resource
-                delete CurJob.jobPtr;
-            }
-
-            // Notify other threads that a job has been taken and we should probably
-            // check to make sure that there isn;t more
-            jobAvailableCondition.notify_one();
-        }*/
+            std::this_thread::sleep_for( std::chrono::milliseconds( 3 ) );
+        }
     }
 }
 
