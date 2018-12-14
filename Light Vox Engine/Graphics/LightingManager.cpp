@@ -51,7 +51,7 @@ void Graphics::LightingManager::Update( float deltaTime )
         pos.x += glm::cos( pos.y ) * ( pos.z + 1 ) * deltaTime;
         pos.z -= glm::sin( pos.x ) * ( pos.y + 1 ) * deltaTime;
 
-        glm::clamp( pos, glm::vec4_packed( -LV_MAX_WORLD_SIZE * 2.0f ), glm::vec4_packed( LV_MAX_WORLD_SIZE * 2.0f ) );
+        glm::clamp( pos, glm::vec4_packed( -LV_MAX_WORLD_SIZE * 1.0f ), glm::vec4_packed( LV_MAX_WORLD_SIZE * 1.0f ) );
 
         lightingBuffer.pointLightPositions[ i ] = pos;
     }
