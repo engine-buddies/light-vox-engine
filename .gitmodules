@@ -1,0 +1,6 @@
+[submodule "additionalLibraries/FastNoiseSIMD"]
+	path = additionalLibraries/FastNoiseSIMD
+	url = git@github.com:Auburns/FastNoiseSIMD.git
+[submodule "additionalLibraries/concurrentqueue"]
+	path = additionalLibraries/concurrentqueue
+	url = git@github.com:cameron314/concurrentqueue.git
