@@ -113,9 +113,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\IMesh.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -194,9 +191,6 @@
       <Filter>NoiseLibrary</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\LightingManager.h">
-      <Filter>Source Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\IMesh.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
