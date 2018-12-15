@@ -1,3 +1,4 @@
+#include "../stdafx.h"
 #include "InputManager.h"
 
 using namespace Input;

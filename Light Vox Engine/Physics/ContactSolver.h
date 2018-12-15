@@ -2,7 +2,6 @@
 /// By Arturo Kuang
 /// </summary>
 #pragma once
-#include  "../stdafx.h"
 #include "../ECS/EntityComponents.h"
 #include "../ECS/ComponentManager.h"
 

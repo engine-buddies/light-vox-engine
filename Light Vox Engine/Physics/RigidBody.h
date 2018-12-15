@@ -1,5 +1,4 @@
 #pragma once 
-#include  "../stdafx.h"
 #include "../ECS/Entity.h"
 #include "../ECS/ComponentManager.h"
 #include "../ECS/EntityComponents.h"

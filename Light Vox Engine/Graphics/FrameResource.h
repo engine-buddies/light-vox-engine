@@ -1,5 +1,4 @@
 #pragma once
-#include "../stdafx.h"		
 #include "ShaderDefinitions.h"
 #include "DebugRenderer.h"
 

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "GameTime.h"
 
 void GameTime::PerformanceFrequency( int64_t & perfFreq )

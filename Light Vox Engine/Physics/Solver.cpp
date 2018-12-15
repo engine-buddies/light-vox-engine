@@ -1,3 +1,4 @@
+#include  "../stdafx.h"
 #include "Solver.h"
 
 using namespace Physics;
