@@ -1,3 +1,4 @@
+#include "../stdafx.h"		
 #include "FrameResource.h"
 #include "Camera.h"
 #include "LightingManager.h"

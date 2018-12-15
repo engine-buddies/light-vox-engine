@@ -1,3 +1,4 @@
+#include "../stdafx.h"
 #include "ObjLoader.h"
 
 #include <string>

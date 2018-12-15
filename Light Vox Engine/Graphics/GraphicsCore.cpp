@@ -1,3 +1,4 @@
+#include "../stdafx.h"
 #include "GraphicsCore.h"
 #include "FrameResource.h"
 #include "Camera.h"

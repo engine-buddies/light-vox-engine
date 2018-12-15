@@ -1,3 +1,4 @@
+#include "../stdafx.h"
 #include "GraphicsCore.h"
 
 using namespace Graphics;

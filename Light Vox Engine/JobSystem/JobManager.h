@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../stdafx.h"
 
 #include <thread>               // std::thread
 #include <vector>               // std::vector

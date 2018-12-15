@@ -1,3 +1,4 @@
+#include  "../stdafx.h"
 #include "ContactSolver.h"
 
 using namespace Physics;

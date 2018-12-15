@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "GameTime.h"
 
 GameTime* GameTime::instance = nullptr;

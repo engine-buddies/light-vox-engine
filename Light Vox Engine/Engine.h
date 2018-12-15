@@ -1,5 +1,4 @@
 #pragma once
-#include "stdafx.h"
 #include <vector>
 #include "Graphics/GraphicsCore.h"
 #include "Graphics/DebugRenderer.h"
