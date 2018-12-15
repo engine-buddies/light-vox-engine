@@ -96,6 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
@@ -130,6 +131,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)_Binary\Assets\"
@@ -166,6 +168,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -204,6 +207,7 @@ for /r "$(SolutionDir)_Binary" %%x in (*.cso) do move "%%x" "$(SolutionDir)_Bina
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)additionalLibraries\FastNoiseSIMD\FastNoiseSIMD;$(SolutionDir)additionalLibraries\concurrentqueue;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
