@@ -1,193 +1,135 @@
 #pragma once
+#include <thread>
+#include <vector>
+#include <atomic>
+#include <assert.h>
 
-#include "../stdafx.h"
-
-#include <thread>               // std::thread
-#include <vector>               // std::vector
-#include <atomic>               // std::atomic
-
+#include "Job.h"
 #include "concurrentqueue.h"    // lock-less queue
 
-namespace Jobs
+/// <summary>
+/// Job 
+/// </summary>
+/// <author>Ben Hoffman</author>
+class JobManager
 {
+public:
 
     /// <summary>
-    /// Manage and execute jobs with an aim to increase
-    /// efficiency in using a multicore CPU
+    /// Creates thread pool
     /// </summary>
-    /// <author>Ben Hoffman</author>
-    class JobManager
-    {
+    void Startup();
 
-    public:
+    /// <summary>
+    /// Blocking function, joins all worker threads and waits for work to be
+    /// done
+    /// </summary>
+    void Shutdown();
 
-        /// <summary>
-        /// Get the Job manager instance
-        /// </summary>
-        /// <returns>Current instance of the job manager</returns>
-        static JobManager* GetInstance();
+    static JobManager Instance;
 
-        /// <summary>
-        /// Release the current Job Manager instance
-        /// </summary>
-        static void ReleaseInstance();
+    /// <summary>
+    /// Creates a job without a parent.
+    /// DOES NOT run the job. To start it, you must call Run.
+    /// </summary>
+    /// <param name="aFunction">Function to call as a job</param>
+    /// <param name="args">the arguments to pass into the job. Must fit inside
+    /// the jobs padding buffer</param>
+    /// <returns>Pointer to the job </returns>
+    Job* CreateJob( JobFunction aFunction, void* args, size_t aSize );
 
-        /// <summary>
-        /// Add a non-member function to the job queue
-        /// </summary>
-        /// <param name="func_ptr">Function to add to the job queue</param>
-        /// <param name="args">Arguments for the job function</param>
-        /// <param name="Index">Index of this job</param>
-        void AddJob( void( *func_ptr )( void*, int ), void* args, int Index );
+    /// <summary>
+    /// Creates a job as a child of another. 
+    /// DOES NOT run the job. To start it, you must call Run.
+    /// </summary>
+    /// <param name="aParent"></param>
+    /// <param name="aFunction"></param>
+    /// <returns></returns>
+    Job* CreateJobAsChild( Job* aParent, JobFunction aFunction, void* args, size_t aSize );
 
-        /// <summary>
-        /// Add a member function to the job queue
-        /// </summary>
-        /// <param name="aParent">That calling object</param>
-        /// <param name="func_ptr">Functoin to jobified</param>
-        /// <param name="args">Arguments to pass to that function</param>
-        /// <param name="Index">Index of this job</param>
-        template <class T>
-        void AddJob( T* aParent,
-            void( T::*func_ptr )( void*, int ),
-            void* args,
-            int Index )
-        {
-            CpuJob aJob = {};
-            aJob.jobArgs = args;
-            aJob.index = Index;
+    /// <summary>
+    /// Run the given job in the system, pushing it to the 
+    /// work queue
+    /// </summary>
+    /// <param name="aJob">Job to run</param>
+    void Run( Job* aJob );
 
-            // #TODO
-            // make this a pooled resource
-            IJob* jobPtr = new JobMemberFunc<T>( aParent, func_ptr );
-            aJob.jobPtr = jobPtr;
+    /// <summary>
+    /// Wait for the given job to finish, return when it is done.
+    /// Does other job work in the background if possible
+    /// </summary>
+    /// <param name="aJob">Job to wait on</param>
+    void Wait( const Job* aJob );
 
-            locklessReadyQueue.enqueue( aJob );
-            //jobAvailableCondition.notify_one();
-        }
+    /// <summary>
+    /// Fin out how many threads this system supports
+    /// </summary>
+    /// <returns>Amount of supported threads for this system</returns>
+    static const unsigned int GetAmountOfSupportedThreads();
 
-        // We don't want anything making copies of this class so delete these operators
-        JobManager( JobManager const& ) = delete;
-        void operator=( JobManager const& ) = delete;
+private:
 
-        ////////////////////////////////////////
-        // Accessors
+    JobManager() {}     // any startup should be done in Startup
+    ~JobManager() {}    // any cleanup should be done in shutdown
 
-        inline const size_t GetThreadCount() const;
+    /// <summary>
+    /// Main work for each thread; Will do any work possible
+    /// or try and steal work from other threads
+    /// </summary>
+    void WorkerThread();
 
-        int GetAmountOfSupportedThreads();
+    /// <summary>
+    /// Yield the work of this thread by sleeping it
+    /// </summary>
+    void YieldWorker();
 
-    private:
+    /// <summary>
+    /// Get a new job
+    /// </summary>
+    /// <returns>Pointer to a new job</returns>
+    Job* AllocateJob();
 
-        JobManager();
+    /// <summary>
+    /// Grabs the next available job from this worker's queue,
+    /// if one is not available then try to get one from another 
+    /// thread. If that dones't work, return nullptr
+    /// </summary>
+    /// <returns></returns>
+    Job* GetJob();
 
-        ~JobManager();
+    /// <summary>
+    /// Checks if the given job is complete or not
+    /// </summary>
+    /// <param name="aJob">The job to check</param>
+    /// <returns>True if the job is compelte, false otherwise</returns>
+    bool HasJobCompleted( const Job* aJob );
 
-        static JobManager* instance;
+    /// <summary>
+    /// Run the jobs function and mark it as finished when completed. 
+    /// </summary>
+    /// <param name="aJob">The job to run</param>
+    void Execute( Job* aJob );
 
-        /// <summary>
-        /// Worker thread will wait for any jobs
-        /// to be available in the Ready Queue and execute
-        /// them accordingly
-        /// </summary>
-        void WorkerThread();
+    /// <summary>
+    /// Mark a job as finished and let its parent know the job is done if it has one
+    /// </summary>
+    /// <param name="aJob">Job to finish</param>
+    void Finish( Job* aJob );
 
-        /// <summary>
-        /// Worker threads for executing jobs
-        /// A worker thread extracts a job from the job queue and executes it
-        /// </summary>
-        std::vector<std::thread> workerThreads;
+    /** Flag for if the system should keep running or not */
+    std::atomic<bool> IsDone { false };
 
-        /// <summary>
-        /// Atomic bool determining if we are done used for closing all threads
-        /// </summary>
-        std::atomic<bool> isDone;
+    /** A vector of all worker threads in the pool */
+    static std::vector<std::thread> WorkerThreads;
 
-        ////////////////////////////////////////
-        // Job Definitions
+    /** Lockless queue for keeping track of what jobs are ready to be done */
+    static moodycamel::ConcurrentQueue<Job*> locklessReadyQueue;
 
-        /// <summary>
-        /// Base functor for jobs to use
-        /// </summary>
-        /// <author>Ben Hoffman</author>
-        struct IJob
-        {
-            virtual ~IJob() {}
-            virtual bool invoke( void* args, int aIndex ) = 0;
-        };
+    /** Job many possible jobs we can have in a pool */
+    const static thread_local unsigned int MAX_JOB_COUNT = 4096;
+    /** Memory block of possible jobs */
+    static thread_local Job g_jobAllocator[ MAX_JOB_COUNT ];
+    /** Thread-local variable used to keep track of which job we are on */
+    static thread_local uint32_t g_allocatedJobs;
 
-        /// <summary>
-        /// A job function that is not a member of a class
-        /// </summary>
-        /// <author>Ben Hoffman</author>
-        struct JobFunc : IJob
-        {
-            JobFunc( void( *aFunc_ptr )( void*, int ) )
-                : func_ptr( aFunc_ptr )
-            {
-
-            }
-
-            /// <summary>
-            /// invoke this job with the given arguments
-            /// </summary>
-            /// <param name="args">Arguments to pass to this job function</param>
-            /// <param name="aIndex">Index of this jobect</param>
-            /// <returns>True if job was successful</returns>
-            virtual bool invoke( void* args, int aIndex ) override
-            {
-                func_ptr( args, aIndex );
-                return true;
-            }
-
-            /** The function pointer for this job to invoke */
-            void( *func_ptr )( void*, int );
-        };
-
-        /// <summary>
-        /// A job member function that is a member of a class
-        /// </summary>
-        /// <author>Ben Hoffman</author>
-        template <class T>
-        struct JobMemberFunc : IJob
-        {
-            JobMemberFunc( T* aParent, void ( T::*f )( void*, int ) )
-            {
-                parentObj = aParent;
-                func_ptr = f;
-            }
-
-            virtual bool invoke( void* args, int aIndex ) override
-            {
-                if ( !parentObj ) { return false; }
-
-                ( parentObj->*func_ptr )( args, aIndex );
-                return true;
-            }
-
-            /** the object to invoke the function pointer on */
-            T* parentObj;
-
-            /** The function pointer to call when we invoke this function */
-            void ( T::*func_ptr )( void*, int );
-        };
-
-        /// <summary>
-        /// A job that will be run in parallel with others on the CPU
-        /// A function pointer for the worker threads to use
-        /// </summary>
-        /// <author>Ben Hoffman</author>
-        struct CpuJob
-        {
-            IJob* jobPtr = nullptr;
-            void* jobArgs = nullptr;
-            int index = 0;
-        };
-
-
-        moodycamel::ConcurrentQueue<CpuJob> locklessReadyQueue;
-
-
-    };  // JobManager
-
-};  // namespace jobs
+};

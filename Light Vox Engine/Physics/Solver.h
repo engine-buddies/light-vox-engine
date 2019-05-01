@@ -16,6 +16,7 @@ namespace Physics
     class Solver
     {
     public:
+
         /// <summary>
         /// Intializes physics system
         /// -sets gravity 
@@ -23,6 +24,7 @@ namespace Physics
         /// </summary>
         Solver();
         ~Solver();
+
         /// <summary>
         /// updates physics calls by solving collision, solving forces,
         /// integrating position, and calc. model to world matrix
@@ -35,41 +37,46 @@ namespace Physics
         /// <summary>
          /// Solves Collision (aabb to aabb) 
          /// </summary>
-        void Collide( void* args, int index );
+        static void Collide( Job* aJob, const void* aData );
+
         /// <summary>
         /// Semi Implicit euler intergration for position
         /// </summary>
         /// <param name="dt"></param>
-        void Integrate( void* args, int index );
+        static void Integrate( Job* aJob, const void* aData );
+
         /// <summary>
         /// Calc. total force
         /// </summary>
-        void AccumlateForces( void* args, int index );
+        static void AccumlateForces( Job* aJob, const void* aData );
+
         /// <summary>
         /// Calc. total torque
         /// </summary>
-        void AccumlateTorque( void* args, int index );
+        static void AccumlateTorque( Job* aJob, const void* aData );
+
         /// <summary>
         /// Calc model to world matrix
         /// </summary>
-        void ModelToWorld( void* args, int index );
+        static void ModelToWorld( Job* aJob, const void* aData );
+
         /// <summary>
         /// Calcs the transformation matrix based on the given offset
          /// and transform the bounding box vertices from local to world space
         /// </summary>
-        void SetColliderData( void* args, int index );
+        static void SetColliderData( Job* aJob, const void* aData );
+
         /// <summary>
         /// Solves angular momentum, linear momentum, and interpenetration
         /// </summary>
         /// <param name="args"></param>
         /// <param name="index"></param>
-        void ResolveCollision( void* args, int index );
+        static void ResolveCollision( Job* aJob, const void* aData );
 
-        ECS::ComponentManager* componentManager;
-        Jobs::JobManager* jobManager = nullptr;
-        Rigidbody* rigidbody = nullptr;
-        ContactSolver* contactSolver = nullptr;
-        Graphics::DebugRenderer* debugRenderer = nullptr;
+        static ECS::ComponentManager* componentManager;
+        static Rigidbody* rigidbody;
+        static ContactSolver* contactSolver;
+        static Graphics::DebugRenderer* debugRenderer;
 
         struct PhysicsArguments
         {
@@ -77,13 +84,8 @@ namespace Physics
 
             int StartElem;
             int EndElm;
-
-            std::promise<void>* jobPromise;
         };
 
-        std::vector< PhysicsArguments*> physicsJobsArgs;
-
-        std::vector<std::promise<void>> promises;
-        std::vector<std::future<void>> futures;
+        std::vector<PhysicsArguments*> physicsJobsArgs;
     };
 };

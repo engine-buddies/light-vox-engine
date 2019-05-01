@@ -59,7 +59,6 @@ private:
     Graphics::GraphicsCore* graphics = nullptr;
     Graphics::Camera* camera = nullptr;
     GameTime* time = nullptr;
-    Jobs::JobManager* jobManager = nullptr;
 
     Graphics::DebugRenderer* debugRenderer = nullptr;
     Graphics::LightingManager* lightingManager = nullptr;

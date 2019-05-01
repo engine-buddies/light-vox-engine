@@ -1,103 +1,170 @@
+#include "../stdafx.h"
 #include "JobManager.h"
 
-using namespace Jobs;
+thread_local Job JobManager::g_jobAllocator[ MAX_JOB_COUNT ];
+thread_local uint32_t JobManager::g_allocatedJobs = 0u;
 
-// Singleton requirement
-JobManager* JobManager::instance = nullptr;
+JobManager JobManager::Instance = {};
+moodycamel::ConcurrentQueue<Job*> JobManager::locklessReadyQueue;
+std::vector<std::thread> JobManager::WorkerThreads;
 
-JobManager* JobManager::GetInstance()
+void JobManager::Startup()
 {
-    if ( instance == nullptr )
+    IsDone = false;
+
+    // Create a thread pool to the worker thread
+    const unsigned int threadCount = GetAmountOfSupportedThreads();
+
+    for ( size_t i = 0; i < threadCount; ++i )
     {
-        instance = new JobManager();
+        WorkerThreads.push_back( std::thread( &JobManager::WorkerThread, this ) );
     }
-    return instance;
+
 }
 
-void JobManager::ReleaseInstance()
+void JobManager::Shutdown()
 {
-    if ( instance != nullptr )
-    {
-        delete instance;
-        instance = nullptr;
-    }
-}
+    IsDone = true;
 
-JobManager::JobManager()
-{
-    const unsigned int supportedThreads = GetAmountOfSupportedThreads();
-
-    DEBUG_PRINT( "The number of threads supported on this system is: %d\n", supportedThreads );
-
-    isDone = false;
-
-    // Create worker threads that check to see if there is any work to do
-    for ( size_t i = 0; i < supportedThreads; ++i )
-    {
-        workerThreads.push_back( std::thread( &Jobs::JobManager::WorkerThread, this ) );
-    }
- }
-
-JobManager::~JobManager()
-{
-    isDone = true;
-
-    // Ensure that all jobs are done (by joining the thread, 
-    // thus waiting for all its work to be done)
-    for ( auto &item : workerThreads )
+    for ( auto &item : WorkerThreads )
     {
         item.join();
     }
 }
 
-void JobManager::AddJob( void( *func_ptr )( void *, int ), void * args, int Index )
+Job * JobManager::CreateJob( JobFunction aFunction, void* args, size_t aSize )
 {
-    CpuJob aJob;
-    aJob.jobArgs = args;
-    aJob.index = Index;
+    assert( aSize >= 0 && aSize < JOB_DATA_PADDING_SIZE );
 
-    IJob* jobPtr = new JobFunc( func_ptr );
-    aJob.jobPtr = jobPtr;
+    Job* job = AllocateJob();
+    job->Function = aFunction;
+    job->Parent = nullptr;
+    job->UnfinishedJobs.store( 1 );
 
+    // Memcpy the args to the jobs padding
+    if ( args != nullptr )
+    {
+        memcpy( job->Padding, args, aSize );
+    }
+
+    return job;
+}
+
+Job * JobManager::CreateJobAsChild( Job * aParent, JobFunction aFunction, void* args, size_t aSize )
+{
+    assert( aSize >= 0 && aSize < JOB_DATA_PADDING_SIZE );
+
+    // Keep track of the number of jobs on the parent
+    aParent->UnfinishedJobs.fetch_add( 1 );
+
+    // Create a new job
+    Job* job = AllocateJob();
+    job->Function = aFunction;
+    job->Parent = aParent;
+    job->UnfinishedJobs.store( 1 );
+
+    // Memcpy the args to the jobs padding
+    if ( args != nullptr )
+    {
+        memcpy( job->Padding, args, aSize );
+    }
+
+    return job;
+}
+
+void JobManager::Run( Job * aJob )
+{
+    assert( aJob != nullptr );
     locklessReadyQueue.enqueue( aJob );
 }
 
-void JobManager::WorkerThread()
+void JobManager::Wait( const Job * aJob )
 {
-    while ( true )
+    // Wait until this job has completed
+    // in the meantime, work on another job
+    while ( !HasJobCompleted( aJob ) )
     {
-        // Make sure that we don't need to be done now!
-        if ( isDone ) return;
-
-        CpuJob CurJob;
-        bool found = locklessReadyQueue.try_dequeue( CurJob );
-
-        if ( found )
+        Job* nextJob = GetJob();
+        if ( nextJob )
         {
-            if ( CurJob.jobPtr )
-            {
-                CurJob.jobPtr->invoke( CurJob.jobArgs, CurJob.index );
-                // #TODO
-                // make this a pooled resource
-                delete CurJob.jobPtr;
-            }
-        }
-        else
-        {
-            std::this_thread::sleep_for( std::chrono::milliseconds( 3 ) );
+            Execute( nextJob );
         }
     }
 }
 
-////////////////////////////////////////
-// Accessors
-
-inline const size_t JobManager::GetThreadCount() const
-{
-    return workerThreads.size();
-}
-
-inline int JobManager::GetAmountOfSupportedThreads()
+const unsigned int JobManager::GetAmountOfSupportedThreads()
 {
     return std::thread::hardware_concurrency();
+}
+
+void JobManager::WorkerThread()
+{
+    while ( !IsDone )
+    {
+        Job* job = GetJob();
+        if ( job )
+        {
+            Execute( job );
+        }
+    }
+}
+
+void JobManager::YieldWorker()
+{
+    // For now, simply sleep this thread to yield its time
+    std::this_thread::sleep_for( std::chrono::milliseconds( 3 ) );
+}
+
+Job * JobManager::GetJob()
+{
+    Job* CurJob = nullptr;
+    bool found = locklessReadyQueue.try_dequeue( CurJob );
+    if ( found )
+    {
+        return CurJob;
+    }
+    else
+    {
+        // TODO: Try and steal a job
+
+        // We couldn't find out job, 
+        YieldWorker();
+        return nullptr;
+    }
+
+    return nullptr;
+}
+
+bool JobManager::HasJobCompleted( const Job * aJob )
+{
+    // A job is done if there is no more unfinished work
+    return ( aJob->UnfinishedJobs <= 0 );
+}
+
+void JobManager::Execute( Job * aJob )
+{
+    assert( aJob != nullptr );
+    // Call the jobs function
+    ( aJob->Function )( aJob, aJob->Padding );
+    // Finish the job when it is done
+    Finish( aJob );
+}
+
+Job * JobManager::AllocateJob()
+{
+    const uint32_t index = g_allocatedJobs++;
+    return &g_jobAllocator[ index & ( MAX_JOB_COUNT - 1u ) ];
+    //return &g_jobAllocator[ ( index - 1u ) & ( MAX_JOB_COUNT - 1u ) ];
+}
+
+void JobManager::Finish( Job * aJob )
+{
+    // Decrement the jobs unfinished job count
+    const int32_t unfinishedJobs = --aJob->UnfinishedJobs;
+
+    // If this job is done, then let the jobs parent know
+    if ( ( unfinishedJobs == 0 ) && ( aJob->Parent ) )
+    {
+        Finish( aJob->Parent );
+    }
 }

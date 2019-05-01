@@ -2,19 +2,21 @@
 
 using namespace Physics;
 
+ECS::ComponentManager*      Solver::componentManager = nullptr;
+Rigidbody*                  Solver::rigidbody = nullptr;
+ContactSolver*              Solver::contactSolver = nullptr;
+Graphics::DebugRenderer*    Solver::debugRenderer = nullptr;
+
 Solver::Solver()
 {
     componentManager = ECS::ComponentManager::GetInstance();
-    jobManager = Jobs::JobManager::GetInstance();
     rigidbody = new Rigidbody();
     contactSolver = new ContactSolver( 1 );
     debugRenderer = Graphics::DebugRenderer::GetInstance();
 
-    int count = jobManager->GetAmountOfSupportedThreads();
+    const unsigned int count = JobManager::Instance.GetAmountOfSupportedThreads();
     physicsJobsArgs = std::vector<PhysicsArguments *>();
     physicsJobsArgs.reserve( count );
-    promises.reserve( count );
-    futures.reserve( count );
 
     int increment = LV_MAX_INSTANCE_COUNT / count;
     for ( size_t i = 0; i < count; ++i )
@@ -22,19 +24,18 @@ Solver::Solver()
         physicsJobsArgs.push_back( new PhysicsArguments() );
         physicsJobsArgs[ i ]->StartElem = increment * i;
         if ( i == count - 1 )
+        {
             physicsJobsArgs[ i ]->EndElm = LV_MAX_INSTANCE_COUNT;
-        else physicsJobsArgs[ i ]->EndElm = increment * ( i + 1 );
-
-        futures.push_back( std::future<void>() );
-        promises.push_back( std::promise<void>() );
-
-        //printf( "[%d] is from %d to %d\n", i, physicsJobsArgs[ i ]->StartElem, physicsJobsArgs[ i ]->EndElm );
+        }
+        else
+        {
+            physicsJobsArgs[ i ]->EndElm = increment * ( i + 1 );
+        }
     }
 }
 
 Solver::~Solver()
 {
-    jobManager = nullptr;
     componentManager = nullptr;
 
     if ( rigidbody != nullptr )
@@ -55,22 +56,31 @@ Solver::~Solver()
 
 void Solver::Update( float dt )
 {
-    for ( size_t i = 0; i < physicsJobsArgs.size(); ++i )
-    {
-        promises[ i ] = std::promise<void>();
-        physicsJobsArgs[ i ]->DeltaTime = dt;
-        futures[ i ] = promises[ i ].get_future();
-        physicsJobsArgs[ i ]->jobPromise = &( promises[ i ] );
-        jobManager->AddJob( this, &Physics::Solver::AccumlateForces, (void*) ( physicsJobsArgs[ i ] ), 0 );
-    }
+    Job* root = JobManager::Instance.CreateJob( 
+        &AccumlateForces,
+        physicsJobsArgs[ 0 ],
+        sizeof( physicsJobsArgs[ 0 ] )
+    );
 
-    for ( size_t i = 0; i < physicsJobsArgs.size(); ++i )
-        futures[ i ].wait();
+    for ( size_t i = 1; i < physicsJobsArgs.size(); ++i )
+    {
+        physicsJobsArgs[ i ]->DeltaTime = dt;
+        Job* child = JobManager::Instance.CreateJobAsChild(
+            root, 
+            &AccumlateForces,
+            physicsJobsArgs[ i ],
+            sizeof( physicsJobsArgs[ i ] )
+        );
+        JobManager::Instance.Run( child );
+    }
+    JobManager::Instance.Run( root );
+    JobManager::Instance.Wait( root );
+
 }
 
-void Solver::AccumlateForces( void* args, int index )
+void Solver::AccumlateForces( Job* aJob, const void* aData )
 {
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>( args );
+    const PhysicsArguments* myArgs = static_cast< const PhysicsArguments* >( aData );
     assert( myArgs != nullptr );
     for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
     {
@@ -80,12 +90,14 @@ void Solver::AccumlateForces( void* args, int index )
         acceleration += force / mass;
     }
 
-    jobManager->AddJob( this, &Physics::Solver::AccumlateTorque, args, 0 );
+    AccumlateTorque( aJob, aData );
+
+    //jobManager->AddJob( this, &Physics::Solver::AccumlateTorque, args, 0 );
 }
 
-void Physics::Solver::AccumlateTorque( void * args, int index )
+void Physics::Solver::AccumlateTorque( Job* aJob, const void* aData )
 {
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>( args );
+    const PhysicsArguments* myArgs = static_cast< const PhysicsArguments* >( aData );
     assert( myArgs != nullptr );
     for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
     {
@@ -94,12 +106,14 @@ void Physics::Solver::AccumlateTorque( void * args, int index )
         glm::mat3& invInertiaTensor = componentManager->bodyProperties[ i ].inertiaTensor;
         angularAccel += invInertiaTensor * torque;
     }
-    jobManager->AddJob( this, &Physics::Solver::Integrate, args, 0 );
+
+    Integrate( aJob, aData );
+    //jobManager->AddJob( this, &Physics::Solver::Integrate, args, 0 );
 }
 
-void Solver::Integrate( void* args, int index )
+void Solver::Integrate( Job* aJob, const void* aData )
 {
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>( args );
+    const PhysicsArguments* myArgs = static_cast< const PhysicsArguments* >( aData );
     assert( myArgs != nullptr );
 
     float dt = myArgs->DeltaTime;
@@ -150,27 +164,26 @@ void Solver::Integrate( void* args, int index )
         force = { .0f, .0f, .0f };
         torque = { .0f, .0f, .0f };
     }
-
-    jobManager->AddJob( this, &Physics::Solver::SetColliderData, args, 0 );
+    SetColliderData( aJob, aData );
+    //jobManager->AddJob( this, &Physics::Solver::SetColliderData, args, 0 );
 }
 
-void Physics::Solver::SetColliderData( void * args, int index )
+void Physics::Solver::SetColliderData( Job* aJob, const void* aData )
 {
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>( args );
+    const PhysicsArguments* myArgs = static_cast< const PhysicsArguments* >( aData );
     assert( myArgs != nullptr );
 
     for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
     {
         rigidbody->CalcHalfSize( i );
     }
-    assert( myArgs->jobPromise != nullptr );
-
-    jobManager->AddJob( this, &Physics::Solver::Collide, args, 0 );
+    Collide( aJob, aData );
+    //jobManager->AddJob( this, &Physics::Solver::Collide, args, 0 );
 }
 
-void Solver::Collide( void* args, int index )
+void Physics::Solver::Collide( Job* aJob, const void* aData )
 {
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>( args );
+    const PhysicsArguments* myArgs = static_cast< const PhysicsArguments* >( aData );
     assert( myArgs != nullptr );
 
     float dt = myArgs->DeltaTime;
@@ -185,13 +198,14 @@ void Solver::Collide( void* args, int index )
             rigidbody->CollideBoxBox( i, j );
         }
     }
-    jobManager->AddJob( this, &Physics::Solver::ResolveCollision, args, 0 );
+    ResolveCollision( aJob, aData );
+    //jobManager->AddJob( this, &Physics::Solver::ResolveCollision, args, 0 );
 }
 
 
-void Physics::Solver::ResolveCollision( void * args, int index )
+void Physics::Solver::ResolveCollision( Job* aJob, const void* aData )
 {
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>( args );
+    const PhysicsArguments* myArgs = static_cast< const PhysicsArguments* >( aData );
     assert( myArgs != nullptr );
 
     float dt = myArgs->DeltaTime;
@@ -201,12 +215,13 @@ void Physics::Solver::ResolveCollision( void * args, int index )
     contactSolver->ResolveContacts( componentManager->contacts, contactsFound, dt );
     componentManager->ClearContactsFound();
 
-    jobManager->AddJob( this, &Physics::Solver::ModelToWorld, args, 0 );
+    ModelToWorld( aJob, aData );
+    //jobManager->AddJob( this, &Physics::Solver::ModelToWorld, args, 0 );
 }
 
-void Solver::ModelToWorld( void* args, int index )
+void Solver::ModelToWorld( Job* aJob, const void* aData )
 {
-    PhysicsArguments* myArgs = static_cast<PhysicsArguments*>( args );
+    const PhysicsArguments* myArgs = static_cast< const PhysicsArguments* >( aData );
     assert( myArgs != nullptr );
 
     for ( size_t i = myArgs->StartElem; i < myArgs->EndElm; ++i )
@@ -220,7 +235,7 @@ void Solver::ModelToWorld( void* args, int index )
         transformMatrix = glm::transpose( transformMatrix );
     }
 
-    assert( myArgs->jobPromise != nullptr );
+    //assert( myArgs->jobPromise != nullptr );
 
-    myArgs->jobPromise->set_value();
+    //myArgs->jobPromise->set_value();
 }

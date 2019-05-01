@@ -38,7 +38,8 @@ Engine::~Engine()
     // Releases the instance of the entity manager
     entityManager->ReleaseInstance();
     componentManager->ReleaseInstance();
-    Jobs::JobManager::ReleaseInstance();
+    JobManager::Instance.Shutdown();
+
     Graphics::DebugRenderer::ReleaseInstance();
     Graphics::LightingManager::ReleaseInstance();
     Input::InputManager::ReleaseInstance();
@@ -120,7 +121,7 @@ LV_RESULT Engine::InitSystems()
     entityManager = ECS::EntityManager::GetInstance();
     componentManager = ECS::ComponentManager::GetInstance();
 
-    jobManager = Jobs::JobManager::GetInstance();
+    JobManager::Instance.Startup();
     inputManager = Input::InputManager::GetInstance();
 
     // Bind an axis to the input man

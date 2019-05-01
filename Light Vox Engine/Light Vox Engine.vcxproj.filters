@@ -190,6 +190,9 @@
     <ClInclude Include="Graphics\LightingManager.h">
       <Filter>Source Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="JobSystem\Job.h">
+      <Filter>Source Files\JobSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ps_basic.hlsl">
