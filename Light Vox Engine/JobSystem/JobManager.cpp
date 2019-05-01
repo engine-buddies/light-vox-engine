@@ -41,6 +41,8 @@ Job * JobManager::CreateJob( JobFunction aFunction, void* args, size_t aSize )
     job->Parent = nullptr;
     job->UnfinishedJobs.store( 1 );
 
+    memset( job->Padding, '\0', JOB_DATA_PADDING_SIZE );
+
     // Memcpy the args to the jobs padding
     if ( args != nullptr )
     {
@@ -62,6 +64,8 @@ Job * JobManager::CreateJobAsChild( Job * aParent, JobFunction aFunction, void* 
     job->Function = aFunction;
     job->Parent = aParent;
     job->UnfinishedJobs.store( 1 );
+
+    memset( job->Padding, '\0', JOB_DATA_PADDING_SIZE );
 
     // Memcpy the args to the jobs padding
     if ( args != nullptr )
@@ -154,7 +158,6 @@ Job * JobManager::AllocateJob()
 {
     const uint32_t index = g_allocatedJobs++;
     return &g_jobAllocator[ index & ( MAX_JOB_COUNT - 1u ) ];
-    //return &g_jobAllocator[ ( index - 1u ) & ( MAX_JOB_COUNT - 1u ) ];
 }
 
 void JobManager::Finish( Job * aJob )

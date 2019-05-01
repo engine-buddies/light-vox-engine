@@ -17,10 +17,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         ThrowIfFailed( engine.Run() );			//run that baby
     }
 
-    //dump that info
-#if defined(_DEBUG)
-    _CrtDumpMemoryLeaks();
-#endif
     return 0;
 }
 
