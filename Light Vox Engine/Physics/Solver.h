@@ -34,57 +34,57 @@ namespace Physics
 
     private:
 
+		struct PhysicsArguments
+		{
+			float DeltaTime;
+
+			int StartElem;
+			int EndElm;
+		};
+
+		/// <summary>
+		/// Calculate total force
+		/// </summary>
+		static void AccumlateForces( Job* aJob, const void* aData );
+
         /// <summary>
          /// Solves Collision (aabb to aabb) 
          /// </summary>
-        static void Collide( Job* aJob, const void* aData );
+        static void Collide( PhysicsArguments* aData );
 
         /// <summary>
-        /// Semi Implicit euler intergration for position
+        /// Semi Implicit euler integration for position
         /// </summary>
         /// <param name="dt"></param>
-        static void Integrate( Job* aJob, const void* aData );
-
-        /// <summary>
-        /// Calc. total force
-        /// </summary>
-        static void AccumlateForces( Job* aJob, const void* aData );
+        static void Integrate( PhysicsArguments* aData );
 
         /// <summary>
         /// Calc. total torque
         /// </summary>
-        static void AccumlateTorque( Job* aJob, const void* aData );
+        static void AccumlateTorque( PhysicsArguments* aData );
 
         /// <summary>
         /// Calc model to world matrix
         /// </summary>
-        static void ModelToWorld( Job* aJob, const void* aData );
+        static void ModelToWorld( PhysicsArguments* aData );
 
         /// <summary>
         /// Calcs the transformation matrix based on the given offset
          /// and transform the bounding box vertices from local to world space
         /// </summary>
-        static void SetColliderData( Job* aJob, const void* aData );
+        static void SetColliderData( PhysicsArguments* aData );
 
         /// <summary>
         /// Solves angular momentum, linear momentum, and interpenetration
         /// </summary>
         /// <param name="args"></param>
         /// <param name="index"></param>
-        static void ResolveCollision( Job* aJob, const void* aData );
+        static void ResolveCollision( PhysicsArguments* aData );
 
         static ECS::ComponentManager* componentManager;
         static Rigidbody* rigidbody;
         static ContactSolver* contactSolver;
         static Graphics::DebugRenderer* debugRenderer;
-
-        struct PhysicsArguments
-        {
-            float DeltaTime;
-
-            int StartElem;
-            int EndElm;
-        };
 
         std::vector<PhysicsArguments*> physicsJobsArgs;
     };
